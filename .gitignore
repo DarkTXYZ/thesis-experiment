@@ -2,7 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
-.venv/*.so
+*.so
 .Python
 env/
 .venv/
@@ -13,7 +13,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-.venv/lib/
+lib/
 lib64/
 parts/
 sdist/
