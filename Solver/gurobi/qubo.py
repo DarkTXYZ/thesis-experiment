@@ -19,7 +19,7 @@ def calculate_penalty(n: int, m: int) -> int:
     k = math.ceil(n + 0.5 - 0.5 * math.sqrt(8.0 * m + 1))
     f = (n - k) * (n - k + 1) / 2.0
     edges_method = (m - f) * (k - 1) + (n - k) * (n * n + (n + 3) * k - 2 * k * k - 1) / 6.0
-    return n
+    return int(min(naive, complete, edges_method)) + 1
 
 
 def var_to_index(N: int, u: int, k: int) -> int:
