@@ -5,7 +5,7 @@ __pycache__/
 *.so
 .Python
 env/
-venv/
+.venv/
 ENV/
 build/
 develop-eggs/
@@ -13,7 +13,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+.venv/lib/
 lib64/
 parts/
 sdist/
@@ -46,7 +46,6 @@ Thumbs.db
 *.o
 *.out
 *.exe
-bin/
 *.dSYM/
 
 # Results and logs
