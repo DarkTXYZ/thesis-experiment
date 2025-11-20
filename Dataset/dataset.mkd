@@ -1,0 +1,197 @@
+# Dataset Information
+# Graph datasets for MINLA experiments (Real-world + Synthetic)
+
+---
+
+## Real-World Networks
+
+### 1. bn-mouse_visual-cortex_1
+- **Type**: Biological Network (Brain Connectivity)
+- **Description**: Neural connectivity network of mouse visual cortex. Nodes represent neurons and edges represent synaptic connections between them.
+- **Vertices**: 29
+- **Edges**: 44
+- **Density**: 0.108
+- **Avg Degree**: 3.03
+- **Source**: Neural circuit reconstruction from electron microscopy
+- **Characteristics**: Small but biologically significant network showing local cortical connectivity patterns
+
+### 2. ca-sandi_auths
+- **Type**: Collaboration Network
+- **Description**: Co-authorship network from Sandia National Laboratories. Nodes represent authors and edges represent co-authorship relationships.
+- **Vertices**: 86
+- **Edges**: 124
+- **Density**: 0.034
+- **Avg Degree**: 2.88
+- **Source**: Publication records from scientific collaborations
+- **Characteristics**: Sparse network with community structure typical of academic collaborations
+
+### 3. ENZYMES8
+- **Type**: Molecular Network
+- **Description**: Protein structure graph representing enzyme molecules. Nodes are amino acids and edges connect spatially close residues in 3D structure.
+- **Vertices**: 88
+- **Edges**: 133
+- **Density**: 0.035
+- **Avg Degree**: 3.02
+- **Source**: ENZYMES dataset from graph classification benchmarks (TU Dortmund)
+- **Characteristics**: Sparse molecular structure with local connectivity patterns typical of protein folding
+
+### 4. johnson8-4-4
+- **Type**: Combinatorial Graph
+- **Description**: Johnson graph J(8,4) from graph theory. Nodes represent 4-element subsets of an 8-element set, edges connect subsets differing by one element.
+- **Vertices**: 70
+- **Edges**: 1,855
+- **Density**: 0.768
+- **Avg Degree**: 53.00
+- **Source**: Constructed from combinatorial design
+- **Characteristics**: Highly regular and symmetric graph with uniform degree distribution
+
+### 5. rt-retweet
+- **Type**: Social Network (Information Diffusion)
+- **Description**: Retweet network from Twitter/X social media platform. Nodes represent users and edges represent retweet relationships.
+- **Vertices**: 96
+- **Edges**: 117
+- **Density**: 0.026
+- **Avg Degree**: 2.44
+- **Source**: Twitter API data collection
+- **Characteristics**: Sparse directed network (treated as undirected) showing information propagation patterns
+
+### 6. soc-dolphins
+- **Type**: Social Network (Animal)
+- **Description**: Social network of bottlenose dolphins in Doubtful Sound, New Zealand. Nodes represent dolphins and edges represent frequent associations observed over multiple years.
+- **Vertices**: 62
+- **Edges**: 159
+- **Density**: 0.084
+- **Avg Degree**: 5.13
+- **Source**: Behavioral observation study by Lusseau et al.
+- **Characteristics**: Moderately sparse network with community structure representing dolphin pods and social groups
+
+---
+
+## Synthetic Networks
+
+### 7. random_n10_d50
+- **Type**: Synthetic Random Graph
+- **Description**: Connected random graph with 10 vertices at 50% target density, generated using Erdős–Rényi G(n,m) model.
+- **Vertices**: 10
+- **Edges**: 22
+- **Density**: 0.489
+- **Avg Degree**: 4.40
+- **Generation**: NetworkX gnm_random_graph with connectivity guarantee
+- **Purpose**: Small-scale baseline for MINLA algorithm testing
+
+### 8. random_n25_d50
+- **Type**: Synthetic Random Graph
+- **Description**: Connected random graph with 25 vertices at 50% target density.
+- **Vertices**: 25
+- **Edges**: 150
+- **Density**: 0.500
+- **Avg Degree**: 12.00
+- **Generation**: NetworkX gnm_random_graph with connectivity guarantee
+- **Purpose**: Medium-small scale testing of MINLA scalability
+
+### 9. random_n50_d50
+- **Type**: Synthetic Random Graph
+- **Description**: Connected random graph with 50 vertices at 50% target density.
+- **Vertices**: 50
+- **Edges**: 612
+- **Density**: 0.499
+- **Avg Degree**: 24.48
+- **Generation**: NetworkX gnm_random_graph with connectivity guarantee
+- **Purpose**: Medium-scale MINLA performance evaluation
+
+### 10. random_n75_d50
+- **Type**: Synthetic Random Graph
+- **Description**: Connected random graph with 75 vertices at 50% target density.
+- **Vertices**: 75
+- **Edges**: 1,387
+- **Density**: 0.500
+- **Avg Degree**: 37.00
+- **Generation**: NetworkX gnm_random_graph with connectivity guarantee
+- **Purpose**: Medium-large scale stress testing for MINLA solver
+
+### 11. random_n100_d50
+- **Type**: Synthetic Random Graph
+- **Description**: Connected random graph with 100 vertices at 50% target density.
+- **Vertices**: 100
+- **Edges**: 2,475
+- **Density**: 0.500
+- **Avg Degree**: 49.50
+- **Generation**: NetworkX gnm_random_graph with connectivity guarantee
+- **Purpose**: Large-scale performance benchmark for MINLA algorithms
+
+---
+
+## Dataset Statistics Summary
+
+### Real-World Networks
+| Dataset | Vertices | Edges | Density | Avg Degree | Type |
+|---------|----------|-------|---------|------------|------|
+| bn-mouse_visual-cortex_1 | 29 | 44 | 0.108 | 3.03 | Biological |
+| soc-dolphins | 62 | 159 | 0.084 | 5.13 | Social (Animal) |
+| johnson8-4-4 | 70 | 1,855 | 0.768 | 53.00 | Combinatorial |
+| ca-sandi_auths | 86 | 124 | 0.034 | 2.88 | Collaboration |
+| ENZYMES8 | 88 | 133 | 0.035 | 3.02 | Molecular |
+| rt-retweet | 96 | 117 | 0.026 | 2.44 | Social (Human) |
+
+### Synthetic Networks (50% Density Target)
+| Dataset | Vertices | Edges | Density | Avg Degree | Type |
+|---------|----------|-------|---------|------------|------|
+| random_n10_d50 | 10 | 22 | 0.489 | 4.40 | Synthetic |
+| random_n25_d50 | 25 | 150 | 0.500 | 12.00 | Synthetic |
+| random_n50_d50 | 50 | 612 | 0.499 | 24.48 | Synthetic |
+| random_n75_d50 | 75 | 1,387 | 0.500 | 37.00 | Synthetic |
+| random_n100_d50 | 100 | 2,475 | 0.500 | 49.50 | Synthetic |
+
+**Note**: Density = 2×E/(V×(V-1)) for undirected graphs
+
+---
+
+## Preprocessing Details
+All datasets have been preprocessed with:
+- **Vertex indexing**: 0-indexed consecutive numbering (0 to n-1)
+- **Header format**: `n m` (number of vertices and edges)
+- **Edge format**: `u v` (one edge per line, space-separated)
+- **Validation**: No self-loops, no duplicate edges, connected graph guaranteed
+- **Output location**: `Dataset/processed/`
+- **Filename format**: `*_preprocessed.txt`
+
+## Graph Categories
+1. **Real-World Networks** (6 graphs): Represent actual systems from biology, social science, and combinatorics
+   - Size range: 29-96 vertices
+   - Density range: 0.026-0.768
+   - Diverse structures: sparse social, dense combinatorial, modular biological
+
+2. **Synthetic Networks** (5 graphs): Random graphs for controlled experiments
+   - Size range: 10-100 vertices (scaling series)
+   - Density: Fixed at ~0.50 (50%)
+   - Properties: Connected, no structure, uniform random edges
+
+## Usage Examples
+```bash
+# Navigate to workspace
+cd /Users/pawaret/Desktop/Thesis/Experiment
+
+# Run MINLA solver on small real-world graph
+docker run --platform=linux/amd64 -v "$PWD/minla:/workspace" qbpp-linux \
+  ./easy_solver Dataset/processed/bn-mouse_visual-cortex_1_preprocessed.txt
+
+# Run on synthetic graph
+docker run --platform=linux/amd64 -v "$PWD/minla:/workspace" qbpp-linux \
+  ./easy_solver Dataset/processed/random_n50_d50_preprocessed.txt
+
+# Batch process all datasets
+for f in Dataset/processed/*_preprocessed.txt; do
+  echo "Processing $(basename $f)..."
+  docker run --platform=linux/amd64 -v "$PWD/minla:/workspace" qbpp-linux \
+    ./easy_solver "$f"
+done
+```
+
+## References
+- **Dolphin network**: Lusseau, D., et al. "The bottlenose dolphin community of Doubtful Sound features a large proportion of long-lasting associations." *Behavioral Ecology and Sociobiology* 54.4 (2003): 396-405.
+- **Mouse cortex**: Reconstructed neural connectivity from electron microscopy studies
+- **Sandia authors**: Co-authorship data from Sandia National Laboratories publications
+- **ENZYMES**: Schomburg, I., et al. "BRENDA, the enzyme database." *Nucleic Acids Research* (2004). TU Dortmund graph benchmarks.
+- **Johnson graphs**: Combinatorial graph from Johnson scheme J(n,k)
+- **Retweet network**: Twitter social media diffusion data
+- **Random graphs**: Erdős, P., & Rényi, A. "On random graphs." *Publicationes Mathematicae* 6 (1959): 290-297.

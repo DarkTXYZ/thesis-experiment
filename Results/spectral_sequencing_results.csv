@@ -1,0 +1,12 @@
+dataset,vertices,edges,spectral_cost
+ENZYMES8,88,133,3730
+bn-mouse_visual-cortex_1,29,44,455
+ca-sandi_auths,86,124,3630
+johnson8-4-4,70,1855,43579
+random_n100_d50,100,2475,84385
+random_n10_d50,10,22,85
+random_n25_d50,25,150,1249
+random_n50_d50,50,612,10640
+random_n75_d50,75,1387,34832
+rt-retweet,96,117,3933
+soc-dolphins,62,159,3325
