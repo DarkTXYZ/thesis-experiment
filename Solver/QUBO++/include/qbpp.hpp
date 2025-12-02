@@ -6,7 +6,7 @@
 /// @note A valid license is required for commercial use of this library.
 /// @author Koji Nakano
 /// @copyright 2025 Koji Nakano
-/// @version 2025.10.30
+/// @version 2025.11.22
 
 #pragma once
 #include <tbb/blocked_range.h>
@@ -688,7 +688,8 @@ class VarArray {
   }
   VarArray& operator*=(const VarArray& vars) {
     std::size_t i = 0;
-    for (; i < N && vars_[i] != VarVoid; ++i);
+    for (; i < N && vars_[i] != VarVoid; ++i)
+      ;
     for (std::size_t j = 0; j < N; ++j) {
       if (vars.vars_[j] == VarVoid) break;
       if (i >= N) {
@@ -2979,6 +2980,8 @@ inline Expr simplify_seq(const Expr& expr,
     auto new_vars = (*sort_vars_func)(term.vars());
     if (new_vars.size() != 0) {
       vars_val_map[new_vars] += term.coeff();
+    } else {  
+      result += term.coeff();
     }
   }
   for (const auto& [vars, val] : vars_val_map) {

@@ -3,12 +3,12 @@ import sys
 from typing import List
 from pathlib import Path
 import random
+import csv
+from pathlib import Path
 
 
 sys.path.append(str(Path(__file__).parent.parent))
 from Utils.min_lin_arrangement import calculate_min_linear_arrangement
-
-random.seed(42)
 
 def init_ordering(graph: nx.Graph, method: str) -> List[int]:
     """Initialize ordering based on the specified method."""
@@ -61,8 +61,10 @@ def successive_augmentation(graph: nx.Graph, method: str) -> List[int]:
 if __name__ == "__main__":
     # Read file from Dataset/processed and create graph
     # Then calculate successive augmentation cost and store in csv file
-    import csv
-    from pathlib import Path
+
+    
+    random.seed(42)
+    
     
     # Get processed datasets directory
     dataset_dir = Path(__file__).parent.parent / "Dataset" / "processed"

@@ -2,7 +2,7 @@
 /// @author Koji Nakano
 /// @brief Generates a QUBO Expression for the Traveling Salesman Problem (TSP)
 /// using QUBO++ library.
-/// @version 2025.10.07
+/// @version 2025.11.11
 
 #include <iostream>
 #include <limits>
@@ -24,8 +24,8 @@ class TSPMap {
   TSPMap(uint32_t grid_size = 100) : grid_size_(grid_size) {};
   void gen_random_map(uint32_t n);
   void add_node(uint32_t x, uint32_t y) { nodes_.push_back({x, y}); }
-  uint32_t dist(const std::pair<int32_t, int32_t> &p1,
-                const std::pair<int32_t, int32_t> &p2) const {
+  uint32_t dist(const std::pair<int32_t, int32_t>& p1,
+                const std::pair<int32_t, int32_t>& p2) const {
     return static_cast<uint32_t>(std::round(
         std::sqrt((p1.first - p2.first) * (p1.first - p2.first) +
                   (p1.second - p2.second) * (p1.second - p2.second))));
@@ -35,84 +35,91 @@ class TSPMap {
   }
   uint32_t min_dist(uint32_t x, uint32_t y) const {
     uint32_t min_dist = grid_size_ * 2;
-    for (const auto &[px, py] : nodes_) {
+    for (const auto& [px, py] : nodes_) {
       if (dist({x, y}, {px, py}) < min_dist) min_dist = dist({x, y}, {px, py});
     }
     return min_dist;
   }
   uint32_t node_count() const { return static_cast<uint32_t>(nodes_.size()); }
   uint32_t get_grid_size() const { return grid_size_; }
-  std::pair<int32_t, int32_t> &operator[](uint32_t index) {
+  std::pair<int32_t, int32_t>& operator[](uint32_t index) {
     return nodes_[index];
   }
 };
-class TSPQuadModel : public qbpp::QuadModel {
+class TSPExpr {
   const bool fix_first_;
   const qbpp::Vector<qbpp::Vector<qbpp::Var>> x_;
-  std::tuple<qbpp::Model, bool, qbpp::Vector<qbpp::Vector<qbpp::Var>>>
-  helper_func(const TSPMap &map, bool fix_first);
-  TSPQuadModel(
-      std::tuple<qbpp::QuadModel, bool, qbpp::Vector<qbpp::Vector<qbpp::Var>>>
-          tuple)
-      : qbpp::QuadModel(std::get<0>(tuple)),
-        fix_first_(std::get<1>(tuple)),
-        x_(std::get<2>(tuple)) {}
+  const qbpp::Expr expr_;
+  std::tuple<qbpp::Expr, bool, qbpp::Vector<qbpp::Vector<qbpp::Var>>>
+  helper_func(const TSPMap& map, bool fix_first);
+  TSPExpr(
+      std::tuple<qbpp::Expr, bool, qbpp::Vector<qbpp::Vector<qbpp::Var>>> tuple)
+      : fix_first_(std::get<1>(tuple)),
+        x_(std::get<2>(tuple)),
+        expr_(std::get<0>(tuple)) {}
  public:
-  TSPQuadModel(const TSPMap &map, bool fix_first = false)
-      : TSPQuadModel(helper_func(map, fix_first)) {}
+  TSPExpr(const TSPMap& map, bool fix_first = false)
+      : TSPExpr(helper_func(map, fix_first)) {}
   uint32_t node_count() const { return static_cast<uint32_t>(x_.size()); }
-  qbpp::Var get_var(uint32_t i, uint32_t j) const { return x_[i][j]; }
-  bool get_fix_first() const { return fix_first_; }
+  qbpp::Var x(uint32_t i, uint32_t j) const { return x_[i][j]; }
+  bool fix_first() const { return fix_first_; }
+  const Expr& expr() const { return expr_; }
 };
 class TSPSol {
-  const TSPQuadModel tsp_quad_model_;
+  const TSPExpr tsp_expr_;
   const Sol sol_;
   const std::vector<uint32_t> tour_;
-  static std::vector<uint32_t> gen_tour(const TSPQuadModel &tsp_quad_model,
-                                        const Sol &sol);
+  static std::vector<uint32_t> gen_tour(const TSPExpr& tsp_quad_model,
+                                        const Sol& sol);
  public:
-  TSPSol(const TSPQuadModel &tsp_quad_model, const qbpp::Sol &sol)
-      : tsp_quad_model_(tsp_quad_model),
+  TSPSol(const TSPExpr& tsp_quad_model, const qbpp::Sol& sol)
+      : tsp_expr_(tsp_quad_model),
         sol_(sol),
         tour_(gen_tour(tsp_quad_model, sol)) {}
   uint32_t operator[](uint32_t index) const { return tour_[index]; }
-  uint32_t node_count() const { return tsp_quad_model_.node_count(); }
-  void print() const {
-    std::cout << sol_.energy() << " :";
-    for (const auto &i : tour_)
+  uint32_t node_count() const { return tsp_expr_.node_count(); }
+  qbpp::Sol sol() const { return sol_; }
+  std::string str() const {
+    std::ostringstream oss;
+    oss << sol_.energy() << " :";
+    for (const auto& i : tour_)
       if (i != uint32_limit)
-        std::cout << " " << i;
+        oss << " " << i;
       else
-        std::cout << " -";
-    std::cout << std::endl;
+        oss << " -";
+    return oss.str();
   }
   void print_matrix() const {
-    for (uint32_t i = 0; i < tsp_quad_model_.node_count(); i++) {
-      for (uint32_t j = 0; j < tsp_quad_model_.node_count(); j++) {
+    for (uint32_t i = 0; i < tsp_expr_.node_count(); i++) {
+      for (uint32_t j = 0; j < tsp_expr_.node_count(); j++) {
         if (i == 0 && j == 0)
           std::cout << "1";
         else if (i == 0 || j == 0)
           std::cout << "0";
         else {
-          std::cout << sol_.get(tsp_quad_model_.get_var(i, j));
+          std::cout << sol_.get(tsp_expr_.x(i, j));
         }
       }
       std::cout << std::endl;
     }
   }
 };
+std::ostream& operator<<(std::ostream& os, const TSPSol& tsp_sol) {
+  os << tsp_sol.str();
+  return os;
+}
 class TSPModel : public qbpp::QuadModel {
   const bool fix_first_;
   const qbpp::Vector<qbpp::Vector<qbpp::Var>> x_;
   std::tuple<qbpp::QuadModel, bool, qbpp::Vector<qbpp::Vector<qbpp::Var>>>
-  helper_func(const TSPMap &map, bool fix_first);
+  helper_func(const TSPMap& map, bool fix_first);
   TSPModel(std::tuple<qbpp::QuadModel, bool,
-                      qbpp::Vector<qbpp::Vector<qbpp::Var>>> &&tuple)
+                      qbpp::Vector<qbpp::Vector<qbpp::Var>>>&& tuple)
       : qbpp::QuadModel(std::move(std::get<0>(tuple))),
         fix_first_(std::get<1>(tuple)),
         x_(std::move(std::get<2>(tuple))) {}
  public:
-  TSPModel(const TSPMap &map, bool fix_first = false)
+  TSPModel(const TSPMap& map, bool fix_first = false)
       : TSPModel(helper_func(map, fix_first)) {}
   uint32_t node_count() const { return static_cast<uint32_t>(x_.size()); }
   qbpp::Var get_var(uint32_t i, uint32_t j) const { return x_[i][j]; }
@@ -123,10 +130,10 @@ class DrawSimpleGraph {
   std::vector<std::tuple<int, int>> edges_;
  public:
   DrawSimpleGraph() = default;
-  void add_node(int x, int y, const std::string &label = "") {
+  void add_node(int x, int y, const std::string& label = "") {
     nodes_.push_back(std::make_tuple(x, y, label));
   }
-  void add_node(std::pair<int, int> node, const std::string &label = "") {
+  void add_node(std::pair<int, int> node, const std::string& label = "") {
     add_node(node.first, node.second, label);
   }
   void add_edge(unsigned int node1, unsigned int node2) {
@@ -181,9 +188,9 @@ inline void TSPMap::gen_random_map(uint32_t n) {
     add_node(x, y);
   }
 }
-inline std::tuple<qbpp::Model, bool, qbpp::Vector<qbpp::Vector<qbpp::Var>>>
-TSPQuadModel::helper_func(const TSPMap &tsp_map, bool fix_first) {
-  uint32_t node_count = tsp_map.node_count();
+inline std::tuple<qbpp::Expr, bool, qbpp::Vector<qbpp::Vector<qbpp::Var>>>
+TSPExpr::helper_func(const TSPMap& tsp_map, bool fix_first) {
+  auto node_count = tsp_map.node_count();
   auto x = qbpp::var("x", node_count, node_count);
   std::cout << "Generating QUBO expression for permutation." << std::endl;
   auto permutation_expr = qbpp::sum(
@@ -192,7 +199,7 @@ TSPQuadModel::helper_func(const TSPMap &tsp_map, bool fix_first) {
   qbpp::Vector<qbpp::Expr> exprs(node_count);
   tbb::parallel_for(decltype(node_count)(0), node_count, [&](uint32_t i) {
     uint32_t next_i = (i + 1) % node_count;
-    auto &expr = exprs[i];
+    auto& expr = exprs[i];
     for (uint32_t j = 0; j < node_count; j++) {
       for (uint32_t k = 0; k < node_count; k++) {
         if (j == k) continue;
@@ -214,19 +221,19 @@ TSPQuadModel::helper_func(const TSPMap &tsp_map, bool fix_first) {
   tsp_expr.simplify_as_binary();
   return {tsp_expr, fix_first, x};
 }
-inline std::vector<uint32_t> TSPSol::gen_tour(
-    const TSPQuadModel &tsp_quad_model, const Sol &sol) {
+inline std::vector<uint32_t> TSPSol::gen_tour(const TSPExpr& tsp_quad_model,
+                                              const Sol& sol) {
   std::vector<uint32_t> tour;
   for (uint32_t i = 0; i < tsp_quad_model.node_count(); i++) {
-    if (tsp_quad_model.get_fix_first() && i == 0) {
+    if (tsp_quad_model.fix_first() && i == 0) {
       tour.push_back(0);
       continue;
     }
     uint32_t count = 0;
     uint32_t node;
-    for (uint32_t j = (tsp_quad_model.get_fix_first() ? 1 : 0);
+    for (uint32_t j = (tsp_quad_model.fix_first() ? 1 : 0);
          j < tsp_quad_model.node_count(); j++) {
-      if (sol.get(tsp_quad_model.get_var(i, j)) == 1) {
+      if (sol.get(tsp_quad_model.x(i, j)) == 1) {
         node = j;
         count++;
       }

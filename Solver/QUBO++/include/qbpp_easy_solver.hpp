@@ -18,7 +18,7 @@ class EasySolver;
 class SolDelta;
 class QueueSet;
 struct SolHash {
-  uint64_t operator()(const qbpp::Sol &sol) const noexcept {
+  uint64_t operator()(const qbpp::Sol& sol) const noexcept {
     return static_cast<uint64_t>(
         qbpp_hash(sol.bit_vector().size64(), sol.bit_vector().bits_ptr()));
   }
@@ -40,9 +40,9 @@ class BestSols {
   explicit BestSols(size_t capacity = 0,
                     SavePolicy save_policy = SavePolicy::BestSolsOnly)
       : capacity_(capacity), save_policy_(save_policy) {}
-  void insert_if_better(const qbpp::Sol &sol,
-                        const misc::MinHeap<energy_t> &neg_set,
-                        const misc::MinHeap<energy_t> &pos_set) {
+  void insert_if_better(const qbpp::Sol& sol,
+                        const misc::MinHeap<energy_t>& neg_set,
+                        const misc::MinHeap<energy_t>& pos_set) {
     if (capacity_ == 0) return;
     if (save_policy_ == SavePolicy::WeakLocalMinimum && !neg_set.empty())
       return;
@@ -61,7 +61,7 @@ class BestSols {
       sol_set_.insert(sol);
     } else {
       if (sol.energy() >= sol_vector_.back().energy()) return;
-      const auto &removed = sol_vector_.back();
+      const auto& removed = sol_vector_.back();
       sol_set_.erase(removed);
       sol_vector_.back() = sol;
       sol_set_.insert(sol);
@@ -75,13 +75,13 @@ class BestSols {
     }
     worst_energy_ = sol_vector_.back().energy();
   }
-  const std::vector<qbpp::Sol> &sol_vector() const { return sol_vector_; }
-  std::vector<qbpp::Sol> &sol_vector() { return sol_vector_; }
+  const std::vector<qbpp::Sol>& sol_vector() const { return sol_vector_; }
+  std::vector<qbpp::Sol>& sol_vector() { return sol_vector_; }
 };
 class SolDelta : public Sol {
  protected:
-  const EasySolver &easy_solver_;
-  const HuboModel &hubo_model_;
+  const EasySolver& easy_solver_;
+  const HuboModel& hubo_model_;
   std::vector<energy_t> delta_;
   misc::MinHeap<energy_t> neg_set_;
   misc::MinHeap<energy_t> pos_set_;
@@ -101,9 +101,9 @@ class SolDelta : public Sol {
     return static_cast<size_t>(base * scale + 10);
   }
  public:
-  SolDelta(const EasySolver &easy_solver, size_t thread_id,
+  SolDelta(const EasySolver& easy_solver, size_t thread_id,
            size_t thread_count);
-  SolDelta &set_all_one() {
+  SolDelta& set_all_one() {
     neg_set_.clear();
     pos_set_.clear();
     for (vindex_t i = 0; i < var_count(); ++i) {
@@ -125,14 +125,14 @@ class SolDelta : public Sol {
     return reach_target_energy() || reach_time_limit() || reach_end_time();
   }
   double remaining_time() const;
-  void set_if_better(const std::string &info);
-  void set_if_better_neighbor(const std::string &info);
+  void set_if_better(const std::string& info);
+  void set_if_better_neighbor(const std::string& info);
   void flip(vindex_t index) { flip_with_updated_vars(index, true); }
   uint64_t flip_count() const { return flip_count_; }
   template <size_t N>
   inline void update_delta_delta(
-      const TermVector<N - 1> &terms,  
-      std::vector<energy_t> &delta_delta,
+      const TermVector<N - 1>& terms,  
+      std::vector<energy_t>& delta_delta,
       energy_t flip_bit_sign)  
   {
     static_assert(N >= 3, "N must be >= 3");
@@ -176,7 +176,7 @@ class SolDelta : public Sol {
     }
     int32_t flip_bit_sign = 1 - 2 * get(index);
     std::vector<energy_t> delta_delta(var_count(), 0);
-    const auto &t2 = hubo_model_.term2(index);
+    const auto& t2 = hubo_model_.term2(index);
     for (size_t i = 0; i < t2.size(); ++i) {
       vindex_t j = t2.indices(i)[0];
       coeff_t coeff = t2.coeff(i);
@@ -277,7 +277,7 @@ class SolDelta : public Sol {
     }
     return count + fail_count_;
   }
-  qbpp::SolHolder &sol_holder() { return *all_best_sol_ptr_; }
+  qbpp::SolHolder& sol_holder() { return *all_best_sol_ptr_; }
   void pos_min(size_t iteration) {
     for (size_t i = 0; i < iteration; ++i) {
       if (should_stop()) {
@@ -316,7 +316,7 @@ class SolDelta : public Sol {
       }
     }
   }
-  void move_to(qbpp::Sol &&destination);
+  void move_to(qbpp::Sol&& destination);
   void random_flip(size_t iteration);
   void random_flip();
   energy_t comp_delta(vindex_t index) {
@@ -345,7 +345,7 @@ class SolDelta : public Sol {
     return oss.str();
   }
   void check_sets() {
-    for (const auto &[val, index] : neg_set_.heap()) {
+    for (const auto& [val, index] : neg_set_.heap()) {
       if (delta_[index] >= 0) {
         throw std::runtime_error(THROW_MESSAGE("Unexpected error."));
       }
@@ -356,7 +356,7 @@ class SolDelta : public Sol {
         throw std::runtime_error(THROW_MESSAGE("Unexpected error."));
       }
     }
-    for (const auto &[val, index] : pos_set_.heap()) {
+    for (const auto& [val, index] : pos_set_.heap()) {
       if (delta_[index] <= 0) {
         throw std::runtime_error(THROW_MESSAGE("Unexpected error."));
       }
@@ -373,13 +373,13 @@ class Sols : public qbpp::Sol {
   const uint64_t flip_count_;
   const std::vector<qbpp::Sol> best_sols_;
  public:
-  explicit Sols(const qbpp::SolHolder &sol_holder, uint64_t flip_count,
+  explicit Sols(const qbpp::SolHolder& sol_holder, uint64_t flip_count,
                 std::vector<qbpp::Sol> best_sols)
       : qbpp::Sol(sol_holder.sol()),
         flip_count_(flip_count),
         best_sols_(best_sols) {}
   [[nodiscard]] size_t size() const noexcept { return best_sols_.size(); }
-  const std::vector<qbpp::Sol> &best_sols() const noexcept {
+  const std::vector<qbpp::Sol>& best_sols() const noexcept {
     return best_sols_;
   }
 };
@@ -406,7 +406,7 @@ class EasySolver {
     flip_count_ += flip_count;
   }
  public:
-  EasySolver(const qbpp::Model &model)
+  EasySolver(const qbpp::Model& model)
       : hubo_model_(model),
         all_best_sol_ptr_(std::make_shared<qbpp::SolHolder>(hubo_model_)),
         best_sols_ptr_(std::make_shared<BestSols>(0)) {
@@ -415,12 +415,12 @@ class EasySolver {
           "The HUBO model has no terms. Please check the model.");
     }
   }
-  const qbpp::HuboModel &hubo_model() const { return hubo_model_; }
-  const std::shared_ptr<qbpp::SolHolder> &sol_holder_ptr() const {
+  const qbpp::HuboModel& hubo_model() const { return hubo_model_; }
+  const std::shared_ptr<qbpp::SolHolder>& sol_holder_ptr() const {
     return all_best_sol_ptr_;
   }
-  const qbpp::SolHolder &sol_holder() const { return *all_best_sol_ptr_; }
-  const std::shared_ptr<qbpp::SolHolder> &time_limited_best_sol_ptr() const {
+  const qbpp::SolHolder& sol_holder() const { return *all_best_sol_ptr_; }
+  const std::shared_ptr<qbpp::SolHolder>& time_limited_best_sol_ptr() const {
     return time_limited_best_sol_ptr_;
   }
   virtual ~EasySolver() {}
@@ -455,10 +455,10 @@ class EasySolver {
     }
     return start_time_ + time_limit_.value() - qbpp::time();
   }
-  const std::optional<energy_t> &target_energy() const {
+  const std::optional<energy_t>& target_energy() const {
     return target_energy_;
   }
-  const std::optional<double> &time_limit() const { return time_limit_; }
+  const std::optional<double>& time_limit() const { return time_limit_; }
   void thread_count(size_t count) { thread_count_ = count; }
   void enable_default_callback() { enable_default_callback_ = true; }
   uint64_t flip_count() const {
@@ -466,7 +466,7 @@ class EasySolver {
     return flip_count_;
   }
   double tts() const { return all_best_sol_ptr_->tts(); }
-  virtual void callback(const qbpp::Sol &sol, double tts,
+  virtual void callback(const qbpp::Sol& sol, double tts,
                         std::string info) const {
     static std::mutex callback_mutex_;
     static std::optional<energy_t> prev_energy_ = std::nullopt;
@@ -486,15 +486,15 @@ class EasySolver {
                         SavePolicy save_policy = SavePolicy::BestSolsOnly) {
     best_sols_ptr_ = std::make_shared<BestSols>(capacity, save_policy);
   }
-  std::shared_ptr<BestSols> &best_sols_ptr() { return best_sols_ptr_; }
-  const std::shared_ptr<BestSols> &best_sols_ptr() const {
+  std::shared_ptr<BestSols>& best_sols_ptr() { return best_sols_ptr_; }
+  const std::shared_ptr<BestSols>& best_sols_ptr() const {
     return best_sols_ptr_;
   }
-  const std::vector<qbpp::Sol> &best_sols() const {
+  const std::vector<qbpp::Sol>& best_sols() const {
     return best_sols_ptr_->sol_vector();
   }
   Sols search(bool has_initial_sol = false);
-  qbpp::Sol search(const qbpp::Sol &initial_sol) {
+  qbpp::Sol search(const qbpp::Sol& initial_sol) {
     all_best_sol_ptr_->sol(initial_sol);
     return search(true);
   }
@@ -571,7 +571,7 @@ inline Sols EasySolver::search(bool has_initial_sol) {
   }
   return Sols(*all_best_sol_ptr_, flip_count_, best_sols_ptr_->sol_vector());
 }
-inline SolDelta::SolDelta(const EasySolver &easy_solver, size_t thread_id,
+inline SolDelta::SolDelta(const EasySolver& easy_solver, size_t thread_id,
                           size_t thread_count)
     : Sol(easy_solver.hubo_model()),
       easy_solver_(easy_solver),
@@ -595,7 +595,7 @@ inline SolDelta::SolDelta(const EasySolver &easy_solver, size_t thread_id,
     }
   }
 }
-inline void SolDelta::move_to(Sol &&destination) {
+inline void SolDelta::move_to(Sol&& destination) {
   misc::MinHeap to_be_flipped(var_count());
   for (vindex_t i = 0; i < var_count(); ++i) {
     if (should_stop()) {
@@ -612,7 +612,7 @@ inline void SolDelta::move_to(Sol &&destination) {
     vindex_t min_index = to_be_flipped.pop_first();
     std::vector<vindex_t> updated_vars = flip_with_updated_vars(min_index);
     set_if_better("MoveTo");
-    for (const auto &index : updated_vars) {
+    for (const auto& index : updated_vars) {
       if (to_be_flipped.has(index)) {
         to_be_flipped.erase(index);
         to_be_flipped.insert(index, delta_[index]);
@@ -641,7 +641,7 @@ inline void SolDelta::random_flip() {
     set_if_better("Random");
   }
 }
-inline void SolDelta::set_if_better(const std::string &info) {
+inline void SolDelta::set_if_better(const std::string& info) {
   if (time_limited_best_sol_ptr_->set_if_better(*this, info)) {
     std::optional<double> tts = all_best_sol_ptr_->set_if_better(*this, info);
     if (tts.has_value()) {
@@ -653,11 +653,11 @@ inline void SolDelta::set_if_better(const std::string &info) {
     }
   }
 }
-inline void SolDelta::set_if_better_neighbor(const std::string &info) {
+inline void SolDelta::set_if_better_neighbor(const std::string& info) {
   if (neg_set_.empty()) {
     return;
   }
-  const auto &[min_delta, min_index] = neg_set_.min();
+  const auto& [min_delta, min_index] = neg_set_.min();
   if (energy() + min_delta < all_best_sol_ptr_->energy()) {
     Sol temp_sol = *this;
     temp_sol.flip_bit_add_delta(min_index, min_delta);

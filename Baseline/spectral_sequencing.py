@@ -1,11 +1,8 @@
 import networkx as nx
 from typing import List
 import sys
-from pathlib import Path
 import csv
 from pathlib import Path
-from scipy import sparse
-from scipy.sparse.linalg import eigsh
 
 sys.path.append(str(Path(__file__).parent.parent))
 from Utils.min_lin_arrangement import calculate_min_linear_arrangement

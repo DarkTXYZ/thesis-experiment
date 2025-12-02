@@ -238,8 +238,7 @@ struct LicenseInfo {
            license_status_ == LicenseStatus::ProfessionalLicense ||
            license_status_ == LicenseStatus::RegisteredTrial ||
            license_status_ == LicenseStatus::PartnerLicense)) {
-        oss << qbpp_message("\nLicense Key: [") << license_key_masked_
-            << qbpp_message("]\n") << qbpp_message("Activations: ")
+        oss << qbpp_message("\nActivations: ")
             << activation_str(total_activations_) << qbpp_message("/")
             << activation_str(allowed_activations_)
             << qbpp_message(" (used/allowed)")
