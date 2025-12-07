@@ -281,7 +281,7 @@ void process_graph(const string& graph_file, ofstream& csv_out)
     cout << "Solving..." << endl;
     
     qbpp::easy_solver::EasySolver solver(qubo);
-    solver.time_limit(5.0);
+    solver.time_limit(10.0);
     
     auto solution = solver.search();
     

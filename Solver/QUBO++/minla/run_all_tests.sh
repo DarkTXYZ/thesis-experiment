@@ -52,22 +52,59 @@ for GRAPH_FILE in "$PROCESSED_DIR"/*.txt; do
     echo "[$COUNTER/$NUM_FILES] Processing: $FILENAME"
     
     # Run solver for single file and append to output CSV
-    TEMP_OUTPUT="$RESULTS_DIR/temp_single_result.csv"
-    "$SOLVER" "$GRAPH_FILE" > /dev/null
+    # Redirect both stdout and stderr, and capture exit code
+    TEMP_LOG="$RESULTS_DIR/temp_solver.log"
     
-    # Extract the result line (skip header) from single result file and append to main output
-    if [ -f "$RESULTS_DIR/easy_solver_single_result.csv" ]; then
-        tail -n 1 "$RESULTS_DIR/easy_solver_single_result.csv" >> "$OUTPUT_CSV"
-        rm "$RESULTS_DIR/easy_solver_single_result.csv"
+    if timeout 300 "$SOLVER" "$GRAPH_FILE" > "$TEMP_LOG" 2>&1; then
+        # Success - extract the result
+        if [ -f "$RESULTS_DIR/easy_solver_single_result.csv" ]; then
+            tail -n 1 "$RESULTS_DIR/easy_solver_single_result.csv" >> "$OUTPUT_CSV"
+            rm "$RESULTS_DIR/easy_solver_single_result.csv"
+            echo "  ✓ Completed successfully"
+        else
+            echo "  ⚠ Warning: No result file generated"
+            echo "$FILENAME,0,0,ERROR,0,0,0" >> "$OUTPUT_CSV"
+        fi
     else
-        echo "Warning: No result generated for $FILENAME"
+        EXIT_CODE=$?
+        if [ $EXIT_CODE -eq 124 ]; then
+            echo "  ✗ TIMEOUT (exceeded 300 seconds)"
+            echo "$FILENAME,0,0,TIMEOUT,0,0,300000" >> "$OUTPUT_CSV"
+        else
+            echo "  ✗ SOLVER ERROR (exit code: $EXIT_CODE)"
+            # Try to extract error message from log
+            ERROR_MSG=$(grep -m 1 "what():" "$TEMP_LOG" | sed 's/.*what():  //' || echo "Unknown error")
+            echo "     Error: $ERROR_MSG"
+            echo "$FILENAME,0,0,SOLVER_ERROR,0,0,0" >> "$OUTPUT_CSV"
+        fi
+        # Clean up any partial result file
+        rm -f "$RESULTS_DIR/easy_solver_single_result.csv"
     fi
     
+    rm -f "$TEMP_LOG"
     echo ""
 done
 
 echo "=== All Tests Complete ==="
 echo "Results saved to: $OUTPUT_CSV"
 echo ""
-echo "Summary:"
+
+# Count results by status
+TOTAL=$(tail -n +2 "$OUTPUT_CSV" | wc -l | tr -d ' ')
+SUCCESS=$(tail -n +2 "$OUTPUT_CSV" | grep -c "Feasible\|Infeasible" || echo "0")
+ERRORS=$(tail -n +2 "$OUTPUT_CSV" | grep -c "ERROR\|TIMEOUT\|SOLVER_ERROR" || echo "0")
+
+echo "Summary Statistics:"
+echo "  Total files:      $TOTAL"
+echo "  Successful:       $SUCCESS"
+echo "  Errors/Timeouts:  $ERRORS"
+echo ""
+
+if [ $ERRORS -gt 0 ]; then
+    echo "Failed files:"
+    tail -n +2 "$OUTPUT_CSV" | grep "ERROR\|TIMEOUT\|SOLVER_ERROR" | cut -d',' -f1 | sed 's/^/  - /'
+    echo ""
+fi
+
+echo "Detailed Results:"
 cat "$OUTPUT_CSV" | column -t -s ','
