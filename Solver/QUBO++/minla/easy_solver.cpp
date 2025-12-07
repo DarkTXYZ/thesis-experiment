@@ -277,11 +277,11 @@ void process_graph(const string& graph_file, ofstream& csv_out)
     
     qubo.simplify_as_binary();
     
-    cout << "Number of variables used: " << qubo.size() << endl;
+    cout << "Number of variables used: " << qubo.var_count() << endl;
     cout << "Solving..." << endl;
     
     qbpp::easy_solver::EasySolver solver(qubo);
-    solver.time_limit(60.0);
+    solver.time_limit(5.0);
     
     auto solution = solver.search();
     
