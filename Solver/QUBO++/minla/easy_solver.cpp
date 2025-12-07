@@ -9,8 +9,10 @@
 #include <chrono>
 #include <cmath>
 #include <algorithm>
+#include <filesystem>
 
 using namespace std;
+namespace fs = std::filesystem;
 
 bool read_graph_file(const string& filename, size_t& n, vector<pair<int, int>>& edges)
 {
@@ -223,66 +225,36 @@ size_t calculate_arrangement_cost(const vector<int>& positions,
     return total_cost;
 }
 
-int main(int argc, char* argv[])
+void process_graph(const string& graph_file, ofstream& csv_out)
 {
-
-    qbpp::license_key("52BEE7-D6C679-46FE86-C73C0D-FD0C56-DCFF58");
-
     size_t n;
     vector<pair<int, int>> edges;
-    string graph_file;
     string graph_type = "unknown";
     
-    if (argc > 1)
+    size_t last_slash = graph_file.find_last_of("/\\");
+    string filename = (last_slash != string::npos) ? graph_file.substr(last_slash + 1) : graph_file;
+    
+    if (filename.find("graph_") == 0)
     {
-        string input_file = argv[1];
+        size_t first_underscore = filename.find('_');
+        size_t last_underscore = filename.find_last_of('_');
         
-        if (input_file.find('/') == string::npos)
+        if (first_underscore != string::npos && last_underscore != string::npos && 
+            first_underscore != last_underscore)
         {
-            graph_file = "processed/" + input_file;
-        }
-        else
-        {
-            graph_file = input_file;
-        }
-        
-        cout << "Reading graph from file: " << graph_file << endl;
-        
-        size_t last_slash = graph_file.find_last_of("/\\");
-        string filename = (last_slash != string::npos) ? graph_file.substr(last_slash + 1) : graph_file;
-        
-        if (filename.find("graph_") == 0)
-        {
-            size_t first_underscore = filename.find('_');
-            size_t last_underscore = filename.find_last_of('_');
-            
-            if (first_underscore != string::npos && last_underscore != string::npos && 
-                first_underscore != last_underscore)
-            {
-                graph_type = filename.substr(first_underscore + 1, last_underscore - first_underscore - 1);
-            }
-        }
-        
-        if (!read_graph_file(graph_file, n, edges))
-        {
-            cerr << "Failed to read graph file. Exiting." << endl;
-            return 1;
+            graph_type = filename.substr(first_underscore + 1, last_underscore - first_underscore - 1);
         }
     }
-    else
+    
+    if (!read_graph_file(graph_file, n, edges))
     {
-        cout << "No graph file provided. Using default graph." << endl;
-        n = 3;
-        edges = {
-            {0, 1},
-            {0, 2}
-        };
-        graph_type = "default";
+        cerr << "Failed to read graph file: " << graph_file << endl;
+        return;
     }
     
     const size_t m = edges.size();
 
-    cout << "=== MINLA Problem ===" << endl;
+    cout << "\n=== Processing: " << filename << " ===" << endl;
     cout << "Graph type: " << graph_type << endl;
     cout << "Vertices: " << n << endl;
     cout << "Edges: " << m << endl;
@@ -305,7 +277,7 @@ int main(int argc, char* argv[])
     
     qubo.simplify_as_binary();
     
-    cout << "\n=== Solving ===" << endl;
+    cout << "Solving..." << endl;
     
     qbpp::easy_solver::EasySolver solver(qubo);
     solver.time_limit(60.0);
@@ -318,18 +290,126 @@ int main(int argc, char* argv[])
     vector<int> positions = extract_positions(solution, x, n);
 
     if (positions.empty()) {
-        cout << "\nNo valid arrangement found in the solution." << endl;
-        return 1;
+        cout << "No valid arrangement found." << endl;
+        csv_out << filename << "," << n << "," << m << ",INVALID,0,0," 
+                << duration.count() << endl;
+        return;
     }
 
     bool is_feasible = is_valid_permutation(positions);
+    size_t arrangement_cost = calculate_arrangement_cost(positions, edges);
     
-    cout << "\n=== Results ===" << endl;
-    cout << "Penalty parameter: " << penalty_param << endl;
     cout << "Feasibility: " << (is_feasible ? "Feasible" : "Infeasible") << endl;
     cout << "Energy: " << solution.energy() << endl;
-    cout << "Calculated arrangement cost: " << calculate_arrangement_cost(positions, edges) << endl;
+    cout << "Arrangement cost: " << arrangement_cost << endl;
     cout << "Time: " << duration.count() << " ms" << endl;
+    
+    // Write to CSV: filename,vertices,edges,feasibility,penalty_param,cost,time_ms
+    csv_out << filename << "," << n << "," << m << "," 
+            << (is_feasible ? "Feasible" : "Infeasible") << ","
+            << penalty_param << "," << arrangement_cost << "," 
+            << duration.count() << endl;
+}
+
+int main(int argc, char* argv[])
+{
+    string processed_dir = "../processed";
+    
+    // Check if a specific file or directory is provided
+    if (argc > 1)
+    {
+        string input_arg = argv[1];
+        
+        // Check if it's a directory
+        if (fs::is_directory(input_arg))
+        {
+            processed_dir = input_arg;
+        }
+        else
+        {
+            // Single file mode
+            string graph_file = input_arg;
+            if (graph_file.find('/') == string::npos)
+            {
+                graph_file = processed_dir + "/" + graph_file;
+            }
+            
+            cout << "Processing single file: " << graph_file << endl;
+            
+            ofstream csv_out("../results/easy_solver_single_result.csv");
+            csv_out << "filename,vertices,edges,feasibility,penalty_param,cost,time_ms" << endl;
+            
+            process_graph(graph_file, csv_out);
+            csv_out.close();
+            
+            return 0;
+        }
+    }
+    
+    // Batch processing mode
+    cout << "=== MINLA Batch Processing ===" << endl;
+    cout << "Processing directory: " << processed_dir << endl;
+    
+    // Get all .txt files from processed directory
+    vector<string> graph_files;
+    
+    try {
+        for (const auto& entry : fs::directory_iterator(processed_dir))
+        {
+            if (entry.is_regular_file() && entry.path().extension() == ".txt")
+            {
+                graph_files.push_back(entry.path().string());
+            }
+        }
+    }
+    catch (const fs::filesystem_error& e)
+    {
+        cerr << "Error accessing directory: " << e.what() << endl;
+        return 1;
+    }
+    
+    if (graph_files.empty())
+    {
+        cout << "No graph files found in " << processed_dir << endl;
+        return 1;
+    }
+    
+    sort(graph_files.begin(), graph_files.end());
+    
+    cout << "Found " << graph_files.size() << " graph files" << endl;
+    
+    // Create results directory if it doesn't exist
+    fs::create_directories("../results");
+    
+    // Open CSV output file with timestamp
+    auto now = chrono::system_clock::now();
+    auto time_t_now = chrono::system_clock::to_time_t(now);
+    stringstream ss;
+    ss << put_time(localtime(&time_t_now), "%Y%m%d_%H%M%S");
+    string timestamp = ss.str();
+    
+    string csv_filename = "../results/easy_solver_results_" + timestamp + ".csv";
+    ofstream csv_out(csv_filename);
+    
+    if (!csv_out.is_open())
+    {
+        cerr << "Failed to create output file: " << csv_filename << endl;
+        return 1;
+    }
+    
+    // Write CSV header
+    csv_out << "filename,vertices,edges,feasibility,penalty_param,cost,time_ms" << endl;
+    
+    // Process each graph file
+    for (const auto& graph_file : graph_files)
+    {
+        process_graph(graph_file, csv_out);
+    }
+    
+    csv_out.close();
+    
+    cout << "\n=== Batch Processing Complete ===" << endl;
+    cout << "Results saved to: " << csv_filename << endl;
     
     return 0;
 }
