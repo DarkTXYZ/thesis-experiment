@@ -68,23 +68,29 @@ bool read_graph_file(const string& filename, size_t& n, vector<pair<int, int>>& 
     return true;
 }
 
-size_t param_for_general_graph(size_t n, size_t m)
+size_t calculate_max_degree(size_t n, const vector<pair<int, int>>& edges)
 {
-    const double naive = m * (n - 1);
-    const double complete = n * (n - 1) * (n + 1) / 6.0;
-    const double k = std::ceil(n + 0.5 - 0.5 * std::sqrt(8.0 * m + 1));
-    const double f = (n - k) * (n - k + 1) / 2.0;
-    const double edges_method = (m - f) * (k - 1) + 
-                                (n - k) * (n * n + (n + 3) * k - 2 * k * k - 1) / 6.0;
+    vector<size_t> degree(n, 0);
     
-    return static_cast<size_t>(std::min({naive, complete, edges_method}));
+    for (const auto& edge : edges)
+    {
+        degree[edge.first]++;
+        degree[edge.second]++;
+    }
+    
+    return *std::max_element(degree.begin(), degree.end());
 }
 
-size_t calculate_penalty_parameter(size_t n, size_t m, const string& graph_type)
+size_t param_for_general_graph(size_t n, const vector<pair<int, int>>& edges)
+{
+    return calculate_max_degree(n, edges);
+}
+
+size_t calculate_penalty_parameter(size_t n, size_t m, const string& graph_type, const vector<pair<int, int>>& edges)
 {
     if (graph_type.find("random") != string::npos)
     {
-        return param_for_general_graph(n, m);
+        return param_for_general_graph(n, edges);
     }
     else if (graph_type == "path")
     {
@@ -104,11 +110,11 @@ size_t calculate_penalty_parameter(size_t n, size_t m, const string& graph_type)
     }
     else if (graph_type == "grid")
     {
-        return param_for_general_graph(n, m);
+        return param_for_general_graph(n, edges);
     }
     else
     {
-        return param_for_general_graph(n, m);
+        return param_for_general_graph(n, edges);
     }
 }
 
@@ -262,9 +268,9 @@ void process_graph(const string& graph_file, ofstream& csv_out)
     auto start_time = chrono::high_resolution_clock::now();
     
     const size_t k = n;
-    const size_t penalty_param = calculate_penalty_parameter(n, m, graph_type);
+    const size_t penalty_param = calculate_penalty_parameter(n, m, graph_type, edges);
     
-    cout << "Penalty parameter: " << penalty_param << endl;
+    cout << "Penalty parameter (max degree): " << penalty_param << endl;
     
     auto x = qbpp::var("x", n, k);
     
