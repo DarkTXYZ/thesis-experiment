@@ -59,12 +59,12 @@ def write_graph_file(filepath, n, edges):
 
 def main():
     # Configuration
-    vertex_counts = [200, 300]
+    vertex_counts = [5,7,9,11,13,15]
     densities = [0.5]
     
     # Get script directory and create processed folder
     script_dir = Path(__file__).parent
-    processed_dir = script_dir / "processed"
+    processed_dir = script_dir / "small_graph"
     processed_dir.mkdir(exist_ok=True)
     
     print("Generating random connected graphs")
