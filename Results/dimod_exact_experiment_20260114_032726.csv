@@ -1,0 +1,15 @@
+graph_name,num_vertices,num_edges,penalty_mode,mu_thermometer,mu_bijective,energy,minla_cost,is_feasible
+exact_n4_id6,4,3,exact,9,9,4.0,4,True
+exact_n4_id6,4,3,lucas,4,4,4.0,4,True
+exact_n4_id1,4,4,exact,10,10,5.0,5,True
+exact_n4_id1,4,4,lucas,4,4,5.0,5,True
+exact_n3_id0,3,2,exact,5,5,2.0,2,True
+exact_n3_id0,3,2,lucas,3,3,2.0,2,True
+exact_n4_id4,4,3,exact,9,9,3.0,3,True
+exact_n4_id4,4,3,lucas,3,3,3.0,3,True
+exact_n4_id5,4,4,exact,10,10,6.0,6,True
+exact_n4_id5,4,4,lucas,3,3,6.0,6,True
+exact_n4_id3,4,5,exact,11,11,7.0,7,True
+exact_n4_id3,4,5,lucas,4,4,7.0,7,True
+exact_n3_id2,3,3,exact,6,6,4.0,4,True
+exact_n3_id2,3,3,lucas,3,3,4.0,4,True
