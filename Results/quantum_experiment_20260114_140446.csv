@@ -1,7 +1,0 @@
-solver_name,graph_name,num_vertices,num_edges,penalty_mode,mu_thermometer,mu_bijective,num_reads,energy,minla_cost,is_feasible,solve_time
-OpenJij,quantum_n10,10,18,exact,109,109,100,511.0,,False,7.2386250495910645
-QWaveSampler,quantum_n10,10,18,exact,109,109,100,50.0,50,True,5.824717998504639
-SimulatedBifurcation,quantum_n10,10,18,exact,109,109,100,50,50,True,1.0729341506958008
-OpenJij,quantum_n10,10,18,lucas,7,7,100,40.0,40,True,7.317644119262695
-QWaveSampler,quantum_n10,10,18,lucas,7,7,100,37.0,37,True,5.703246116638184
-SimulatedBifurcation,quantum_n10,10,18,lucas,7,7,100,37,37,True,0.993798017501831
