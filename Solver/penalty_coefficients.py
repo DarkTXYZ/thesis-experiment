@@ -22,7 +22,7 @@ def calculate_upper_obj_bound(G: nx.Graph):
             number_of_edges_remaining = 0
             edge_length -= 1
     
-    print(f"\tUpper Bound Calculation: naive={naive}, complete={complete}, edges={edges}")
+    # print(f"\tUpper Bound Calculation: naive={naive}, complete={complete}, edges={edges}")
     
     return int(min(naive, complete,edges)) + 1
 
@@ -79,6 +79,8 @@ def calculate_lucas_bound(G: nx.Graph):
     
     mu_thermometer = delta + 1
     mu_bijective = delta + 1
+    
+    # print(f"\tLucas Bound Calculation: delta={delta}")
     
     return mu_thermometer, mu_bijective
     

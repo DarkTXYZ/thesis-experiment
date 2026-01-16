@@ -4,6 +4,7 @@ import random
 import json
 import os
 import sys
+import pickle
 from pathlib import Path
 
 # Add parent directories to path for imports
@@ -45,117 +46,149 @@ def calculate_minla_baseline(graph: nx.Graph) -> dict:
     }
 
 
-def generate_unique_graphs(num_vertices_list: list, seed: int) -> list:
+def generate_connected_random_graph(n: int, density: float, max_attempts: int = 1000) -> nx.Graph:
     """
-    Generate one unique random graph for each vertex count in the list.
-    Returns list of (graph, name) tuples.
+    Generate a connected random graph with n vertices and approximate edge density.
     """
-    random.seed(seed)
-    np.random.seed(seed)
+    for _ in range(max_attempts):
+        G = nx.gnp_random_graph(n, density)
+        if nx.is_connected(G):
+            return G
     
-    graphs = []
+    # Fallback: connect components
+    G = nx.gnp_random_graph(n, density)
+    while not nx.is_connected(G):
+        components = list(nx.connected_components(G))
+        comp1 = random.choice(list(components[0]))
+        comp2 = random.choice(list(components[1]))
+        G.add_edge(comp1, comp2)
+    return G
+
+
+def generate_graphs_for_vertex_count(n: int, num_graphs: int, density: float, seed: int) -> list:
+    """
+    Generate multiple unique random graphs for a given vertex count.
+    Returns list of graphs with their baseline results.
+    """
+    graphs_data = []
     
-    for n in num_vertices_list:
-        attempts = 0
-        max_attempts = 1000
+    for i in range(num_graphs):
+        # Set seed for reproducibility
+        graph_seed = seed + n * 1000 + i
+        random.seed(graph_seed)
+        np.random.seed(graph_seed)
         
-        while attempts < max_attempts:
-            attempts += 1
-            
-            # Random density between 0.3 and 0.8
-            density = random.uniform(0.3, 0.8)
-            
-            # Generate random graph
-            graph = nx.erdos_renyi_graph(n, density, seed=seed + n + attempts)
-            
-            # Skip disconnected graphs
-            if not nx.is_connected(graph):
-                continue
-            
-            # Found a connected graph
-            graph_name = f"quantum_n{n}"
-            graphs.append((graph, graph_name))
-            break
-    
-    return graphs
-
-
-def save_graphs_with_minla(graphs: list, output_dir: str):
-    """
-    Save graphs and their MinLA costs to files.
-    Creates:
-    - Individual graph files (.edgelist) - NetworkX compatible
-    - Summary JSON file with all results
-    """
-    os.makedirs(output_dir, exist_ok=True)
-    
-    results = []
-    
-    for graph, name in graphs:
-        n = graph.number_of_nodes()
-        m = graph.number_of_edges()
+        # Generate connected random graph
+        graph = generate_connected_random_graph(n, density)
         
         # Calculate MinLA using baseline algorithms
         baseline_results = calculate_minla_baseline(graph)
         
-        # Save graph as edge list (NetworkX compatible format)
-        graph_file = os.path.join(output_dir, f"{name}.edgelist")
-        nx.write_edgelist(graph, graph_file, data=False)
-        
-        # Store result
-        result = {
-            'name': name,
-            'num_vertices': n,
-            'num_edges': m,
+        graph_data = {
+            'id': i,
+            'num_edges': graph.number_of_edges(),
+            'edges': list(graph.edges()),
             'spectral_cost': baseline_results['spectral_cost'],
             'successive_augmentation_cost': baseline_results['successive_augmentation_cost'],
             'successive_augmentation_method': baseline_results['successive_augmentation_method'],
             'local_search_cost': baseline_results['local_search_cost'],
-            'best_cost': baseline_results['best_cost'],
-            'edges': [list(e) for e in graph.edges()]
+            'best_cost': baseline_results['best_cost']
         }
-        results.append(result)
+        graphs_data.append(graph_data)
         
-        print(f"{name}: n={n}, m={m}")
-        print(f"  Spectral: {baseline_results['spectral_cost']}, "
-              f"SA ({baseline_results['successive_augmentation_method']}): {baseline_results['successive_augmentation_cost']}, "
-              f"Local Search: {baseline_results['local_search_cost']}, "
-              f"Best: {baseline_results['best_cost']}")
+        if (i + 1) % 10 == 0:
+            print(f"    Generated {i + 1}/{num_graphs} graphs")
+    
+    return graphs_data
+
+
+def save_graphs_to_pickle(num_vertices_list: list, num_graphs: int, density: float, seed: int, output_dir: str):
+    """
+    Generate and save graphs to pickle files.
+    Creates one pickle file per vertex count containing all graphs.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+    
+    all_results = []
+    
+    for n in num_vertices_list:
+        print(f"\nGenerating {num_graphs} graphs with {n} vertices...")
+        
+        graphs_data = generate_graphs_for_vertex_count(n, num_graphs, density, seed)
+        
+        # Create data structure for pickle file
+        data = {
+            'num_vertices': n,
+            'density': density,
+            'num_graphs': num_graphs,
+            'seed': seed,
+            'graphs': graphs_data
+        }
+        
+        # Save to pickle file
+        filename = f"quantum_n{n}.pkl"
+        filepath = os.path.join(output_dir, filename)
+        with open(filepath, 'wb') as f:
+            pickle.dump(data, f)
+        
+        # Calculate statistics
+        avg_edges = sum(g['num_edges'] for g in graphs_data) / len(graphs_data)
+        avg_best_cost = sum(g['best_cost'] for g in graphs_data) / len(graphs_data)
+        
+        print(f"  Saved to {filename}")
+        print(f"  Avg edges: {avg_edges:.1f}, Avg best cost: {avg_best_cost:.1f}")
+        
+        # Store summary for JSON
+        result = {
+            'name': f"quantum_n{n}",
+            'num_vertices': n,
+            'num_graphs': num_graphs,
+            'density': density,
+            'avg_edges': avg_edges,
+            'avg_best_cost': avg_best_cost
+        }
+        all_results.append(result)
     
     # Save summary JSON
     summary_file = os.path.join(output_dir, "minla_summary.json")
     with open(summary_file, 'w') as f:
-        json.dump(results, f, indent=2)
+        json.dump(all_results, f, indent=2)
     
-    print(f"\nSaved {len(graphs)} graphs to {output_dir}")
-    print(f"Summary saved to {summary_file}")
+    print(f"\nSummary saved to {summary_file}")
     
-    return results
+    return all_results
 
 
-def load_graph(filepath: str) -> nx.Graph:
-    """Load a graph from .edgelist file."""
-    return nx.read_edgelist(filepath, nodetype=int)
+def load_graphs(filepath: str) -> dict:
+    """Load graphs from pickle file."""
+    with open(filepath, 'rb') as f:
+        return pickle.load(f)
 
 
 def main():
     # Configuration
     seed = 42
-    num_vertices_list = [5, 7, 10, 12]
+    num_vertices_list = [5, 8, 11, 13, 15]
+    num_graphs = 50  # Number of graphs per vertex count
+    density = 0.5  # Edge density
     
     output_dir = os.path.dirname(os.path.abspath(__file__))
     
-    print(f"Generating graphs with {num_vertices_list} vertices (seed={seed})")
-    print("-" * 50)
+    print("=" * 60)
+    print("Quantum Dataset Generator")
+    print("=" * 60)
+    print(f"Vertex counts: {num_vertices_list}")
+    print(f"Graphs per size: {num_graphs}")
+    print(f"Edge density: {density}")
+    print(f"Seed: {seed}")
+    print("=" * 60)
     
-    # Generate unique graphs
-    graphs = generate_unique_graphs(num_vertices_list, seed)
+    # Generate and save graphs
+    results = save_graphs_to_pickle(num_vertices_list, num_graphs, density, seed, output_dir)
     
-    # Save graphs and calculate MinLA
-    results = save_graphs_with_minla(graphs, output_dir)
-    
-    print("-" * 50)
+    print("\n" + "=" * 60)
     print("Done!")
+    print("=" * 60)
 
 
 if __name__ == "__main__":
