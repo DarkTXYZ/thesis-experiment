@@ -1,6 +1,163 @@
 [
   {
-    "name": "exact_n3_id0",
+    "name": "c3",
+    "num_vertices": 3,
+    "num_edges": 3,
+    "minla_cost": 4,
+    "best_ordering": [
+      0,
+      1,
+      2
+    ],
+    "edges": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        1,
+        2
+      ]
+    ]
+  },
+  {
+    "name": "c4",
+    "num_vertices": 4,
+    "num_edges": 4,
+    "minla_cost": 6,
+    "best_ordering": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "edges": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        3
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        3
+      ]
+    ]
+  },
+  {
+    "name": "g01",
+    "num_vertices": 4,
+    "num_edges": 4,
+    "minla_cost": 5,
+    "best_ordering": [
+      0,
+      2,
+      1,
+      3
+    ],
+    "edges": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        1,
+        3
+      ]
+    ]
+  },
+  {
+    "name": "g02",
+    "num_vertices": 4,
+    "num_edges": 5,
+    "minla_cost": 7,
+    "best_ordering": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "edges": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        2,
+        3
+      ]
+    ]
+  },
+  {
+    "name": "k4",
+    "num_vertices": 4,
+    "num_edges": 6,
+    "minla_cost": 10,
+    "best_ordering": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "edges": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        0,
+        3
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        2,
+        3
+      ]
+    ]
+  },
+  {
+    "name": "p3",
     "num_vertices": 3,
     "num_edges": 2,
     "minla_cost": 2,
@@ -21,126 +178,11 @@
     ]
   },
   {
-    "name": "exact_n4_id1",
-    "num_vertices": 4,
-    "num_edges": 4,
-    "minla_cost": 5,
-    "best_ordering": [
-      0,
-      1,
-      2,
-      3
-    ],
-    "edges": [
-      [
-        0,
-        1
-      ],
-      [
-        1,
-        2
-      ],
-      [
-        1,
-        3
-      ],
-      [
-        2,
-        3
-      ]
-    ]
-  },
-  {
-    "name": "exact_n3_id2",
-    "num_vertices": 3,
-    "num_edges": 3,
-    "minla_cost": 4,
-    "best_ordering": [
-      0,
-      1,
-      2
-    ],
-    "edges": [
-      [
-        0,
-        1
-      ],
-      [
-        0,
-        2
-      ],
-      [
-        1,
-        2
-      ]
-    ]
-  },
-  {
-    "name": "exact_n4_id3",
-    "num_vertices": 4,
-    "num_edges": 5,
-    "minla_cost": 7,
-    "best_ordering": [
-      1,
-      0,
-      3,
-      2
-    ],
-    "edges": [
-      [
-        0,
-        1
-      ],
-      [
-        0,
-        2
-      ],
-      [
-        0,
-        3
-      ],
-      [
-        1,
-        3
-      ],
-      [
-        2,
-        3
-      ]
-    ]
-  },
-  {
-    "name": "exact_n4_id4",
+    "name": "p4",
     "num_vertices": 4,
     "num_edges": 3,
     "minla_cost": 3,
     "best_ordering": [
-      1,
-      0,
-      3,
-      2
-    ],
-    "edges": [
-      [
-        0,
-        1
-      ],
-      [
-        0,
-        3
-      ],
-      [
-        2,
-        3
-      ]
-    ]
-  },
-  {
-    "name": "exact_n4_id5",
-    "num_vertices": 4,
-    "num_edges": 4,
-    "minla_cost": 6,
-    "best_ordering": [
       0,
       1,
       2,
@@ -152,12 +194,8 @@
         1
       ],
       [
-        0,
-        2
-      ],
-      [
         1,
-        3
+        2
       ],
       [
         2,
@@ -166,27 +204,27 @@
     ]
   },
   {
-    "name": "exact_n4_id6",
+    "name": "s4",
     "num_vertices": 4,
     "num_edges": 3,
     "minla_cost": 4,
     "best_ordering": [
-      0,
       1,
+      0,
       2,
       3
     ],
     "edges": [
       [
         0,
+        1
+      ],
+      [
+        0,
         2
       ],
       [
-        1,
-        2
-      ],
-      [
-        2,
+        0,
         3
       ]
     ]
