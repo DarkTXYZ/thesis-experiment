@@ -1,11 +1,11 @@
 [
   {
-    "name": "quantum_n5",
-    "num_vertices": 5,
+    "name": "quantum_n6",
+    "num_vertices": 6,
     "num_graphs": 50,
     "density": 0.5,
-    "avg_edges": 6.190476190476191,
-    "avg_best_cost": 9.571428571428571
+    "avg_edges": 7.78,
+    "avg_best_cost": 12.52
   },
   {
     "name": "quantum_n8",
