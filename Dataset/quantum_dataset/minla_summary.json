@@ -4,16 +4,16 @@
     "num_vertices": 5,
     "num_graphs": 50,
     "density": 0.5,
-    "avg_edges": 5.78,
-    "avg_best_cost": 8.36
+    "avg_edges": 6.190476190476191,
+    "avg_best_cost": 9.571428571428571
   },
   {
     "name": "quantum_n8",
     "num_vertices": 8,
     "num_graphs": 50,
     "density": 0.5,
-    "avg_edges": 14.46,
-    "avg_best_cost": 29.98
+    "avg_edges": 14.44,
+    "avg_best_cost": 29.86
   },
   {
     "name": "quantum_n11",

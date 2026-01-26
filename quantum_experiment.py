@@ -91,6 +91,15 @@ class AggregatedResult:
 
 
 @dataclass
+class SolverTimeSummary:
+    """Summary of total time per solver."""
+    solver_name: str
+    total_time: float
+    num_graphs_solved: int
+    avg_time_per_graph: float
+
+
+@dataclass
 class Metrics:
     """Calculated metrics for experiment results."""
     feasibility_rate: float
@@ -107,12 +116,12 @@ class Metrics:
 CONFIG = ExperimentConfig(
     vertex_counts=[5, 8, 11, 13, 15],
     penalty_methods=['exact', 'lucas'],
-    num_reads=100,
+    num_reads=1000,
     seed=42,
     use_openjij=True,
-    use_qwavesampler=False,
-    use_simulated_bifurcation=False,
-    success_gap_threshold=0.1,
+    use_qwavesampler=True,
+    use_simulated_bifurcation=True,
+    success_gap_threshold=0.05,
     verbose=True
 )
 
@@ -288,6 +297,20 @@ def log_metrics(metrics: Metrics, num_graphs: int, total_time: float) -> None:
     tqdm.write(f"      Total time: {total_time:.2f}s")
 
 
+def log_solver_time_summary(solver_times: dict[str, dict]) -> None:
+    """Log total time summary for each solver."""
+    print("\n" + "=" * 60)
+    print("SOLVER TIME SUMMARY")
+    print("=" * 60)
+    for solver_name in sorted(solver_times.keys()):
+        data = solver_times[solver_name]
+        print(f"{solver_name}:")
+        print(f"  Total time: {data['total_time']:.2f}s")
+        print(f"  Graphs solved: {data['num_graphs']}")
+        print(f"  Avg time per graph: {data['avg_time']:.4f}s")
+    print("=" * 60)
+
+
 def save_results_to_csv(
     results: list,
     filepath: str,
@@ -326,6 +349,7 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
     
     aggregated_results: list[AggregatedResult] = []
     detailed_results: list[DetailedResult] = []
+    solver_times: dict[str, dict] = {name: {'total_time': 0.0, 'num_graphs': 0} for name in solvers.keys()}
     
     total_configs = len(config.vertex_counts) * len(config.penalty_methods) * len(solvers)
     pbar_configs = tqdm(total=total_configs, desc="Configurations", position=0)
@@ -337,9 +361,9 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
             continue
         
         dataset = load_dataset(dataset_path)
-        num_graphs = dataset['num_graphs']
         density = dataset['density']
         graphs_data = dataset['graphs']
+        num_graphs = len(graphs_data)  # Use actual number of graphs in dataset
         
         if config.verbose:
             tqdm.write(f"\n{'='*60}")
@@ -370,6 +394,10 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
                     best_costs.append(best_cost)
                     total_time += detailed.solve_time
                     detailed_results.append(detailed)
+                    
+                    # Track solver time
+                    solver_times[solver_name]['total_time'] += detailed.solve_time
+                    solver_times[solver_name]['num_graphs'] += 1
                 
                 metrics = calculate_metrics(graph_results, best_costs, config.success_gap_threshold)
                 
@@ -395,6 +423,17 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
     
     pbar_configs.close()
     
+    # Calculate average time per graph for each solver
+    for solver_name in solver_times:
+        num_graphs = solver_times[solver_name]['num_graphs']
+        solver_times[solver_name]['avg_time'] = (
+            solver_times[solver_name]['total_time'] / num_graphs if num_graphs > 0 else 0.0
+        )
+    
+    # Log solver time summary
+    if config.verbose:
+        log_solver_time_summary(solver_times)
+    
     # Save results
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     
@@ -419,6 +458,23 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
         save_results_to_csv(detailed_results, detail_path, detail_fields)
         if config.verbose:
             print(f"Detailed results saved to: {detail_path}")
+    
+    # Save solver time summary
+    if solver_times:
+        time_summary_results = [
+            SolverTimeSummary(
+                solver_name=name,
+                total_time=data['total_time'],
+                num_graphs_solved=data['num_graphs'],
+                avg_time_per_graph=data['avg_time']
+            )
+            for name, data in solver_times.items()
+        ]
+        time_summary_path = os.path.join(results_dir, f'quantum_experiment_solver_times_{timestamp}.csv')
+        time_summary_fields = ['solver_name', 'total_time', 'num_graphs_solved', 'avg_time_per_graph']
+        save_results_to_csv(time_summary_results, time_summary_path, time_summary_fields)
+        if config.verbose:
+            print(f"Solver time summary saved to: {time_summary_path}")
     
     return aggregated_results, detailed_results
 

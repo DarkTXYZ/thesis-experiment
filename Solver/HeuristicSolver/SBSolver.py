@@ -3,7 +3,6 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from solver_class import BaseSolver, SolverResult
-from qubolite import qubo, solving
 from pyqubo import Array
 import networkx as nx
 import numpy as np
@@ -103,7 +102,8 @@ class SimulatedBifurcationSolver(BaseSolver):
                     heated=self.heated,
                     timeout=self.timeout,
                     max_steps=self.max_iter,
-                    best_only=True
+                    best_only=True,
+                    verbose=False
                    )
         
         solution = results[0].numpy().reshape((n,n))

@@ -65,21 +65,44 @@ def generate_connected_random_graph(n: int, density: float, max_attempts: int = 
     return G
 
 
+def is_isomorphic_to_any(graph: nx.Graph, graph_list: list[nx.Graph]) -> bool:
+    """
+    Check if graph is isomorphic to any graph in the list.
+    """
+    for existing_graph in graph_list:
+        if nx.is_isomorphic(graph, existing_graph):
+            return True
+    return False
+
+
 def generate_graphs_for_vertex_count(n: int, num_graphs: int, density: float, seed: int) -> list:
     """
-    Generate multiple unique random graphs for a given vertex count.
+    Generate multiple unique non-isomorphic random graphs for a given vertex count.
     Returns list of graphs with their baseline results.
     """
     graphs_data = []
+    unique_graphs = []  # Store nx.Graph objects to check isomorphism
     
-    for i in range(num_graphs):
+    i = 0
+    attempts = 0
+    max_attempts = num_graphs * 100  # Prevent infinite loops
+    
+    while i < num_graphs and attempts < max_attempts:
         # Set seed for reproducibility
-        graph_seed = seed + n * 1000 + i
+        graph_seed = seed + n * 1000 + attempts
         random.seed(graph_seed)
         np.random.seed(graph_seed)
         
         # Generate connected random graph
         graph = generate_connected_random_graph(n, density)
+        
+        # Check if isomorphic to any existing graph
+        if is_isomorphic_to_any(graph, unique_graphs):
+            attempts += 1
+            continue
+        
+        # Graph is unique, add it to the list
+        unique_graphs.append(graph)
         
         # Calculate MinLA using baseline algorithms
         baseline_results = calculate_minla_baseline(graph)
@@ -96,8 +119,14 @@ def generate_graphs_for_vertex_count(n: int, num_graphs: int, density: float, se
         }
         graphs_data.append(graph_data)
         
-        if (i + 1) % 10 == 0:
-            print(f"    Generated {i + 1}/{num_graphs} graphs")
+        i += 1
+        attempts += 1
+        
+        if i % 10 == 0:
+            print(f"    Generated {i}/{num_graphs} unique graphs (attempts: {attempts})")
+    
+    if i < num_graphs:
+        print(f"    WARNING: Only generated {i} unique graphs out of {num_graphs} requested after {attempts} attempts")
     
     return graphs_data
 
@@ -136,6 +165,7 @@ def save_graphs_to_pickle(num_vertices_list: list, num_graphs: int, density: flo
         avg_best_cost = sum(g['best_cost'] for g in graphs_data) / len(graphs_data)
         
         print(f"  Saved to {filename}")
+        print(f"  Total unique graphs: {len(graphs_data)}")
         print(f"  Avg edges: {avg_edges:.1f}, Avg best cost: {avg_best_cost:.1f}")
         
         # Store summary for JSON
