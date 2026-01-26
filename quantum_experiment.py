@@ -2,10 +2,13 @@ import os
 import csv
 import time
 import pickle
-import networkx as nx
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Optional
+
+import networkx as nx
 from tqdm import tqdm
+
 from Solver.HeuristicSolver.OpenJijSolver import OpenJijSolver
 from Solver.HeuristicSolver.QWSamplerSolver import QWaveSamplerSolver
 from Solver.HeuristicSolver.SBSolver import SimulatedBifurcationSolver
@@ -14,18 +17,18 @@ from Utils.min_lin_arrangement import calculate_min_linear_arrangement
 
 
 # =============================================================================
-# CONFIGURATION
+# DATA CLASSES
 # =============================================================================
 @dataclass
 class ExperimentConfig:
     """Configuration for the quantum experiment."""
     
     # Dataset settings
-    vertex_counts: list = field(default_factory=lambda: [5, 8, 11, 13, 15])
+    vertex_counts: list[int] = field(default_factory=lambda: [5, 8, 11, 13, 15])
     dataset_dir: str = "Dataset/quantum_dataset"
     
     # Solver settings
-    penalty_methods: list = field(default_factory=lambda: ['exact', 'lucas'])
+    penalty_methods: list[str] = field(default_factory=lambda: ['exact', 'lucas'])
     num_reads: int = 1000
     seed: int = 42
     
@@ -35,7 +38,7 @@ class ExperimentConfig:
     use_simulated_bifurcation: bool = True
     
     # Success criteria
-    success_gap_threshold: float = 0.0  # Success if relative gap <= this value (0.0 = exact match, 0.1 = 10% gap)
+    success_gap_threshold: float = 0.0  # 0.0 = exact match, 0.1 = 10% gap allowed
     
     # Output settings
     results_dir: str = "Results"
@@ -46,7 +49,61 @@ class ExperimentConfig:
     verbose: bool = True
 
 
-# Default configuration - MODIFY THIS TO CHANGE EXPERIMENT PARAMETERS
+@dataclass
+class GraphResult:
+    """Result for a single graph."""
+    minla_cost: Optional[int]
+    is_feasible: bool
+
+
+@dataclass
+class DetailedResult:
+    """Detailed result for a single graph solve."""
+    solver_name: str
+    num_vertices: int
+    graph_id: int
+    num_edges: int
+    penalty_mode: str
+    mu_thermometer: float
+    mu_bijective: float
+    energy: float
+    minla_cost: Optional[int]
+    best_known_cost: int
+    is_feasible: bool
+    solve_time: float
+
+
+@dataclass
+class AggregatedResult:
+    """Aggregated result for a dataset configuration."""
+    solver_name: str
+    num_vertices: int
+    num_graphs: int
+    density: float
+    penalty_mode: str
+    feasibility_rate: float
+    success_rate: float
+    dominance_score: float
+    avg_relative_gap: float
+    num_feasible: int
+    num_success: int
+    total_time: float
+
+
+@dataclass
+class Metrics:
+    """Calculated metrics for experiment results."""
+    feasibility_rate: float
+    success_rate: float
+    dominance_score: float
+    avg_relative_gap: float
+    num_feasible: int
+    num_success: int
+
+
+# =============================================================================
+# DEFAULT CONFIGURATION
+# =============================================================================
 CONFIG = ExperimentConfig(
     vertex_counts=[5, 8, 11, 13, 15],
     penalty_methods=['exact', 'lucas'],
@@ -55,19 +112,21 @@ CONFIG = ExperimentConfig(
     use_openjij=True,
     use_qwavesampler=False,
     use_simulated_bifurcation=False,
-    success_gap_threshold=0.05,  # 5% gap allowed for success
+    success_gap_threshold=0.1,
     verbose=True
 )
+
+
 # =============================================================================
-
-
+# HELPER FUNCTIONS
+# =============================================================================
 def load_dataset(filepath: str) -> dict:
     """Load a dataset from pickle file."""
     with open(filepath, 'rb') as f:
         return pickle.load(f)
 
 
-def build_graph_from_edges(edges: list, num_vertices: int) -> nx.Graph:
+def build_graph(edges: list[tuple[int, int]], num_vertices: int) -> nx.Graph:
     """Build a NetworkX graph from edge list."""
     G = nx.Graph()
     G.add_nodes_from(range(num_vertices))
@@ -75,71 +134,71 @@ def build_graph_from_edges(edges: list, num_vertices: int) -> nx.Graph:
     return G
 
 
-def calculate_metrics(results: list, best_costs: list, success_gap_threshold: float = 0.0) -> dict:
+def get_penalty_bounds(graph: nx.Graph, penalty_mode: str) -> tuple[float, float]:
+    """Get penalty bounds based on the penalty mode."""
+    if penalty_mode == 'exact':
+        return calculate_exact_bound(graph)
+    return calculate_lucas_bound(graph)
+
+
+def calculate_relative_gap(solver_cost: int, best_cost: int) -> Optional[float]:
+    """Calculate relative gap between solver cost and best known cost."""
+    if best_cost <= 0:
+        return None
+    return (solver_cost - best_cost) / best_cost
+
+
+def calculate_metrics(
+    results: list[GraphResult], 
+    best_costs: list[int], 
+    success_gap_threshold: float = 0.0
+) -> Metrics:
     """
     Calculate experiment metrics.
     
     Args:
-        results: List of (minla_cost, is_feasible) tuples
+        results: List of GraphResult objects
         best_costs: List of best known costs from baseline
-        success_gap_threshold: Maximum relative gap to count as success (0.0 = exact match, 0.1 = 10% gap)
+        success_gap_threshold: Maximum relative gap to count as success
     
     Returns:
-        Dictionary with feasibility_rate, success_rate, dominance_score, avg_relative_gap
+        Metrics dataclass with calculated values
     """
     num_graphs = len(results)
     
-    # Feasibility rate
-    num_feasible = sum(1 for _, is_feasible in results if is_feasible)
-    feasibility_rate = num_feasible / num_graphs
-    
-    # Success rate (feasible and relative gap <= threshold)
+    # Count feasible and successful solutions
+    num_feasible = 0
     num_success = 0
-    for (minla_cost, is_feasible), best_cost in zip(results, best_costs):
-        if is_feasible and minla_cost is not None and best_cost > 0:
-            relative_gap = (minla_cost - best_cost) / best_cost
-            if relative_gap <= success_gap_threshold:
-                num_success += 1
-    success_rate = num_success / num_graphs
+    num_dominant = 0
+    relative_gaps: list[float] = []
     
-    # Dominance score (how many times solver beats or matches baseline, among feasible)
-    num_dominant = sum(
-        1 for (minla_cost, is_feasible), best_cost in zip(results, best_costs)
-        if is_feasible and minla_cost is not None and minla_cost <= best_cost
-    )
-    dominance_score = num_dominant / num_feasible if num_feasible > 0 else 0.0
-    
-    # Average relative gap: (solver_cost - best_cost) / best_cost, only for feasible solutions
-    relative_gaps = []
-    for (minla_cost, is_feasible), best_cost in zip(results, best_costs):
-        if is_feasible and minla_cost is not None and best_cost > 0:
-            gap = (minla_cost - best_cost) / best_cost
+    for result, best_cost in zip(results, best_costs):
+        if not result.is_feasible or result.minla_cost is None:
+            continue
+            
+        num_feasible += 1
+        
+        if result.minla_cost <= best_cost:
+            num_dominant += 1
+        
+        gap = calculate_relative_gap(result.minla_cost, best_cost)
+        if gap is not None:
             relative_gaps.append(gap)
-    avg_relative_gap = sum(relative_gaps) / len(relative_gaps) if relative_gaps else float('inf')
+            if gap <= success_gap_threshold:
+                num_success += 1
     
-    return {
-        'feasibility_rate': feasibility_rate,
-        'success_rate': success_rate,
-        'dominance_score': dominance_score,
-        'avg_relative_gap': avg_relative_gap,
-        'num_feasible': num_feasible,
-        'num_success': num_success
-    }
+    return Metrics(
+        feasibility_rate=num_feasible / num_graphs,
+        success_rate=num_success / num_graphs,
+        dominance_score=num_dominant / num_feasible if num_feasible > 0 else 0.0,
+        avg_relative_gap=sum(relative_gaps) / len(relative_gaps) if relative_gaps else float('inf'),
+        num_feasible=num_feasible,
+        num_success=num_success
+    )
 
 
-def run_experiment(config: ExperimentConfig = None):
-    """Run quantum experiment on all datasets."""
-    if config is None:
-        config = CONFIG
-    
-    base_dir = os.path.dirname(__file__)
-    dataset_dir = os.path.join(base_dir, config.dataset_dir)
-    results_dir = os.path.join(base_dir, config.results_dir)
-    
-    # Ensure results directory exists
-    os.makedirs(results_dir, exist_ok=True)
-    
-    # Initialize solvers based on configuration
+def init_solvers(config: ExperimentConfig) -> dict[str, object]:
+    """Initialize solvers based on configuration."""
     solvers = {}
     if config.use_openjij:
         solvers['OpenJij'] = OpenJijSolver()
@@ -148,40 +207,135 @@ def run_experiment(config: ExperimentConfig = None):
     if config.use_simulated_bifurcation:
         solvers['SimulatedBifurcation'] = SimulatedBifurcationSolver()
     
+    for solver in solvers.values():
+        solver.configure(seed=config.seed, num_reads=config.num_reads)
+    
+    return solvers
+
+
+def process_single_graph(
+    graph_data: dict,
+    num_vertices: int,
+    solver: object,
+    penalty_mode: str,
+    solver_name: str
+) -> tuple[GraphResult, DetailedResult, float]:
+    """
+    Process a single graph with the given solver.
+    
+    Returns:
+        Tuple of (GraphResult, DetailedResult, solve_time)
+    """
+    graph_id = graph_data['id']
+    edges = graph_data['edges']
+    best_cost = graph_data['best_cost']
+    
+    graph = build_graph(edges, num_vertices)
+    num_edges = graph.number_of_edges()
+    
+    mu_thermo, mu_bijec = get_penalty_bounds(graph, penalty_mode)
+    
+    start_time = time.time()
+    result = solver.solve(graph)
+    solve_time = time.time() - start_time
+    
+    minla_cost = None
+    if result.is_feasible:
+        minla_cost = calculate_min_linear_arrangement(graph, result.ordering)
+    
+    graph_result = GraphResult(minla_cost=minla_cost, is_feasible=result.is_feasible)
+    
+    detailed = DetailedResult(
+        solver_name=solver_name,
+        num_vertices=num_vertices,
+        graph_id=graph_id,
+        num_edges=num_edges,
+        penalty_mode=penalty_mode,
+        mu_thermometer=mu_thermo,
+        mu_bijective=mu_bijec,
+        energy=result.energy,
+        minla_cost=minla_cost,
+        best_known_cost=best_cost,
+        is_feasible=result.is_feasible,
+        solve_time=solve_time
+    )
+    
+    return graph_result, detailed, best_cost
+
+
+def log_config(config: ExperimentConfig, solvers: dict[str, object]) -> None:
+    """Log experiment configuration."""
+    if not config.verbose:
+        return
+    print("=" * 60)
+    print("QUANTUM EXPERIMENT CONFIGURATION")
+    print("=" * 60)
+    print(f"Vertex counts: {config.vertex_counts}")
+    print(f"Penalty methods: {config.penalty_methods}")
+    print(f"Num reads: {config.num_reads}")
+    print(f"Seed: {config.seed}")
+    print(f"Success gap threshold: {config.success_gap_threshold * 100:.1f}%")
+    print(f"Solvers: {list(solvers.keys())}")
+    print("=" * 60)
+
+
+def log_metrics(metrics: Metrics, num_graphs: int, total_time: float) -> None:
+    """Log metrics for a solver run."""
+    tqdm.write(f"      Feasibility: {metrics.feasibility_rate*100:.1f}% ({metrics.num_feasible}/{num_graphs})")
+    tqdm.write(f"      Success rate: {metrics.success_rate*100:.1f}% ({metrics.num_success}/{num_graphs})")
+    tqdm.write(f"      Dominance: {metrics.dominance_score*100:.1f}%")
+    tqdm.write(f"      Avg relative gap: {metrics.avg_relative_gap*100:.2f}%")
+    tqdm.write(f"      Total time: {total_time:.2f}s")
+
+
+def save_results_to_csv(
+    results: list,
+    filepath: str,
+    fieldnames: list[str],
+    is_dataclass: bool = True
+) -> None:
+    """Save results to CSV file."""
+    with open(filepath, 'w', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        if is_dataclass:
+            writer.writerows([vars(r) for r in results])
+        else:
+            writer.writerows(results)
+
+
+# =============================================================================
+# MAIN EXPERIMENT
+# =============================================================================
+def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResult], list[DetailedResult]]:
+    """Run quantum experiment on all datasets."""
+    if config is None:
+        config = CONFIG
+    
+    base_dir = os.path.dirname(__file__)
+    dataset_dir = os.path.join(base_dir, config.dataset_dir)
+    results_dir = os.path.join(base_dir, config.results_dir)
+    os.makedirs(results_dir, exist_ok=True)
+    
+    solvers = init_solvers(config)
     if not solvers:
         print("No solvers enabled. Please enable at least one solver in config.")
         return [], []
     
-    # Configure all solvers with common parameters
-    for solver in solvers.values():
-        solver.configure(seed=config.seed, num_reads=config.num_reads)
+    log_config(config, solvers)
     
-    if config.verbose:
-        print("=" * 60)
-        print("QUANTUM EXPERIMENT CONFIGURATION")
-        print("=" * 60)
-        print(f"Vertex counts: {config.vertex_counts}")
-        print(f"Penalty methods: {config.penalty_methods}")
-        print(f"Num reads: {config.num_reads}")
-        print(f"Seed: {config.seed}")
-        print(f"Solvers: {list(solvers.keys())}")
-        print("=" * 60)
+    aggregated_results: list[AggregatedResult] = []
+    detailed_results: list[DetailedResult] = []
     
-    # Store aggregated results
-    aggregated_results = []
-    detailed_results = []
-    
-    # Calculate total iterations for progress bar
     total_configs = len(config.vertex_counts) * len(config.penalty_methods) * len(solvers)
     pbar_configs = tqdm(total=total_configs, desc="Configurations", position=0)
     
     for n in config.vertex_counts:
-        # Load dataset
         dataset_path = os.path.join(dataset_dir, f'quantum_n{n}.pkl')
         if not os.path.exists(dataset_path):
             print(f"Dataset not found: {dataset_path}")
             continue
-            
+        
         dataset = load_dataset(dataset_path)
         num_graphs = dataset['num_graphs']
         density = dataset['density']
@@ -202,121 +356,69 @@ def run_experiment(config: ExperimentConfig = None):
                 if config.verbose:
                     tqdm.write(f"    Solver: {solver_name}...")
                 
-                # Configure solver with penalty mode
                 solver.configure(penalty_mode=penalty_mode)
                 
-                # Collect results for all graphs in this dataset
-                solver_results = []
-                best_costs = []
-                total_time = 0
+                graph_results: list[GraphResult] = []
+                best_costs: list[int] = []
+                total_time = 0.0
                 
-                for graph_data in tqdm(graphs_data, desc=f"    Graphs", leave=False, position=1):
-                    graph_id = graph_data['id']
-                    edges = graph_data['edges']
-                    best_cost = graph_data['best_cost']
+                for graph_data in tqdm(graphs_data, desc="    Graphs", leave=False, position=1):
+                    result, detailed, best_cost = process_single_graph(
+                        graph_data, n, solver, penalty_mode, solver_name
+                    )
+                    graph_results.append(result)
                     best_costs.append(best_cost)
-                    
-                    # Build graph
-                    graph = build_graph_from_edges(edges, n)
-                    m = graph.number_of_edges()
-                    
-                    # Get penalty values
-                    if penalty_mode == 'exact':
-                        mu_thermo, mu_bijec = calculate_exact_bound(graph)
-                    else:  # lucas
-                        mu_thermo, mu_bijec = calculate_lucas_bound(graph)
-                    
-                    # Solve and measure time
-                    start_time = time.time()
-                    result = solver.solve(graph)
-                    solve_time = time.time() - start_time
-                    total_time += solve_time
-                    
-                    # Calculate MinLA cost only if solution is feasible
-                    if result.is_feasible:
-                        minla_cost = calculate_min_linear_arrangement(graph, result.ordering)
-                    else:
-                        minla_cost = None
-                    
-                    solver_results.append((minla_cost, result.is_feasible))
-                    
-                    # Store detailed result
-                    detailed_results.append({
-                        'solver_name': solver_name,
-                        'num_vertices': n,
-                        'graph_id': graph_id,
-                        'num_edges': m,
-                        'penalty_mode': penalty_mode,
-                        'mu_thermometer': mu_thermo,
-                        'mu_bijective': mu_bijec,
-                        'energy': result.energy,
-                        'minla_cost': minla_cost,
-                        'best_known_cost': best_cost,
-                        'is_feasible': result.is_feasible,
-                        'solve_time': solve_time
-                    })
+                    total_time += detailed.solve_time
+                    detailed_results.append(detailed)
                 
-                # Calculate metrics
-                metrics = calculate_metrics(solver_results, best_costs, config.success_gap_threshold)
+                metrics = calculate_metrics(graph_results, best_costs, config.success_gap_threshold)
                 
-                # Store aggregated result
-                aggregated_results.append({
-                    'solver_name': solver_name,
-                    'num_vertices': n,
-                    'num_graphs': num_graphs,
-                    'density': density,
-                    'penalty_mode': penalty_mode,
-                    'feasibility_rate': metrics['feasibility_rate'],
-                    'success_rate': metrics['success_rate'],
-                    'dominance_score': metrics['dominance_score'],
-                    'avg_relative_gap': metrics['avg_relative_gap'],
-                    'num_feasible': metrics['num_feasible'],
-                    'num_success': metrics['num_success'],
-                    'total_time': total_time
-                })
+                aggregated_results.append(AggregatedResult(
+                    solver_name=solver_name,
+                    num_vertices=n,
+                    num_graphs=num_graphs,
+                    density=density,
+                    penalty_mode=penalty_mode,
+                    feasibility_rate=metrics.feasibility_rate,
+                    success_rate=metrics.success_rate,
+                    dominance_score=metrics.dominance_score,
+                    avg_relative_gap=metrics.avg_relative_gap,
+                    num_feasible=metrics.num_feasible,
+                    num_success=metrics.num_success,
+                    total_time=total_time
+                ))
                 
                 pbar_configs.update(1)
                 
                 if config.verbose:
-                    tqdm.write(f"      Feasibility: {metrics['feasibility_rate']*100:.1f}% ({metrics['num_feasible']}/{num_graphs})")
-                    tqdm.write(f"      Success rate: {metrics['success_rate']*100:.1f}% ({metrics['num_success']}/{num_graphs})")
-                    tqdm.write(f"      Dominance: {metrics['dominance_score']*100:.1f}%")
-                    tqdm.write(f"      Avg relative gap: {metrics['avg_relative_gap']*100:.2f}%")
-                    tqdm.write(f"      Total time: {total_time:.2f}s")
+                    log_metrics(metrics, num_graphs, total_time)
     
     pbar_configs.close()
     
-    # Save aggregated results to CSV
+    # Save results
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     
-    if config.save_aggregated:
-        agg_output_file = os.path.join(results_dir, f'quantum_experiment_aggregated_{timestamp}.csv')
-        agg_fieldnames = ['solver_name', 'num_vertices', 'num_graphs', 'density', 'penalty_mode',
-                          'feasibility_rate', 'success_rate', 'dominance_score', 'avg_relative_gap',
-                          'num_feasible', 'num_success', 'total_time']
-        
-        with open(agg_output_file, 'w', newline='') as f:
-            writer = csv.DictWriter(f, fieldnames=agg_fieldnames)
-            writer.writeheader()
-            writer.writerows(aggregated_results)
-        
+    if config.save_aggregated and aggregated_results:
+        agg_path = os.path.join(results_dir, f'quantum_experiment_aggregated_{timestamp}.csv')
+        agg_fields = [
+            'solver_name', 'num_vertices', 'num_graphs', 'density', 'penalty_mode',
+            'feasibility_rate', 'success_rate', 'dominance_score', 'avg_relative_gap',
+            'num_feasible', 'num_success', 'total_time'
+        ]
+        save_results_to_csv(aggregated_results, agg_path, agg_fields)
         if config.verbose:
-            print(f"\nAggregated results saved to: {agg_output_file}")
+            print(f"\nAggregated results saved to: {agg_path}")
     
-    # Save detailed results to CSV
-    if config.save_detailed:
-        detail_output_file = os.path.join(results_dir, f'quantum_experiment_detailed_{timestamp}.csv')
-        detail_fieldnames = ['solver_name', 'num_vertices', 'graph_id', 'num_edges', 'penalty_mode',
-                             'mu_thermometer', 'mu_bijective', 'energy', 'minla_cost', 
-                             'best_known_cost', 'is_feasible', 'solve_time']
-        
-        with open(detail_output_file, 'w', newline='') as f:
-            writer = csv.DictWriter(f, fieldnames=detail_fieldnames)
-            writer.writeheader()
-            writer.writerows(detailed_results)
-        
+    if config.save_detailed and detailed_results:
+        detail_path = os.path.join(results_dir, f'quantum_experiment_detailed_{timestamp}.csv')
+        detail_fields = [
+            'solver_name', 'num_vertices', 'graph_id', 'num_edges', 'penalty_mode',
+            'mu_thermometer', 'mu_bijective', 'energy', 'minla_cost',
+            'best_known_cost', 'is_feasible', 'solve_time'
+        ]
+        save_results_to_csv(detailed_results, detail_path, detail_fields)
         if config.verbose:
-            print(f"Detailed results saved to: {detail_output_file}")
+            print(f"Detailed results saved to: {detail_path}")
     
     return aggregated_results, detailed_results
 
