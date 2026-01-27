@@ -158,6 +158,79 @@ CONFIG = ExperimentConfig(
 
 
 # =============================================================================
+# CONSTANTS
+# =============================================================================
+# CSV field names
+AGGREGATED_FIELDS = [
+    'solver_name', 'dataset_name', 'num_vertices', 'num_graphs', 'density', 'penalty_mode',
+    'feasibility_rate', 'success_rate', 'dominance_score', 'avg_relative_gap', 'std_relative_gap',
+    'num_feasible', 'num_success', 'total_time'
+]
+
+DETAILED_FIELDS = [
+    'solver_name', 'num_vertices', 'graph_id', 'num_edges', 'penalty_mode',
+    'mu_thermometer', 'mu_bijective', 'energy', 'minla_cost',
+    'best_known_cost', 'is_feasible', 'solve_time'
+]
+
+REAL_WORLD_FIELDS = [
+    'solver_name', 'graph_name', 'num_vertices', 'num_edges', 'penalty_mode',
+    'mu_thermometer', 'mu_bijective', 'is_feasible', 'objective_value',
+    'spectral_cost', 'successive_augmentation_cost', 'local_search_cost',
+    'best_known_cost', 'relative_gap', 'solve_time'
+]
+
+SOLVER_TIME_FIELDS = ['solver_name', 'total_time', 'num_graphs_solved', 'avg_time_per_graph']
+
+
+# =============================================================================
+# HELPER CLASSES
+# =============================================================================
+class SolverTimeTracker:
+    """Track and manage solver execution times."""
+    
+    def __init__(self, solver_names: list[str]):
+        self.times = {
+            name: {'total_time': 0.0, 'num_graphs': 0}
+            for name in solver_names
+        }
+    
+    def add_time(self, solver_name: str, time: float) -> None:
+        """Add execution time for a solver."""
+        self.times[solver_name]['total_time'] += time
+        self.times[solver_name]['num_graphs'] += 1
+    
+    def get_summaries(self) -> list[SolverTimeSummary]:
+        """Get time summaries for all solvers."""
+        summaries = []
+        for solver_name, data in self.times.items():
+            num_graphs = data['num_graphs']
+            avg_time = data['total_time'] / num_graphs if num_graphs > 0 else 0.0
+            summaries.append(SolverTimeSummary(
+                solver_name=solver_name,
+                total_time=data['total_time'],
+                num_graphs_solved=num_graphs,
+                avg_time_per_graph=avg_time
+            ))
+        return summaries
+    
+    def log_summary(self) -> None:
+        """Log time summary for all solvers."""
+        print("\n" + "=" * 60)
+        print("SOLVER TIME SUMMARY")
+        print("=" * 60)
+        for solver_name in sorted(self.times.keys()):
+            data = self.times[solver_name]
+            num_graphs = data['num_graphs']
+            avg_time = data['total_time'] / num_graphs if num_graphs > 0 else 0.0
+            print(f"{solver_name}:")
+            print(f"  Total time: {data['total_time']:.2f}s")
+            print(f"  Graphs solved: {num_graphs}")
+            print(f"  Avg time per graph: {avg_time:.4f}s")
+        print("=" * 60)
+
+
+# =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
 def load_dataset(filepath: str) -> dict:
@@ -364,33 +437,6 @@ def process_real_world_graph(
         relative_gap=relative_gap,
         solve_time=solve_time
     )
-    
-    start_time = time.time()
-    result = solver.solve(graph)
-    solve_time = time.time() - start_time
-    
-    minla_cost = None
-    if result.is_feasible:
-        minla_cost = calculate_min_linear_arrangement(graph, result.ordering)
-    
-    graph_result = GraphResult(minla_cost=minla_cost, is_feasible=result.is_feasible)
-    
-    detailed = DetailedResult(
-        solver_name=solver_name,
-        num_vertices=num_vertices,
-        graph_id=graph_id,
-        num_edges=num_edges,
-        penalty_mode=penalty_mode,
-        mu_thermometer=mu_thermo,
-        mu_bijective=mu_bijec,
-        energy=result.energy,
-        minla_cost=minla_cost,
-        best_known_cost=best_cost,
-        is_feasible=result.is_feasible,
-        solve_time=solve_time
-    )
-    
-    return graph_result, detailed, best_cost
 
 
 def log_config(config: ExperimentConfig, solvers: dict[str, object]) -> None:
@@ -421,20 +467,6 @@ def log_metrics(metrics: Metrics, num_graphs: int, total_time: float) -> None:
     tqdm.write(f"      Total time: {total_time:.2f}s")
 
 
-def log_solver_time_summary(solver_times: dict[str, dict]) -> None:
-    """Log total time summary for each solver."""
-    print("\n" + "=" * 60)
-    print("SOLVER TIME SUMMARY")
-    print("=" * 60)
-    for solver_name in sorted(solver_times.keys()):
-        data = solver_times[solver_name]
-        print(f"{solver_name}:")
-        print(f"  Total time: {data['total_time']:.2f}s")
-        print(f"  Graphs solved: {data['num_graphs']}")
-        print(f"  Avg time per graph: {data['avg_time']:.4f}s")
-    print("=" * 60)
-
-
 def save_results_to_csv(
     results: list,
     filepath: str,
@@ -451,33 +483,15 @@ def save_results_to_csv(
             writer.writerows(results)
 
 
-# =============================================================================
-# MAIN EXPERIMENT
-# =============================================================================
-def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResult], list[DetailedResult], list[RealWorldResult]]:
-    """Run quantum experiment on all datasets."""
-    if config is None:
-        config = CONFIG
+def collect_datasets(config: ExperimentConfig, base_dir: str) -> list[tuple[str, any, str]]:
+    """
+    Collect all datasets to process based on configuration.
     
-    base_dir = os.path.dirname(__file__)
-    dataset_dir = os.path.join(base_dir, config.dataset_dir)
-    results_dir = os.path.join(base_dir, config.results_dir)
-    os.makedirs(results_dir, exist_ok=True)
-    
-    solvers = init_solvers(config)
-    if not solvers:
-        print("No solvers enabled. Please enable at least one solver in config.")
-        return [], [], []
-    
-    log_config(config, solvers)
-    
-    aggregated_results: list[AggregatedResult] = []
-    detailed_results: list[DetailedResult] = []
-    real_world_results: list[RealWorldResult] = []
-    solver_times: dict[str, dict] = {name: {'total_time': 0.0, 'num_graphs': 0} for name in solvers.keys()}
-    
-    # Collect all datasets to process
+    Returns:
+        List of tuples: (dataset_type, vertex_label, dataset_path)
+    """
     datasets_to_process = []
+    dataset_dir = os.path.join(base_dir, config.dataset_dir)
     
     # Add synthetic datasets
     if config.use_synthetic_dataset:
@@ -495,6 +509,133 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
             datasets_to_process.append(('real_world', 'mixed', real_world_path))
         else:
             print(f"Warning: Real-world dataset not found: {real_world_path}")
+    
+    return datasets_to_process
+
+
+def process_synthetic_dataset(
+    graphs_data: list[dict],
+    n: int,
+    solver: object,
+    solver_name: str,
+    penalty_mode: str,
+    config: ExperimentConfig,
+    time_tracker: SolverTimeTracker
+) -> tuple[list[GraphResult], list[DetailedResult], list[int], float]:
+    """
+    Process a synthetic dataset with the given solver.
+    
+    Returns:
+        Tuple of (graph_results, detailed_results, best_costs, total_time)
+    """
+    graph_results: list[GraphResult] = []
+    detailed_results: list[DetailedResult] = []
+    best_costs: list[int] = []
+    total_time = 0.0
+    
+    for graph_data in tqdm(graphs_data, desc="    Graphs", leave=False, position=1):
+        graph_n = graph_data.get('num_vertices', n)
+        
+        result, detailed, best_cost = process_single_graph(
+            graph_data, graph_n, solver, penalty_mode, solver_name
+        )
+        graph_results.append(result)
+        best_costs.append(best_cost)
+        detailed_results.append(detailed)
+        total_time += detailed.solve_time
+        time_tracker.add_time(solver_name, detailed.solve_time)
+    
+    return graph_results, detailed_results, best_costs, total_time
+
+
+def process_realworld_dataset(
+    graphs_data: list[dict],
+    solver: object,
+    solver_name: str,
+    penalty_mode: str,
+    time_tracker: SolverTimeTracker
+) -> tuple[list[RealWorldResult], float]:
+    """
+    Process a real-world dataset with the given solver.
+    
+    Returns:
+        Tuple of (real_world_results, total_time)
+    """
+    real_world_results: list[RealWorldResult] = []
+    total_time = 0.0
+    
+    for graph_data in tqdm(graphs_data, desc="    Graphs", leave=False, position=1):
+        result = process_real_world_graph(graph_data, solver, penalty_mode, solver_name)
+        real_world_results.append(result)
+        total_time += result.solve_time
+        time_tracker.add_time(solver_name, result.solve_time)
+    
+    return real_world_results, total_time
+
+
+def save_experiment_results(
+    experiment_folder: str,
+    aggregated_results: list[AggregatedResult],
+    detailed_results: list[DetailedResult],
+    real_world_results: list[RealWorldResult],
+    time_tracker: SolverTimeTracker,
+    config: ExperimentConfig
+) -> None:
+    """Save all experiment results to CSV files."""
+    if config.save_aggregated and aggregated_results:
+        agg_path = os.path.join(experiment_folder, 'aggregated_results.csv')
+        save_results_to_csv(aggregated_results, agg_path, AGGREGATED_FIELDS)
+        if config.verbose:
+            print(f"\nAggregated results saved to: {agg_path}")
+    
+    if config.save_detailed and detailed_results:
+        detail_path = os.path.join(experiment_folder, 'detailed_results.csv')
+        save_results_to_csv(detailed_results, detail_path, DETAILED_FIELDS)
+        if config.verbose:
+            print(f"Detailed results saved to: {detail_path}")
+    
+    if real_world_results:
+        real_world_path = os.path.join(experiment_folder, 'real_world_results.csv')
+        save_results_to_csv(real_world_results, real_world_path, REAL_WORLD_FIELDS)
+        if config.verbose:
+            print(f"Real-world results saved to: {real_world_path}")
+    
+    # Save solver time summary
+    time_summaries = time_tracker.get_summaries()
+    if time_summaries:
+        time_summary_path = os.path.join(experiment_folder, 'solver_times.csv')
+        save_results_to_csv(time_summaries, time_summary_path, SOLVER_TIME_FIELDS)
+        if config.verbose:
+            print(f"Solver time summary saved to: {time_summary_path}")
+
+
+# =============================================================================
+# MAIN EXPERIMENT
+# =============================================================================
+def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResult], list[DetailedResult], list[RealWorldResult]]:
+    """Run quantum experiment on all datasets."""
+    if config is None:
+        config = CONFIG
+    
+    base_dir = os.path.dirname(__file__)
+    results_dir = os.path.join(base_dir, config.results_dir)
+    os.makedirs(results_dir, exist_ok=True)
+    
+    solvers = init_solvers(config)
+    if not solvers:
+        print("No solvers enabled. Please enable at least one solver in config.")
+        return [], [], []
+    
+    log_config(config, solvers)
+    
+    # Initialize result containers
+    aggregated_results: list[AggregatedResult] = []
+    detailed_results: list[DetailedResult] = []
+    real_world_results: list[RealWorldResult] = []
+    time_tracker = SolverTimeTracker(list(solvers.keys()))
+    
+    # Collect all datasets to process
+    datasets_to_process = collect_datasets(config, base_dir)
     
     if not datasets_to_process:
         print("No datasets enabled. Please enable at least one dataset type in config.")
@@ -514,7 +655,6 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
             density = dataset['density']
             dataset_name = f"synthetic_n{n}"
         else:  # real_world
-            # For real-world, graphs may have different sizes
             n = dataset.get('avg_vertices', 0)
             density = dataset.get('avg_density', 0.0)
             dataset_name = "real_world"
@@ -537,44 +677,21 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
                 solver.configure(penalty_mode=penalty_mode)
                 
                 if dataset_type == 'real_world':
-                    # For real-world: process individually without aggregation
-                    total_time = 0.0
-                    
-                    for graph_data in tqdm(graphs_data, desc="    Graphs", leave=False, position=1):
-                        real_world_result = process_real_world_graph(
-                            graph_data, solver, penalty_mode, solver_name
-                        )
-                        real_world_results.append(real_world_result)
-                        total_time += real_world_result.solve_time
-                        
-                        # Track solver time
-                        solver_times[solver_name]['total_time'] += real_world_result.solve_time
-                        solver_times[solver_name]['num_graphs'] += 1
+                    # Process real-world dataset (no aggregation)
+                    rw_results, total_time = process_realworld_dataset(
+                        graphs_data, solver, solver_name, penalty_mode, time_tracker
+                    )
+                    real_world_results.extend(rw_results)
                     
                     if config.verbose:
                         tqdm.write(f"      Total time: {total_time:.2f}s")
                 
                 else:
-                    # For synthetic: aggregate results
-                    graph_results: list[GraphResult] = []
-                    best_costs: list[int] = []
-                    total_time = 0.0
-                    
-                    for graph_data in tqdm(graphs_data, desc="    Graphs", leave=False, position=1):
-                        # For synthetic datasets
-                        graph_n = graph_data.get('num_vertices', n)
-                        
-                        result, detailed, best_cost = process_single_graph(
-                            graph_data, graph_n, solver, penalty_mode, solver_name
-                        )
-                        graph_results.append(result)
-                        best_costs.append(best_cost)
-                        total_time += detailed.solve_time
-                        detailed_results.append(detailed)
-                        
-                        # Track solver time
-                        solver_times[solver_name]['total_time'] += detailed.solve_time
-                        solver_times[solver_name]['num_graphs'] += 1
+                    # Process synthetic dataset (with aggregation)
+                    graph_results, details, best_costs, total_time = process_synthetic_dataset(
+                        graphs_data, n, solver, solver_name, penalty_mode, config, time_tracker
+                    )
+                    detailed_results.extend(details)
                     
                     metrics = calculate_metrics(graph_results, best_costs, config.success_gap_threshold)
                     
@@ -602,73 +719,19 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
     
     pbar_configs.close()
     
-    # Calculate average time per graph for each solver
-    for solver_name in solver_times:
-        num_graphs = solver_times[solver_name]['num_graphs']
-        solver_times[solver_name]['avg_time'] = (
-            solver_times[solver_name]['total_time'] / num_graphs if num_graphs > 0 else 0.0
-        )
-    
     # Log solver time summary
     if config.verbose:
-        log_solver_time_summary(solver_times)
+        time_tracker.log_summary()
     
-    # Save results - create timestamped folder
+    # Save results to timestamped folder
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     experiment_folder = os.path.join(results_dir, f'quantum_experiment_{timestamp}')
     os.makedirs(experiment_folder, exist_ok=True)
     
-    if config.save_aggregated and aggregated_results:
-        agg_path = os.path.join(experiment_folder, 'aggregated_results.csv')
-        agg_fields = [
-            'solver_name', 'dataset_name', 'num_vertices', 'num_graphs', 'density', 'penalty_mode',
-            'feasibility_rate', 'success_rate', 'dominance_score', 'avg_relative_gap', 'std_relative_gap',
-            'num_feasible', 'num_success', 'total_time'
-        ]
-        save_results_to_csv(aggregated_results, agg_path, agg_fields)
-        if config.verbose:
-            print(f"\nAggregated results saved to: {agg_path}")
-    
-    if config.save_detailed and detailed_results:
-        detail_path = os.path.join(experiment_folder, 'detailed_results.csv')
-        detail_fields = [
-            'solver_name', 'num_vertices', 'graph_id', 'num_edges', 'penalty_mode',
-            'mu_thermometer', 'mu_bijective', 'energy', 'minla_cost',
-            'best_known_cost', 'is_feasible', 'solve_time'
-        ]
-        save_results_to_csv(detailed_results, detail_path, detail_fields)
-        if config.verbose:
-            print(f"Detailed results saved to: {detail_path}")
-    
-    # Save real-world results (individual, not aggregated)
-    if real_world_results:
-        real_world_path = os.path.join(experiment_folder, 'real_world_results.csv')
-        real_world_fields = [
-            'solver_name', 'graph_name', 'num_vertices', 'num_edges', 'penalty_mode',
-            'mu_thermometer', 'mu_bijective', 'is_feasible', 'objective_value',
-            'spectral_cost', 'successive_augmentation_cost', 'local_search_cost',
-            'best_known_cost', 'relative_gap', 'solve_time'
-        ]
-        save_results_to_csv(real_world_results, real_world_path, real_world_fields)
-        if config.verbose:
-            print(f"Real-world results saved to: {real_world_path}")
-    
-    # Save solver time summary
-    if solver_times:
-        time_summary_results = [
-            SolverTimeSummary(
-                solver_name=name,
-                total_time=data['total_time'],
-                num_graphs_solved=data['num_graphs'],
-                avg_time_per_graph=data['avg_time']
-            )
-            for name, data in solver_times.items()
-        ]
-        time_summary_path = os.path.join(experiment_folder, 'solver_times.csv')
-        time_summary_fields = ['solver_name', 'total_time', 'num_graphs_solved', 'avg_time_per_graph']
-        save_results_to_csv(time_summary_results, time_summary_path, time_summary_fields)
-        if config.verbose:
-            print(f"Solver time summary saved to: {time_summary_path}")
+    save_experiment_results(
+        experiment_folder, aggregated_results, detailed_results,
+        real_world_results, time_tracker, config
+    )
     
     if config.verbose:
         print(f"\nAll results saved in folder: {experiment_folder}")
