@@ -40,9 +40,9 @@ def load_latest_aggregated_results(results_dir: str = "Results") -> Optional[pd.
 
 def display_summary_table(df: pd.DataFrame) -> None:
     """Display a formatted summary table."""
-    print("=" * 120)
+    print("=" * 140)
     print("QUANTUM EXPERIMENT AGGREGATED RESULTS")
-    print("=" * 120)
+    print("=" * 140)
     
     # Format the dataframe for better display
     display_df = df.copy()
@@ -50,16 +50,26 @@ def display_summary_table(df: pd.DataFrame) -> None:
     display_df['success_rate'] = (display_df['success_rate'] * 100).round(1).astype(str) + '%'
     display_df['dominance_score'] = (display_df['dominance_score'] * 100).round(1).astype(str) + '%'
     display_df['avg_relative_gap'] = (display_df['avg_relative_gap'] * 100).round(2).astype(str) + '%'
+    
+    # Add std_relative_gap if it exists in the dataframe
+    if 'std_relative_gap' in display_df.columns:
+        display_df['std_relative_gap'] = (display_df['std_relative_gap'] * 100).round(2).astype(str) + '%'
+    
     display_df['total_time'] = (display_df['total_time'] / 60).round(2).astype(str) + ' min'
     
     # Reorder columns
     cols = ['solver_name', 'num_vertices', 'penalty_mode', 'num_graphs', 
             'feasibility_rate', 'success_rate', 'dominance_score', 
-            'avg_relative_gap', 'total_time']
+            'avg_relative_gap']
+    
+    if 'std_relative_gap' in display_df.columns:
+        cols.append('std_relative_gap')
+    
+    cols.append('total_time')
     display_df = display_df[cols]
     
     print(display_df.to_string(index=False))
-    print("=" * 120)
+    print("=" * 140)
 
 
 def display_solver_comparison(df: pd.DataFrame) -> None:
@@ -77,11 +87,13 @@ def display_solver_comparison(df: pd.DataFrame) -> None:
             penalty_subset = subset[subset['penalty_mode'] == penalty].copy()
             
             for _, row in penalty_subset.iterrows():
+                std_gap_str = f"Std: {row['std_relative_gap']*100:6.2f}% | " if 'std_relative_gap' in row else ""
                 print(f"    {row['solver_name']:20s} | "
                       f"Feasibility: {row['feasibility_rate']*100:5.1f}% | "
                       f"Success: {row['success_rate']*100:5.1f}% | "
                       f"Dominance: {row['dominance_score']*100:5.1f}% | "
                       f"Gap: {row['avg_relative_gap']*100:6.2f}% | "
+                      f"{std_gap_str}"
                       f"Time: {row['total_time']/60:7.2f} min")
 
 

@@ -2,6 +2,7 @@ import os
 import csv
 import time
 import pickle
+import statistics
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
@@ -91,6 +92,7 @@ class AggregatedResult:
     success_rate: float
     dominance_score: float
     avg_relative_gap: float
+    std_relative_gap: float
     num_feasible: int
     num_success: int
     total_time: float
@@ -132,6 +134,7 @@ class Metrics:
     success_rate: float
     dominance_score: float
     avg_relative_gap: float
+    std_relative_gap: float  # Standard deviation of relative gaps (consistency metric)
     num_feasible: int
     num_success: int
 
@@ -224,11 +227,15 @@ def calculate_metrics(
             if gap <= success_gap_threshold:
                 num_success += 1
     
+    # Calculate standard deviation of relative gaps
+    std_gap = statistics.stdev(relative_gaps) if len(relative_gaps) > 1 else 0.0
+    
     return Metrics(
         feasibility_rate=num_feasible / num_graphs,
         success_rate=num_success / num_graphs,
         dominance_score=num_dominant / num_feasible if num_feasible > 0 else 0.0,
         avg_relative_gap=sum(relative_gaps) / len(relative_gaps) if relative_gaps else float('inf'),
+        std_relative_gap=std_gap,
         num_feasible=num_feasible,
         num_success=num_success
     )
@@ -410,6 +417,7 @@ def log_metrics(metrics: Metrics, num_graphs: int, total_time: float) -> None:
     tqdm.write(f"      Success rate: {metrics.success_rate*100:.1f}% ({metrics.num_success}/{num_graphs})")
     tqdm.write(f"      Dominance: {metrics.dominance_score*100:.1f}%")
     tqdm.write(f"      Avg relative gap: {metrics.avg_relative_gap*100:.2f}%")
+    tqdm.write(f"      Std relative gap: {metrics.std_relative_gap*100:.2f}%")
     tqdm.write(f"      Total time: {total_time:.2f}s")
 
 
@@ -581,6 +589,7 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
                         success_rate=metrics.success_rate,
                         dominance_score=metrics.dominance_score,
                         avg_relative_gap=metrics.avg_relative_gap,
+                        std_relative_gap=metrics.std_relative_gap,
                         num_feasible=metrics.num_feasible,
                         num_success=metrics.num_success,
                         total_time=total_time
@@ -613,7 +622,7 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
         agg_path = os.path.join(experiment_folder, 'aggregated_results.csv')
         agg_fields = [
             'solver_name', 'dataset_name', 'num_vertices', 'num_graphs', 'density', 'penalty_mode',
-            'feasibility_rate', 'success_rate', 'dominance_score', 'avg_relative_gap',
+            'feasibility_rate', 'success_rate', 'dominance_score', 'avg_relative_gap', 'std_relative_gap',
             'num_feasible', 'num_success', 'total_time'
         ]
         save_results_to_csv(aggregated_results, agg_path, agg_fields)
