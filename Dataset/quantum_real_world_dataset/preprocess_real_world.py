@@ -158,26 +158,14 @@ def main():
     
     script_dir = Path(__file__).parent
     
-    # Find all graph files in current directory and subdirectories
-    graph_files = []
+    # Find all .edges files in current directory
+    graph_files = sorted(script_dir.glob("*.edges"))
     
-    # Files in root directory
-    graph_files.extend(script_dir.glob("*.edges"))
-    graph_files.extend(script_dir.glob("*.txt"))
+    # Also include .txt files (like iscas89-s27.txt)
+    graph_files.extend(sorted(script_dir.glob("*.txt")))
     
-    # Files in alchemy subdirectory
-    alchemy_dir = script_dir / "alchemy"
-    if alchemy_dir.exists():
-        graph_files.extend(alchemy_dir.glob("*_preprocessed.txt"))
-    
-    # Files in proteins subdirectory
-    proteins_dir = script_dir / "proteins"
-    if proteins_dir.exists():
-        graph_files.extend(proteins_dir.glob("*_preprocessed.txt"))
-    
-    # Filter to only include graph files (exclude this script)
+    # Filter out this script file if it appears
     graph_files = [f for f in graph_files if f.name != 'preprocess_real_world.py']
-    graph_files = sorted(graph_files)
     
     if not graph_files:
         print("No graph files found!")

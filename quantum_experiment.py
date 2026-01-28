@@ -147,9 +147,9 @@ CONFIG = ExperimentConfig(
     penalty_methods=['exact', 'lucas'],
     num_reads=100,
     seed=42,
-    use_openjij=True,
+    use_openjij=False,
     use_qwavesampler=True,
-    use_simulated_bifurcation=True,
+    use_simulated_bifurcation=False,
     use_synthetic_dataset=False,  # Set to False to skip synthetic datasets
     use_real_world_dataset=True,  # Set to True to include real-world graphs
     success_gap_threshold=0.05,
@@ -321,6 +321,7 @@ def init_solvers(config: ExperimentConfig) -> dict[str, object]:
         solvers['OpenJij'] = OpenJijSolver()
     if config.use_qwavesampler:
         solvers['QWaveSampler'] = QWaveSamplerSolver()
+        # solvers['QWaveSampler'].configure(sampler_type = "sa")
     if config.use_simulated_bifurcation:
         solvers['SimulatedBifurcation'] = SimulatedBifurcationSolver()
     
