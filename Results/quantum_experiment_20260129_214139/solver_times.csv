@@ -1,0 +1,4 @@
+solver_name,total_time,num_graphs_solved,avg_time_per_graph
+OpenJij,56.24353218078613,16,3.5152207612991333
+QWaveSampler_path,231.5993025302887,16,14.474956408143044
+SimulatedBifurcation,37.52393889427185,16,2.3452461808919907

@@ -1,0 +1,4 @@
+solver_name,sampler_type,dataset_name,num_vertices,num_graphs,density,penalty_mode,feasibility_rate,success_rate,dominance_score,avg_relative_gap,std_relative_gap,num_feasible,num_success,total_time
+QWaveSampler_rotor,rotor,synthetic_n20,20,50,0.5,lucas,0.0,0.0,0.0,inf,0.0,0,0,69.07972478866577
+QWaveSampler_rotor,rotor,synthetic_n25,25,50,0.5,lucas,0.0,0.0,0.0,inf,0.0,0,0,179.2203722000122
+QWaveSampler_rotor,rotor,synthetic_n30,30,50,0.5,lucas,0.0,0.0,0.0,inf,0.0,0,0,290.4411687850952
