@@ -1,0 +1,33 @@
+# Source
+Pajek: Wasserman and Faust datasets
+
+# Description
+Wasserman and Faust provided five network in their work on social network
+analysis: Krackhardt's high-tech managers, Padgett's Florentine families, 
+Freeman's EIES network, Countries trade network, and Galaskiewicz's CEOs 
+and clubs network. The trade network has been exluded here since it is 
+actually a collection of small networks.
+
+Complete descriptions of these data, including references for the original sources 
+of the data, can be found in Chapter 2 (pages 59- 66) and Appendix B (pages 738-755)
+of Wasserman and Faust.
+
+Padgett's dataset contains marital and business ties between sixteen
+Florentine families.
+
+# URL
+http://vlado.fmf.uni-lj.si/pub/networks/data/WaFa/Padgett.paj
+http://vlado.fmf.uni-lj.si/pub/networks/data/WaFa/default.htm
+
+# Tags
+social, collaboration, survey
+
+# Bibtex
+@book{wasserman1994social,
+  title={Social network analysis: Methods and applications},
+  author={Wasserman, Stanley and Faust, Katherine and others},
+  volume={8},
+  year={1994},
+  publisher={Cambridge university press}
+}
+
