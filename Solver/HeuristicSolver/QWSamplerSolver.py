@@ -3,7 +3,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from solver_class import BaseSolver, SolverResult
-from dwave.samplers import PathIntegralAnnealingSampler, SteepestDescentSampler, SimulatedAnnealingSampler
+from dwave.samplers import PathIntegralAnnealingSampler, SteepestDescentSampler, SimulatedAnnealingSampler, RotorModelAnnealingSampler
 from pyqubo import Array
 import networkx as nx
 import numpy as np
@@ -80,6 +80,8 @@ class QWaveSamplerSolver(BaseSolver):
             return SteepestDescentSampler()
         elif self.sampler_type == "path":
             return PathIntegralAnnealingSampler()
+        elif self.sampler_type == "rotor":
+            return RotorModelAnnealingSampler()
         elif self.sampler_type == "sa":
             return SimulatedAnnealingSampler()
         raise ValueError(f"Unknown sampler type: {self.sampler_type}")
