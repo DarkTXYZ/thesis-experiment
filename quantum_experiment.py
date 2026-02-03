@@ -149,13 +149,13 @@ class Metrics:
 # DEFAULT CONFIGURATION
 # =============================================================================
 CONFIG = ExperimentConfig(
-    vertex_counts=[20,25,30],
-    penalty_methods=['lucas'], # 'exact','lucas'
+    vertex_counts=[6,8,11,13,15],
+    penalty_methods=['exact','lucas'], # 'exact','lucas'
     num_reads=100,
     seed=42,
-    use_openjij=False,
+    use_openjij=True,
     use_qwavesampler=True,
-    use_simulated_bifurcation=False,
+    use_simulated_bifurcation=True,
     qwavesampler_types=['path'],  # 'path'/'sa'
     use_synthetic_dataset=True,  # Set to False to skip synthetic datasets
     use_real_world_dataset=True,  # Set to True to include real-world graphs

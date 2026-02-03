@@ -77,7 +77,7 @@ def calculate_lucas_bound(G: nx.Graph):
     degree_sequence = (d for n, d in G.degree())
     delta = max(degree_sequence)
     
-    mu_thermometer = delta + 1
+    mu_thermometer = 2*delta + 1
     mu_bijective = delta + 1
     
     # print(f"\tLucas Bound Calculation: delta={delta}")
