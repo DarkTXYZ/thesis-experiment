@@ -149,16 +149,16 @@ class Metrics:
 # DEFAULT CONFIGURATION
 # =============================================================================
 CONFIG = ExperimentConfig(
-    vertex_counts=[6,8,11,13,15],
+    vertex_counts=[6, 8, 11, 13, 15],
     penalty_methods=['exact','lucas'], # 'exact','lucas'
-    num_reads=100,
+    num_reads=10,
     seed=42,
-    use_openjij=True,
+    use_openjij=False,
     use_qwavesampler=True,
-    use_simulated_bifurcation=True,
+    use_simulated_bifurcation=False,
     qwavesampler_types=['path'],  # 'path'/'sa'
     use_synthetic_dataset=True,  # Set to False to skip synthetic datasets
-    use_real_world_dataset=True,  # Set to True to include real-world graphs
+    use_real_world_dataset=False,  # Set to True to include real-world graphs
     success_gap_threshold=0.05,
     verbose=True
 )

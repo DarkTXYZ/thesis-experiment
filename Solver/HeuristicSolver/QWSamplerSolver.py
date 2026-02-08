@@ -12,7 +12,7 @@ from penalty_coefficients import calculate_lucas_bound, calculate_exact_bound
 class QWaveSamplerSolver(BaseSolver):
     
     def __init__(self):
-        self.num_reads = 100
+        self.num_reads = 10
         self.num_sweeps = 1000
         self.sampler_type = "path"
         self.penalty_mode = "lucas"
@@ -28,7 +28,7 @@ class QWaveSamplerSolver(BaseSolver):
         self.penalty_thermometer = kwargs.get('penalty_thermometer', self.penalty_thermometer)
         self.penalty_bijective = kwargs.get('penalty_bijective', self.penalty_bijective)
         self.seed = kwargs.get('seed', self.seed)
-    
+
     def _build_qubo(self, graph: nx.Graph):
         n = graph.number_of_nodes()
         mu_thermo, mu_bijec = self._get_penalties(graph)
@@ -85,16 +85,42 @@ class QWaveSamplerSolver(BaseSolver):
         elif self.sampler_type == "sa":
             return SimulatedAnnealingSampler()
         raise ValueError(f"Unknown sampler type: {self.sampler_type}")
+    
+    import numpy as np
+
+    def generate_linear_schedule(self, steps: int):
+        s = np.linspace(0, 1, steps)
+        Hd_field = (1 - s)
+        Hp_field = s
+        
+        return Hp_field, Hd_field
+
+    def generate_exponential_schedule(self, steps: int, exponent: float = 2.0):
+        s = np.linspace(0, 1, steps)
+        Hd_field = (1 - s ** exponent)
+        Hp_field = s ** exponent
+
+        return Hp_field, Hd_field
 
     def solve(self, graph: nx.Graph) -> SolverResult:
         bqm = self._build_qubo(graph)
         
         sampler = self._get_sampler()
         
-        sample_kwargs = {'num_reads': self.num_reads, 'num_sweeps': self.num_sweeps}
+        sample_kwargs = {
+            'num_reads': self.num_reads, 
+            'num_sweeps': self.num_sweeps,
+        }
         if self.seed is not None:
             sample_kwargs['seed'] = self.seed
-        response = sampler.sample(bqm, **sample_kwargs)
+
+        Hp, Hd = self.generate_exponential_schedule(self.num_sweeps)
+
+        response = sampler.sample(bqm, 
+                                #   beta_schedule_type='custom',
+                                #   Hp_field=Hp,
+                                #   Hd_field=Hd,
+                                  **sample_kwargs)
         
         best_sample = response.first.sample
         energy = response.first.energy
