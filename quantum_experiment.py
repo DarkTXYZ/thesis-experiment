@@ -44,7 +44,7 @@ class ExperimentConfig:
     use_simulated_bifurcation: bool = True
     
     # QWaveSampler settings
-    qwavesampler_types: list[str] = field(default_factory=lambda: ['path'])  # Options: 'path', 'sa', 'steepest'
+    beta_schedule_types: list[str] = field(default_factory=lambda: ['default', 'linear', 'exponential'])
     
     # Success criteria
     success_gap_threshold: float = 0.0  # 0.0 = exact match, 0.1 = 10% gap allowed
@@ -69,7 +69,7 @@ class GraphResult:
 class DetailedResult:
     """Detailed result for a single graph solve."""
     solver_name: str
-    sampler_type: str
+    beta_schedule_type: str
     num_vertices: int
     graph_id: int
     num_edges: int
@@ -87,7 +87,7 @@ class DetailedResult:
 class AggregatedResult:
     """Aggregated result for a dataset configuration (synthetic only)."""
     solver_name: str
-    sampler_type: str
+    beta_schedule_type: str
     dataset_name: str
     num_vertices: int
     num_graphs: int
@@ -107,7 +107,7 @@ class AggregatedResult:
 class RealWorldResult:
     """Individual result for a real-world graph (not aggregated)."""
     solver_name: str
-    sampler_type: str
+    beta_schedule_type: str
     graph_name: str
     num_vertices: int
     num_edges: int
@@ -150,13 +150,13 @@ class Metrics:
 # =============================================================================
 CONFIG = ExperimentConfig(
     vertex_counts=[6, 8, 11, 13, 15],
-    penalty_methods=['exact','lucas'], # 'exact','lucas'
+    penalty_methods=['lucas'],
     num_reads=10,
     seed=42,
     use_openjij=False,
     use_qwavesampler=True,
     use_simulated_bifurcation=False,
-    qwavesampler_types=['path'],  # 'path'/'sa'
+    beta_schedule_types=['default', 'linear', 'exponential'],  # All beta schedule types
     use_synthetic_dataset=True,  # Set to False to skip synthetic datasets
     use_real_world_dataset=False,  # Set to True to include real-world graphs
     success_gap_threshold=0.05,
@@ -169,19 +169,19 @@ CONFIG = ExperimentConfig(
 # =============================================================================
 # CSV field names
 AGGREGATED_FIELDS = [
-    'solver_name', 'sampler_type', 'dataset_name', 'num_vertices', 'num_graphs', 'density', 'penalty_mode',
+    'solver_name', 'beta_schedule_type', 'dataset_name', 'num_vertices', 'num_graphs', 'density', 'penalty_mode',
     'feasibility_rate', 'success_rate', 'dominance_score', 'avg_relative_gap', 'std_relative_gap',
     'num_feasible', 'num_success', 'total_time'
 ]
 
 DETAILED_FIELDS = [
-    'solver_name', 'sampler_type', 'num_vertices', 'graph_id', 'num_edges', 'penalty_mode',
+    'solver_name', 'beta_schedule_type', 'num_vertices', 'graph_id', 'num_edges', 'penalty_mode',
     'mu_thermometer', 'mu_bijective', 'energy', 'minla_cost',
     'best_known_cost', 'is_feasible', 'solve_time'
 ]
 
 REAL_WORLD_FIELDS = [
-    'solver_name', 'sampler_type', 'graph_name', 'num_vertices', 'num_edges', 'penalty_mode',
+    'solver_name', 'beta_schedule_type', 'graph_name', 'num_vertices', 'num_edges', 'penalty_mode',
     'mu_thermometer', 'mu_bijective', 'is_feasible', 'objective_value',
     'spectral_cost', 'successive_augmentation_cost', 'local_search_cost',
     'best_known_cost', 'relative_gap', 'solve_time'
@@ -327,10 +327,10 @@ def init_solvers(config: ExperimentConfig) -> dict[str, object]:
     if config.use_openjij:
         solvers['OpenJij'] = OpenJijSolver()
     if config.use_qwavesampler:
-        for sampler_type in config.qwavesampler_types:
+        for beta_schedule_type in config.beta_schedule_types:
             solver = QWaveSamplerSolver()
-            solver.configure(sampler_type=sampler_type)
-            solvers[f'QWaveSampler_{sampler_type}'] = solver
+            solver.configure(beta_schedule_type=beta_schedule_type)
+            solvers[f'QWaveSampler_{beta_schedule_type}'] = solver
     if config.use_simulated_bifurcation:
         solvers['SimulatedBifurcation'] = SimulatedBifurcationSolver()
     
@@ -346,7 +346,7 @@ def process_single_graph(
     solver: object,
     penalty_mode: str,
     solver_name: str,
-    sampler_type: str
+    beta_schedule_type: str
 ) -> tuple[GraphResult, DetailedResult, float]:
     """
     Process a single graph with the given solver.
@@ -375,7 +375,7 @@ def process_single_graph(
     
     detailed = DetailedResult(
         solver_name=solver_name,
-        sampler_type=sampler_type,
+        beta_schedule_type=beta_schedule_type,
         num_vertices=num_vertices,
         graph_id=graph_id,
         num_edges=num_edges,
@@ -397,7 +397,7 @@ def process_real_world_graph(
     solver: object,
     penalty_mode: str,
     solver_name: str,
-    sampler_type: str
+    beta_schedule_type: str
 ) -> RealWorldResult:
     """
     Process a single real-world graph and return individual results.
@@ -435,7 +435,7 @@ def process_real_world_graph(
     
     return RealWorldResult(
         solver_name=solver_name,
-        sampler_type=sampler_type,
+        beta_schedule_type=beta_schedule_type,
         graph_name=graph_name,
         num_vertices=num_vertices,
         num_edges=num_edges,
@@ -535,7 +535,7 @@ def process_synthetic_dataset(
     penalty_mode: str,
     config: ExperimentConfig,
     time_tracker: SolverTimeTracker,
-    sampler_type: str
+    beta_schedule_type: str
 ) -> tuple[list[GraphResult], list[DetailedResult], list[int], float]:
     """
     Process a synthetic dataset with the given solver.
@@ -552,7 +552,7 @@ def process_synthetic_dataset(
         graph_n = graph_data.get('num_vertices', n)
         
         result, detailed, best_cost = process_single_graph(
-            graph_data, graph_n, solver, penalty_mode, solver_name, sampler_type
+            graph_data, graph_n, solver, penalty_mode, solver_name, beta_schedule_type
         )
         graph_results.append(result)
         best_costs.append(best_cost)
@@ -569,7 +569,7 @@ def process_realworld_dataset(
     solver_name: str,
     penalty_mode: str,
     time_tracker: SolverTimeTracker,
-    sampler_type: str
+    beta_schedule_type: str
 ) -> tuple[list[RealWorldResult], float]:
     """
     Process a real-world dataset with the given solver.
@@ -581,7 +581,7 @@ def process_realworld_dataset(
     total_time = 0.0
     
     for graph_data in tqdm(graphs_data, desc="    Graphs", leave=False, position=1):
-        result = process_real_world_graph(graph_data, solver, penalty_mode, solver_name, sampler_type)
+        result = process_real_world_graph(graph_data, solver, penalty_mode, solver_name, beta_schedule_type)
         real_world_results.append(result)
         total_time += result.solve_time
         time_tracker.add_time(solver_name, result.solve_time)
@@ -692,13 +692,13 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
                 
                 solver.configure(penalty_mode=penalty_mode)
                 
-                # Get sampler_type for QWaveSampler, "N/A" for others
-                sampler_type = getattr(solver, 'sampler_type', 'N/A')
+                # Get beta_schedule_type for QWaveSampler, "N/A" for others
+                beta_schedule_type = getattr(solver, 'beta_schedule_type', 'N/A')
                 
                 if dataset_type == 'real_world':
                     # Process real-world dataset (no aggregation)
                     rw_results, total_time = process_realworld_dataset(
-                        graphs_data, solver, solver_name, penalty_mode, time_tracker, sampler_type
+                        graphs_data, solver, solver_name, penalty_mode, time_tracker, beta_schedule_type
                     )
                     real_world_results.extend(rw_results)
                     
@@ -708,7 +708,7 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
                 else:
                     # Process synthetic dataset (with aggregation)
                     graph_results, details, best_costs, total_time = process_synthetic_dataset(
-                        graphs_data, n, solver, solver_name, penalty_mode, config, time_tracker, sampler_type
+                        graphs_data, n, solver, solver_name, penalty_mode, config, time_tracker, beta_schedule_type
                     )
                     detailed_results.extend(details)
                     
@@ -716,7 +716,7 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
                     
                     aggregated_results.append(AggregatedResult(
                         solver_name=solver_name,
-                        sampler_type=sampler_type,
+                        beta_schedule_type=beta_schedule_type,
                         dataset_name=dataset_name,
                         num_vertices=n if dataset_type == 'synthetic' else int(n),
                         num_graphs=num_graphs,
@@ -745,7 +745,7 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
     
     # Save results to timestamped folder
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    experiment_folder = os.path.join(results_dir, f'quantum_experiment_{timestamp}')
+    experiment_folder = os.path.join(results_dir, f'quantum_experiment_reads{config.num_reads}_{timestamp}')
     os.makedirs(experiment_folder, exist_ok=True)
     
     save_experiment_results(

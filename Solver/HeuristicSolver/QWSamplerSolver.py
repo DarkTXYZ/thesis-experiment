@@ -3,11 +3,12 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from solver_class import BaseSolver, SolverResult
-from dwave.samplers import PathIntegralAnnealingSampler, SteepestDescentSampler, SimulatedAnnealingSampler, RotorModelAnnealingSampler
+from dwave.samplers import PathIntegralAnnealingSampler
 from pyqubo import Array
 import networkx as nx
 import numpy as np
 from penalty_coefficients import calculate_lucas_bound, calculate_exact_bound
+import numpy as np
 
 class QWaveSamplerSolver(BaseSolver):
     
@@ -19,6 +20,7 @@ class QWaveSamplerSolver(BaseSolver):
         self.penalty_thermometer = 1.0
         self.penalty_bijective = 1.0
         self.seed = None
+        self.beta_schedule_type = 'default'
     
     def configure(self, **kwargs) -> None:
         self.num_reads = kwargs.get('num_reads', self.num_reads)
@@ -28,6 +30,7 @@ class QWaveSamplerSolver(BaseSolver):
         self.penalty_thermometer = kwargs.get('penalty_thermometer', self.penalty_thermometer)
         self.penalty_bijective = kwargs.get('penalty_bijective', self.penalty_bijective)
         self.seed = kwargs.get('seed', self.seed)
+        self.beta_schedule_type = kwargs.get('beta_schedule_type', 'default') # default, linear, exponential, custom
 
     def _build_qubo(self, graph: nx.Graph):
         n = graph.number_of_nodes()
@@ -76,17 +79,8 @@ class QWaveSamplerSolver(BaseSolver):
         return Q, bqm.offset
     
     def _get_sampler(self):
-        if self.sampler_type == "steepest":
-            return SteepestDescentSampler()
-        elif self.sampler_type == "path":
-            return PathIntegralAnnealingSampler()
-        elif self.sampler_type == "rotor":
-            return RotorModelAnnealingSampler()
-        elif self.sampler_type == "sa":
-            return SimulatedAnnealingSampler()
-        raise ValueError(f"Unknown sampler type: {self.sampler_type}")
+        return PathIntegralAnnealingSampler()
     
-    import numpy as np
 
     def generate_linear_schedule(self, steps: int):
         s = np.linspace(0, 1, steps)
@@ -111,16 +105,23 @@ class QWaveSamplerSolver(BaseSolver):
             'num_reads': self.num_reads, 
             'num_sweeps': self.num_sweeps,
         }
+
         if self.seed is not None:
             sample_kwargs['seed'] = self.seed
 
-        Hp, Hd = self.generate_exponential_schedule(self.num_sweeps)
+        if self.beta_schedule_type == 'linear':
+            Hp, Hd = self.generate_linear_schedule(self.num_sweeps)
+        elif self.beta_schedule_type == 'exponential':
+            Hp, Hd = self.generate_exponential_schedule(self.num_sweeps)
 
-        response = sampler.sample(bqm, 
-                                #   beta_schedule_type='custom',
-                                #   Hp_field=Hp,
-                                #   Hd_field=Hd,
-                                  **sample_kwargs)
+        if self.beta_schedule_type == 'default':
+            response = sampler.sample(bqm, **sample_kwargs)
+        else:
+            response = sampler.sample(bqm, 
+                                      beta_schedule_type='custom',
+                                      Hp_field=Hp,
+                                      Hd_field=Hd,
+                                    **sample_kwargs)
         
         best_sample = response.first.sample
         energy = response.first.energy
