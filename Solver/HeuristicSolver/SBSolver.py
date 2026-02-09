@@ -25,11 +25,16 @@ class SimulatedBifurcationSolver(BaseSolver):
         self.seed = None
     
     def configure(self, **kwargs) -> None:
-        self.penalty_mode = kwargs.get('penalty_mode', self.penalty_mode)
-        self.penalty_thermometer = kwargs.get('penalty_thermometer', self.penalty_thermometer)
-        self.penalty_bijective = kwargs.get('penalty_bijective', self.penalty_bijective)
-        self.agent_count = kwargs.get('agent_count', self.agent_count)
-        self.seed = kwargs.get('seed', self.seed)
+        if 'penalty_mode' in kwargs:
+            self.penalty_mode = kwargs['penalty_mode']
+        if 'penalty_thermometer' in kwargs:
+            self.penalty_thermometer = kwargs['penalty_thermometer']
+        if 'penalty_bijective' in kwargs:
+            self.penalty_bijective = kwargs['penalty_bijective']
+        if 'agent_count' in kwargs:
+            self.agent_count = kwargs['agent_count']
+        if 'seed' in kwargs:
+            self.seed = kwargs['seed']
     
     def _build_qubo(self, graph: nx.Graph):
         n = graph.number_of_nodes()

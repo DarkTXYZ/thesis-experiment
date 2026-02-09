@@ -20,12 +20,18 @@ class OpenJijSolver(BaseSolver):
         self.seed = None
     
     def configure(self, **kwargs) -> None:
-        self.num_reads = kwargs.get('num_reads', self.num_reads)
-        self.use_sparse = kwargs.get('use_sparse', self.use_sparse)
-        self.penalty_mode = kwargs.get('penalty_mode', self.penalty_mode)
-        self.penalty_thermometer = kwargs.get('penalty_thermometer', self.penalty_thermometer)
-        self.penalty_bijective = kwargs.get('penalty_bijective', self.penalty_bijective)
-        self.seed = kwargs.get('seed', self.seed)
+        if 'num_reads' in kwargs:
+            self.num_reads = kwargs['num_reads']
+        if 'use_sparse' in kwargs:
+            self.use_sparse = kwargs['use_sparse']
+        if 'penalty_mode' in kwargs:
+            self.penalty_mode = kwargs['penalty_mode']
+        if 'penalty_thermometer' in kwargs:
+            self.penalty_thermometer = kwargs['penalty_thermometer']
+        if 'penalty_bijective' in kwargs:
+            self.penalty_bijective = kwargs['penalty_bijective']
+        if 'seed' in kwargs:
+            self.seed = kwargs['seed']
     
     def _build_qubo(self, graph: nx.Graph):
         from pyqubo import Array

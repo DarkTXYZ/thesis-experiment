@@ -23,14 +23,22 @@ class QWaveSamplerSolver(BaseSolver):
         self.beta_schedule_type = 'default'
     
     def configure(self, **kwargs) -> None:
-        self.num_reads = kwargs.get('num_reads', self.num_reads)
-        self.num_sweeps = kwargs.get('num_sweeps', self.num_sweeps)
-        self.sampler_type = kwargs.get('sampler_type', self.sampler_type)
-        self.penalty_mode = kwargs.get('penalty_mode', self.penalty_mode)
-        self.penalty_thermometer = kwargs.get('penalty_thermometer', self.penalty_thermometer)
-        self.penalty_bijective = kwargs.get('penalty_bijective', self.penalty_bijective)
-        self.seed = kwargs.get('seed', self.seed)
-        self.beta_schedule_type = kwargs.get('beta_schedule_type', 'default') # default, linear, exponential, custom
+        if 'num_reads' in kwargs:
+            self.num_reads = kwargs['num_reads']
+        if 'num_sweeps' in kwargs:
+            self.num_sweeps = kwargs['num_sweeps']
+        if 'sampler_type' in kwargs:
+            self.sampler_type = kwargs['sampler_type']
+        if 'penalty_mode' in kwargs:
+            self.penalty_mode = kwargs['penalty_mode']
+        if 'penalty_thermometer' in kwargs:
+            self.penalty_thermometer = kwargs['penalty_thermometer']
+        if 'penalty_bijective' in kwargs:
+            self.penalty_bijective = kwargs['penalty_bijective']
+        if 'seed' in kwargs:
+            self.seed = kwargs['seed']
+        if 'beta_schedule_type' in kwargs:
+            self.beta_schedule_type = kwargs['beta_schedule_type']
 
     def _build_qubo(self, graph: nx.Graph):
         n = graph.number_of_nodes()
