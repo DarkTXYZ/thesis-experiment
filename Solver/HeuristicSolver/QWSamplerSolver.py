@@ -101,9 +101,9 @@ class QWaveSamplerSolver(BaseSolver):
         return Hp_field, Hd_field
 
     def generate_exponential_schedule(self, steps: int, exponent: float = 2.0):
-        s = np.linspace(self.beta_range[0], self.beta_range[1] ** 0.5, steps)
-        Hd_field = (self.beta_range[1] - s ** exponent)
-        Hp_field = s ** exponent
+        s = np.linspace(1, steps, steps)
+        Hd_field = self.beta_range[1] * s ** (-exponent)
+        Hp_field = self.beta_range[1] * (1 - s ** (-exponent))
 
         return Hp_field, Hd_field
 
