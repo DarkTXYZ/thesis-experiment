@@ -157,6 +157,7 @@ CONFIG = ExperimentConfig(
     use_qwavesampler=True,
     use_simulated_bifurcation=False,
     beta_schedule_types=['default', 'linear', 'exponential'],  # All beta schedule types
+    beta_range=(0, 10),  # Beta range for QWaveSampler
     use_synthetic_dataset=True,  # Set to False to skip synthetic datasets
     use_real_world_dataset=False,  # Set to True to include real-world graphs
     success_gap_threshold=0.05,
@@ -329,7 +330,7 @@ def init_solvers(config: ExperimentConfig) -> dict[str, object]:
     if config.use_qwavesampler:
         for beta_schedule_type in config.beta_schedule_types:
             solver = QWaveSamplerSolver()
-            solver.configure(beta_schedule_type=beta_schedule_type)
+            solver.configure(beta_schedule_type=beta_schedule_type, beta_range=config.beta_range)
             solvers[f'QWaveSampler_{beta_schedule_type}'] = solver
     if config.use_simulated_bifurcation:
         solvers['SimulatedBifurcation'] = SimulatedBifurcationSolver()
@@ -745,7 +746,8 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
     
     # Save results to timestamped folder
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    experiment_folder = os.path.join(results_dir, f'quantum_experiment_reads{config.num_reads}_{timestamp}')
+    beta_range_str = f"beta{config.beta_range[0]}-{config.beta_range[1]}"
+    experiment_folder = os.path.join(results_dir, f'quantum_experiment_reads{config.num_reads}_{beta_range_str}_{timestamp}')
     os.makedirs(experiment_folder, exist_ok=True)
     
     save_experiment_results(

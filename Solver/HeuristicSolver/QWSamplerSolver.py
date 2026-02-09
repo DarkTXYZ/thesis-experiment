@@ -21,6 +21,7 @@ class QWaveSamplerSolver(BaseSolver):
         self.penalty_bijective = 1.0
         self.seed = None
         self.beta_schedule_type = 'default'
+        self.beta_range = (0, 1)
     
     def configure(self, **kwargs) -> None:
         if 'num_reads' in kwargs:
@@ -39,6 +40,8 @@ class QWaveSamplerSolver(BaseSolver):
             self.seed = kwargs['seed']
         if 'beta_schedule_type' in kwargs:
             self.beta_schedule_type = kwargs['beta_schedule_type']
+        if 'beta_range' in kwargs:
+            self.beta_range = kwargs['beta_range']
 
     def _build_qubo(self, graph: nx.Graph):
         n = graph.number_of_nodes()
@@ -91,15 +94,15 @@ class QWaveSamplerSolver(BaseSolver):
     
 
     def generate_linear_schedule(self, steps: int):
-        s = np.linspace(0, 1, steps)
-        Hd_field = (1 - s)
+        s = np.linspace(self.beta_range[0], self.beta_range[1], steps)
+        Hd_field = (self.beta_range[1] - s)
         Hp_field = s
         
         return Hp_field, Hd_field
 
     def generate_exponential_schedule(self, steps: int, exponent: float = 2.0):
-        s = np.linspace(0, 1, steps)
-        Hd_field = (1 - s ** exponent)
+        s = np.linspace(self.beta_range[0], self.beta_range[1] ** 0.5, steps)
+        Hd_field = (self.beta_range[1] - s ** exponent)
         Hp_field = s ** exponent
 
         return Hp_field, Hd_field
