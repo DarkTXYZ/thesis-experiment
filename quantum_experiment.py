@@ -45,6 +45,7 @@ class ExperimentConfig:
     
     # QWaveSampler settings
     beta_schedule_types: list[str] = field(default_factory=lambda: ['default', 'linear', 'exponential'])
+    beta_range: tuple[int, int] = (0, 1)
     
     # Success criteria
     success_gap_threshold: float = 0.0  # 0.0 = exact match, 0.1 = 10% gap allowed
