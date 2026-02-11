@@ -150,17 +150,17 @@ class Metrics:
 # DEFAULT CONFIGURATION
 # =============================================================================
 CONFIG = ExperimentConfig(
-    vertex_counts=[6, 8, 11, 13, 15],
+    vertex_counts=[5, 10, 15, 20, 25],
     penalty_methods=['lucas'],
     num_reads=10,
     seed=42,
     use_openjij=False,
     use_qwavesampler=True,
     use_simulated_bifurcation=False,
-    beta_schedule_types=['default', 'linear', 'exponential'],  # All beta schedule types
+    beta_schedule_types=['linear'],  # All beta schedule types
     beta_range=(0, 10),  # Beta range for QWaveSampler
     use_synthetic_dataset=True,  # Set to False to skip synthetic datasets
-    use_real_world_dataset=False,  # Set to True to include real-world graphs
+    use_real_world_dataset=True,  # Set to True to include real-world graphs
     success_gap_threshold=0.05,
     verbose=True
 )

@@ -1,0 +1,4 @@
+solver_name,total_time,num_graphs_solved,avg_time_per_graph
+QWaveSampler_default,348.37154603004456,516,0.6751386550969856
+QWaveSampler_linear,912.9051010608673,516,1.7691959322885025
+QWaveSampler_exponential,372.25675415992737,516,0.7214278181393942

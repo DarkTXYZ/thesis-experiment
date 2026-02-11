@@ -1,0 +1,17 @@
+solver_name,beta_schedule_type,graph_name,num_vertices,num_edges,penalty_mode,mu_thermometer,mu_bijective,is_feasible,objective_value,spectral_cost,successive_augmentation_cost,local_search_cost,best_known_cost,relative_gap,solve_time
+QWaveSampler_default,default,ENZYMES_g124,14,31,lucas,7,7,True,64,126,75,61,61,0.04918032786885246,2.633023500442505
+QWaveSampler_default,default,ENZYMES_g154,9,16,lucas,5,5,True,26,56,27,26,26,0.0,0.7273027896881104
+QWaveSampler_default,default,ENZYMES_g487,15,27,lucas,7,7,True,45,97,49,44,44,0.022727272727272728,2.9370880126953125
+QWaveSampler_default,default,PROTEINS_g1046,13,22,lucas,5,5,True,34,109,34,41,34,0.0,1.9987008571624756
+QWaveSampler_default,default,PROTEINS_g670,14,27,lucas,6,6,True,44,144,46,75,46,-0.043478260869565216,2.4339308738708496
+QWaveSampler_default,default,PROTEINS_g751,15,28,lucas,6,6,True,50,147,60,45,45,0.1111111111111111,3.34184193611145
+QWaveSampler_default,default,iscas89-s27,9,8,lucas,4,4,True,9,25,12,11,11,-0.18181818181818182,0.7123188972473145
+QWaveSampler_default,default,wafa-padgett,15,27,lucas,9,9,True,75,138,82,68,68,0.10294117647058823,3.0767221450805664
+QWaveSampler_linear,linear,ENZYMES_g124,14,31,lucas,7,7,True,64,126,75,61,61,0.04918032786885246,2.7689013481140137
+QWaveSampler_linear,linear,ENZYMES_g154,9,16,lucas,5,5,True,27,56,27,26,26,0.038461538461538464,0.8178403377532959
+QWaveSampler_linear,linear,ENZYMES_g487,15,27,lucas,7,7,True,46,97,49,44,44,0.045454545454545456,3.2999513149261475
+QWaveSampler_linear,linear,PROTEINS_g1046,13,22,lucas,5,5,True,34,109,34,41,34,0.0,2.2989983558654785
+QWaveSampler_linear,linear,PROTEINS_g670,14,27,lucas,6,6,True,44,144,46,75,46,-0.043478260869565216,2.941823720932007
+QWaveSampler_linear,linear,PROTEINS_g751,15,28,lucas,6,6,True,45,147,60,45,45,0.0,3.305633783340454
+QWaveSampler_linear,linear,iscas89-s27,9,8,lucas,4,4,True,14,25,12,11,11,0.2727272727272727,0.8313970565795898
+QWaveSampler_linear,linear,wafa-padgett,15,27,lucas,9,9,True,69,138,82,68,68,0.014705882352941176,3.68200421333313
