@@ -6,6 +6,7 @@ from solver_class import BaseSolver, SolverResult
 from dwave.samplers import PathIntegralAnnealingSampler
 from pyqubo import Array
 import networkx as nx
+import dimod
 import numpy as np
 from penalty_coefficients import calculate_lucas_bound, calculate_exact_bound
 import numpy as np
@@ -21,7 +22,8 @@ class QWaveSamplerSolver(BaseSolver):
         self.penalty_bijective = 1.0
         self.seed = None
         self.beta_schedule_type = 'default'
-        self.beta_range = (0, 1)
+        self.beta_range = (0.0, 1.0)
+        self.use_auto_beta_range = False
     
     def configure(self, **kwargs) -> None:
         if 'num_reads' in kwargs:
@@ -42,8 +44,10 @@ class QWaveSamplerSolver(BaseSolver):
             self.beta_schedule_type = kwargs['beta_schedule_type']
         if 'beta_range' in kwargs:
             self.beta_range = kwargs['beta_range']
+        if 'use_auto_beta_range' in kwargs:
+            self.use_auto_beta_range = kwargs['use_auto_beta_range']
 
-    def _build_qubo(self, graph: nx.Graph):
+    def _build_qubo(self, graph: nx.Graph) -> dimod.BinaryQuadraticModel:
         n = graph.number_of_nodes()
         mu_thermo, mu_bijec = self._get_penalties(graph)
         
@@ -92,18 +96,88 @@ class QWaveSamplerSolver(BaseSolver):
     def _get_sampler(self):
         return PathIntegralAnnealingSampler()
     
+    def _calculate_beta_range(self, bqm) -> tuple[float, float]:
+        """
+        Calculate appropriate hot_beta and cold_beta from the BQM.
+        
+        hot_beta: Low β (high T) - allows exploration, 50% flip probability
+        cold_beta: High β (low T) - suppresses excitations, 1% excitation rate
+        
+        Returns:
+            (hot_beta, cold_beta)
+        """
+        from collections import defaultdict
+        
+        # Calculate sum of absolute biases and min absolute bias for each variable
+        sum_abs_bias = defaultdict(float)
+        min_abs_bias = defaultdict(lambda: float('inf'))
+        
+        # Add linear biases
+        for var, bias in bqm.linear.items():
+            abs_bias = abs(bias)
+            sum_abs_bias[var] += abs_bias
+            if abs_bias > 0:
+                min_abs_bias[var] = min(min_abs_bias[var], abs_bias)
+        
+        # Add quadratic biases
+        for (var1, var2), bias in bqm.quadratic.items():
+            abs_bias = abs(bias)
+            sum_abs_bias[var1] += abs_bias
+            sum_abs_bias[var2] += abs_bias
+            if abs_bias > 0:
+                min_abs_bias[var1] = min(min_abs_bias[var1], abs_bias)
+                min_abs_bias[var2] = min(min_abs_bias[var2], abs_bias)
+        
+        # Hot beta: Allow 50% flip probability for worst case
+        max_effective_field = max(sum_abs_bias.values(), default=0)
+        if max_effective_field == 0:
+            hot_beta = 1.0
+        else:
+            hot_beta = np.log(2) / (2 * max_effective_field)
+        
+        # Cold beta: Suppress excitations to 1%
+        if len(min_abs_bias) == 0:
+            cold_beta = hot_beta
+        else:
+            values_array = np.array([v for v in min_abs_bias.values() if v < float('inf')])
+            if len(values_array) == 0:
+                cold_beta = hot_beta
+            else:
+                min_effective_field = np.min(values_array)
+                number_min_gaps = np.sum(min_effective_field == values_array)
+                max_excitation_rate = 0.01
+                cold_beta = np.log(number_min_gaps / max_excitation_rate) / (2 * min_effective_field)
+        
+        return (hot_beta, cold_beta)
 
-    def generate_linear_schedule(self, steps: int):
-        s = np.linspace(self.beta_range[0], self.beta_range[1], steps)
-        Hd_field = (self.beta_range[1] - s)
-        Hp_field = s
+    def generate_linear_beta_schedule(self, steps: int, beta_range: tuple[float, float]):
+        """
+        Generate linear annealing schedule.
+        
+        Hp_field: increases linearly from hot_beta to cold_beta
+        Hd_field: decreases linearly from cold_beta to 0
+        """
+        hot_beta, cold_beta = beta_range
+        s = np.linspace(0, 1, steps)  # annealing parameter s ∈ [0, 1]
+        
+        Hp_field = hot_beta + (cold_beta - hot_beta) * s  # hot_beta → cold_beta
+        Hd_field = cold_beta * (1 - s)                     # cold_beta → 0
         
         return Hp_field, Hd_field
-
-    def generate_exponential_schedule(self, steps: int, exponent: float = 2.0):
+    
+    def generate_exponential_schedule(self, steps):
         s = np.linspace(1, steps, steps)
-        Hd_field = self.beta_range[1] * s ** (-exponent)
-        Hp_field = self.beta_range[1] * (1 - s ** (-exponent))
+
+        Hd_field = np.exp(-0.01 * s)
+        Hp_field = 1 - Hd_field
+
+        return Hp_field, Hd_field
+    
+    def generate_power_schedule(self, steps):
+        s = np.linspace(1, steps, steps)
+
+        Hd_field = np.power(s, -0.3)
+        Hp_field = 1 - Hd_field
 
         return Hp_field, Hd_field
 
@@ -111,6 +185,15 @@ class QWaveSamplerSolver(BaseSolver):
         bqm = self._build_qubo(graph)
         
         sampler = self._get_sampler()
+        
+        # Determine beta range - auto-calculate or use configured values
+        if self.use_auto_beta_range:
+            beta_range = self._calculate_beta_range(bqm)
+        else:
+            beta_range = (0, 1)
+
+        # Store the actual beta_range used (for results tracking)
+        self.actual_beta_range = beta_range
         
         sample_kwargs = {
             'num_reads': self.num_reads, 
@@ -121,9 +204,11 @@ class QWaveSamplerSolver(BaseSolver):
             sample_kwargs['seed'] = self.seed
 
         if self.beta_schedule_type == 'linear':
-            Hp, Hd = self.generate_linear_schedule(self.num_sweeps)
+            Hp, Hd = self.generate_linear_schedule(self.num_sweeps, beta_range)
         elif self.beta_schedule_type == 'exponential':
             Hp, Hd = self.generate_exponential_schedule(self.num_sweeps)
+        elif self.beta_schedule_type == 'power':
+            Hp, Hd = self.generate_power_schedule(self.num_sweeps)
 
         if self.beta_schedule_type == 'default':
             response = sampler.sample(bqm, **sample_kwargs)
@@ -165,12 +250,5 @@ class QWaveSamplerSolver(BaseSolver):
 
 
 if __name__ == "__main__":
-    graph = nx.erdos_renyi_graph(5, 0.5, seed=42)
-    
     solver = QWaveSamplerSolver()
-    solver.configure(num_reads=100, num_sweeps=1000, sampler_type="path")
-    
-    result = solver.solve(graph)
-    print("Energy:", result.energy)
-    print("Ordering:", result.ordering)
-    print("Feasible:", result.is_feasible)  
+    print(solver.generate_power_schedule(1000))

@@ -1,0 +1,2 @@
+solver_name,beta_schedule_type,dataset_name,num_vertices,num_graphs,density,penalty_mode,feasibility_rate,success_rate,dominance_score,avg_relative_gap,std_relative_gap,num_feasible,num_success,total_time
+QWaveSampler_linear,linear,synthetic_n25,25,50,0.5,lucas,0.06,0.04,0.6666666666666666,0.019701295358624492,0.06947670060757158,3,2,311.57383847236633
