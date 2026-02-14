@@ -132,9 +132,10 @@ class Metrics:
 # DEFAULT CONFIGURATION
 # =============================================================================
 CONFIG = ExperimentConfig(
-    vertex_counts=[5,10,15,20,25],
+    vertex_counts=[10],
     penalty_methods=['exact', 'lucas'],
-    num_reads=1,
+    beta_schedule_types=['linear_beta'],
+    num_reads=10,
     seed=42,
     beta_range=(0.0, 1.0),
     use_auto_beta_range=True,

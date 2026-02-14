@@ -1,3 +1,0 @@
-solver_name,sampler_type,dataset_name,num_vertices,num_graphs,density,penalty_mode,feasibility_rate,success_rate,dominance_score,avg_relative_gap,std_relative_gap,num_feasible,num_success,total_time
-QWaveSampler_path,path,synthetic_n6,6,50,0.5,exact,1.0,0.42,0.42,0.09555581140565658,0.11551373534781473,50,21,6.996860027313232
-QWaveSampler_path,path,synthetic_n6,6,50,0.5,lucas,1.0,1.0,1.0,-0.010330055909003275,0.030697497576924356,50,50,7.267782688140869

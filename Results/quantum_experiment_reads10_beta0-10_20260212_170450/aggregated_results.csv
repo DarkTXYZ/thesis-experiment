@@ -1,6 +1,0 @@
-solver_name,beta_schedule_type,dataset_name,num_vertices,num_graphs,density,penalty_mode,feasibility_rate,success_rate,dominance_score,avg_relative_gap,std_relative_gap,num_feasible,num_success,total_time
-QWaveSampler_linear,linear,synthetic_n5,5,21,0.5,lucas,1.0,1.0,1.0,0.0,0.0,21,21,5.216647148132324
-QWaveSampler_linear,linear,synthetic_n10,10,50,0.5,lucas,1.0,1.0,1.0,-0.03139191215499542,0.04866257076018369,50,50,64.63918280601501
-QWaveSampler_linear,linear,synthetic_n15,15,50,0.5,lucas,0.88,0.88,1.0,-0.03110974585177095,0.02902195887076688,44,44,178.80530190467834
-QWaveSampler_linear,linear,synthetic_n20,20,50,0.5,lucas,0.66,0.66,0.7878787878787878,-0.019496777607989884,0.029166214742667857,33,33,377.4809491634369
-QWaveSampler_linear,linear,synthetic_n25,25,50,0.5,lucas,0.24,0.24,0.75,-0.013575106797656626,0.02016501845097067,12,12,681.6071112155914

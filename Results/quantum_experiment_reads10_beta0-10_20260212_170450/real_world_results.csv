@@ -1,9 +1,0 @@
-solver_name,beta_schedule_type,graph_name,num_vertices,num_edges,penalty_mode,mu_thermometer,mu_bijective,is_feasible,objective_value,spectral_cost,successive_augmentation_cost,local_search_cost,best_known_cost,relative_gap,solve_time
-QWaveSampler_linear,linear,ENZYMES_g124,14,31,lucas,7,7,True,61,126,75,61,61,0.0,3.4336366653442383
-QWaveSampler_linear,linear,ENZYMES_g154,9,16,lucas,5,5,True,26,56,27,26,26,0.0,1.044630765914917
-QWaveSampler_linear,linear,ENZYMES_g487,15,27,lucas,7,7,True,44,97,49,44,44,0.0,3.8254871368408203
-QWaveSampler_linear,linear,PROTEINS_g1046,13,22,lucas,5,5,True,34,109,34,41,34,0.0,2.718798875808716
-QWaveSampler_linear,linear,PROTEINS_g670,14,27,lucas,6,6,True,43,144,46,75,46,-0.06521739130434782,3.207435369491577
-QWaveSampler_linear,linear,PROTEINS_g751,15,28,lucas,6,6,True,45,147,60,45,45,0.0,3.903109550476074
-QWaveSampler_linear,linear,iscas89-s27,9,8,lucas,4,4,True,9,25,12,11,11,-0.18181818181818182,1.0905802249908447
-QWaveSampler_linear,linear,wafa-padgett,15,27,lucas,9,9,True,68,138,82,68,68,0.0,7.069437742233276
