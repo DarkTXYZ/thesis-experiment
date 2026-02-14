@@ -1,10 +1,66 @@
 [
   {
+    "name": "quantum_n5",
+    "num_vertices": 5,
+    "num_graphs": 100,
+    "density": 0.5,
+    "avg_edges": 6.190476190476191,
+    "avg_best_cost": 9.571428571428571
+  },
+  {
     "name": "quantum_n10",
     "num_vertices": 10,
-    "num_graphs": 50,
+    "num_graphs": 100,
     "density": 0.5,
-    "avg_edges": 22.26,
-    "avg_best_cost": 55.76
+    "avg_edges": 22.24,
+    "avg_best_cost": 55.26
+  },
+  {
+    "name": "quantum_n15",
+    "num_vertices": 15,
+    "num_graphs": 100,
+    "density": 0.5,
+    "avg_edges": 52.79,
+    "avg_best_cost": 201.88
+  },
+  {
+    "name": "quantum_n20",
+    "num_vertices": 20,
+    "num_graphs": 100,
+    "density": 0.5,
+    "avg_edges": 93.85,
+    "avg_best_cost": 482.91
+  },
+  {
+    "name": "quantum_n25",
+    "num_vertices": 25,
+    "num_graphs": 100,
+    "density": 0.5,
+    "avg_edges": 149.7,
+    "avg_best_cost": 984.59
+  },
+  {
+    "name": "quantum_n30",
+    "num_vertices": 30,
+    "num_graphs": 100,
+    "density": 0.5,
+    "avg_edges": 216.38,
+    "avg_best_cost": 1733.06
+  },
+  {
+    "name": "quantum_n35",
+    "num_vertices": 35,
+    "num_graphs": 100,
+    "density": 0.5,
+    "avg_edges": 297.7,
+    "avg_best_cost": 2840.83
+  },
+  {
+    "name": "quantum_n40",
+    "num_vertices": 40,
+    "num_graphs": 100,
+    "density": 0.5,
+    "avg_edges": 388.47,
+    "avg_best_cost": 4289.55
   }
 ]

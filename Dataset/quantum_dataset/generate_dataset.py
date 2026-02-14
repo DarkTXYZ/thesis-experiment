@@ -198,8 +198,8 @@ def load_graphs(filepath: str) -> dict:
 def main():
     # Configuration
     seed = 42
-    num_vertices_list = [10]
-    num_graphs = 50  # Number of graphs per vertex count
+    num_vertices_list = [5, 10, 15, 20, 25, 30, 35, 40]
+    num_graphs = 100  # Number of graphs per vertex count
     density = 0.5  # Edge density
     
     output_dir = os.path.dirname(os.path.abspath(__file__))
