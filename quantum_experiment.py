@@ -1,18 +1,17 @@
 import os
 import csv
+import json
 import time
 import pickle
 import statistics
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from datetime import datetime
 from typing import Optional
 
 import networkx as nx
 from tqdm import tqdm
 
-from Solver.HeuristicSolver.OpenJijSolver import OpenJijSolver
 from Solver.HeuristicSolver.QWSamplerSolver import QWaveSamplerSolver
-from Solver.HeuristicSolver.SBSolver import SimulatedBifurcationSolver
 from Solver.penalty_coefficients import calculate_exact_bound, calculate_lucas_bound
 from Utils.min_lin_arrangement import calculate_min_linear_arrangement
 
@@ -22,57 +21,40 @@ from Utils.min_lin_arrangement import calculate_min_linear_arrangement
 # =============================================================================
 @dataclass
 class ExperimentConfig:
-    """Configuration for the quantum experiment."""
+    seed: int = 42
+    verbose: bool = True
     
-    # Dataset settings
-    vertex_counts: list[int] = field(default_factory=lambda: [5, 8, 11, 13, 15])
-    dataset_dir: str = "Dataset/quantum_dataset"
-    use_synthetic_dataset: bool = True
+    vertex_counts: list[int] = field(default_factory=lambda: [])
+    penalty_methods: list[str] = field(default_factory=lambda: ['exact', 'lucas'])
+    num_reads: int = 10
+    success_gap_threshold: float = 0.05 
     
-    # Real-world dataset settings
-    use_real_world_dataset: bool = False
+    synthetic_dataset_path: str = "Dataset/quantum_dataset"
     real_world_dataset_path: str = "Dataset/quantum_real_world_dataset/quantum_real_world.pkl"
     
-    # Solver settings
-    penalty_methods: list[str] = field(default_factory=lambda: ['exact', 'lucas'])
-    num_reads: int = 1000
-    seed: int = 42
+    use_synthetic_dataset: bool = True
+    use_real_world_dataset: bool = False
     
-    # Solvers to use (set to False to disable)
-    use_openjij: bool = True
-    use_qwavesampler: bool = True
-    use_simulated_bifurcation: bool = True
+    beta_schedule_types: list[str] = field(default_factory=lambda: [
+        'default', 'linear', 'geometric' ,'linear_beta', 'exponential', 'power'
+        ])
+    beta_range: tuple[float, float] = (0.0, 1.0)
+    use_auto_beta_range: bool = False
     
-    # QWaveSampler settings
-    beta_schedule_types: list[str] = field(default_factory=lambda: ['default', 'linear', 'exponential'])
-    beta_range: tuple[float, float] = (0.0, 10.0)  # Custom beta range (hot_beta, cold_beta)
-    use_auto_beta_range: bool = False  # If True, calculate beta_range from BQM automatically
-    
-    # Success criteria
-    success_gap_threshold: float = 0.0  # 0.0 = exact match, 0.1 = 10% gap allowed
-    
-    # Output settings
     results_dir: str = "Results"
     save_detailed: bool = True
     save_aggregated: bool = True
-    
-    # Logging
-    verbose: bool = True
 
 
 @dataclass
 class GraphResult:
-    """Result for a single graph."""
     minla_cost: Optional[int]
     is_feasible: bool
 
 
 @dataclass
 class DetailedResult:
-    """Detailed result for a single graph solve."""
-    solver_name: str
-    beta_schedule_type: str
-    beta_range: str  # Beta range used "(hot_beta, cold_beta)"
+    solver_id: int
     num_vertices: int
     graph_id: int
     num_edges: int
@@ -84,35 +66,26 @@ class DetailedResult:
     best_known_cost: int
     is_feasible: bool
     solve_time: float
-
-
+    
 @dataclass
 class AggregatedResult:
-    """Aggregated result for a dataset configuration (synthetic only)."""
-    solver_name: str
-    beta_schedule_type: str
-    beta_range: str  # Beta range used "(hot_beta, cold_beta)"
+    solver_id: int
     dataset_name: str
     num_vertices: int
     num_graphs: int
-    density: float
     penalty_mode: str
+    num_feasible: int
+    num_success: int
     feasibility_rate: float
     success_rate: float
     dominance_score: float
     avg_relative_gap: float
     std_relative_gap: float
-    num_feasible: int
-    num_success: int
     total_time: float
-
-
+    
 @dataclass
 class RealWorldResult:
-    """Individual result for a real-world graph (not aggregated)."""
-    solver_name: str
-    beta_schedule_type: str
-    beta_range: str  # Beta range used "(hot_beta, cold_beta)"
+    solver_id: int
     graph_name: str
     num_vertices: int
     num_edges: int
@@ -120,18 +93,24 @@ class RealWorldResult:
     mu_thermometer: float
     mu_bijective: float
     is_feasible: bool
-    objective_value: Optional[int]  # MINLA cost from solver
+    objective_value: Optional[int]
     spectral_cost: int
     successive_augmentation_cost: int
     local_search_cost: int
     best_known_cost: int
-    relative_gap: Optional[float]  # Gap from best_known_cost
+    relative_gap: Optional[float]
     solve_time: float
-
+    
+@dataclass
+class SolverConfig:
+    solver_id: int
+    solver_name: str
+    beta_schedule_type: str
+    use_auto_beta_range: bool
 
 @dataclass
 class SolverTimeSummary:
-    """Summary of total time per solver."""
+    solver_id: int
     solver_name: str
     total_time: float
     num_graphs_solved: int
@@ -140,12 +119,11 @@ class SolverTimeSummary:
 
 @dataclass
 class Metrics:
-    """Calculated metrics for experiment results."""
     feasibility_rate: float
     success_rate: float
     dominance_score: float
     avg_relative_gap: float
-    std_relative_gap: float  # Standard deviation of relative gaps (consistency metric)
+    std_relative_gap: float 
     num_feasible: int
     num_success: int
 
@@ -154,18 +132,14 @@ class Metrics:
 # DEFAULT CONFIGURATION
 # =============================================================================
 CONFIG = ExperimentConfig(
-    vertex_counts=[15],
-    penalty_methods=['lucas'],
-    num_reads=10,
+    vertex_counts=[5,10,15,20,25],
+    penalty_methods=['exact', 'lucas'],
+    num_reads=1,
     seed=42,
-    use_openjij=False,
-    use_qwavesampler=True,
-    use_simulated_bifurcation=False,
-    beta_schedule_types=['linear_beta'],  # All beta schedule types
-    beta_range=(0.0, 1.0),  # Custom beta range (hot_beta, cold_beta)
-    use_auto_beta_range=True,  # Set to True to auto-calculate from BQM
-    use_synthetic_dataset=True,  # Set to False to skip synthetic datasets
-    use_real_world_dataset=False,  # Set to True to include real-world graphs
+    beta_range=(0.0, 1.0),
+    use_auto_beta_range=True,
+    use_synthetic_dataset=True,
+    use_real_world_dataset=True,
     success_gap_threshold=0.05,
     verbose=True
 )
@@ -176,68 +150,121 @@ CONFIG = ExperimentConfig(
 # =============================================================================
 # CSV field names
 AGGREGATED_FIELDS = [
-    'solver_name', 'beta_schedule_type', 'beta_range', 'dataset_name', 'num_vertices', 'num_graphs', 'density', 'penalty_mode',
-    'feasibility_rate', 'success_rate', 'dominance_score', 'avg_relative_gap', 'std_relative_gap',
-    'num_feasible', 'num_success', 'total_time'
+    'solver_id', 'dataset_name', 'num_vertices', 'num_graphs', 'penalty_mode',
+    'num_feasible', 'num_success', 'feasibility_rate', 'success_rate', 'dominance_score', 'avg_relative_gap', 'std_relative_gap',
+    'total_time'
 ]
 
 DETAILED_FIELDS = [
-    'solver_name', 'beta_schedule_type', 'beta_range', 'num_vertices', 'graph_id', 'num_edges', 'penalty_mode',
+    'solver_id', 'num_vertices', 'graph_id', 'num_edges', 'penalty_mode',
     'mu_thermometer', 'mu_bijective', 'energy', 'minla_cost',
     'best_known_cost', 'is_feasible', 'solve_time'
 ]
 
 REAL_WORLD_FIELDS = [
-    'solver_name', 'beta_schedule_type', 'beta_range', 'graph_name', 'num_vertices', 'num_edges', 'penalty_mode',
+    'solver_id', 'graph_name', 'num_vertices', 'num_edges', 'penalty_mode',
     'mu_thermometer', 'mu_bijective', 'is_feasible', 'objective_value',
     'spectral_cost', 'successive_augmentation_cost', 'local_search_cost',
     'best_known_cost', 'relative_gap', 'solve_time'
 ]
 
-SOLVER_TIME_FIELDS = ['solver_name', 'total_time', 'num_graphs_solved', 'avg_time_per_graph']
+SOLVER_CONFIG_FIELDS = ['solver_id', 'solver_name', 'beta_schedule_type', 'use_auto_beta_range']
+
+SOLVER_TIME_FIELDS = ['solver_id', 'solver_name', 'total_time', 'num_graphs_solved', 'avg_time_per_graph']
 
 
 # =============================================================================
 # HELPER CLASSES
 # =============================================================================
+class SolverConfigManager:
+    """Manage solver configurations and assign unique IDs."""
+    
+    def __init__(self):
+        self.configs: list[SolverConfig] = []
+        self.solver_map = {}  # Maps (solver_name, beta_schedule_type) -> solver_id
+        self._next_id = 0
+    
+    def add_solver(self, solver_name: str, solver: object, use_auto_beta_range: bool) -> int:
+        """Add a solver configuration and return its ID."""
+        beta_schedule_type = getattr(solver, 'beta_schedule_type', 'N/A')
+        
+        # Check if we already have this configuration
+        key = (solver_name, beta_schedule_type)
+        if key in self.solver_map:
+            return self.solver_map[key]
+        
+        # Create new configuration
+        solver_id = self._next_id
+        self._next_id += 1
+        
+        config = SolverConfig(
+            solver_id=solver_id,
+            solver_name=solver_name,
+            beta_schedule_type=beta_schedule_type,
+            use_auto_beta_range=use_auto_beta_range
+        )
+        
+        self.configs.append(config)
+        self.solver_map[key] = solver_id
+        
+        return solver_id
+    
+    def get_config(self, solver_id: int) -> Optional[SolverConfig]:
+        """Get solver configuration by ID."""
+        for config in self.configs:
+            if config.solver_id == solver_id:
+                return config
+        return None
+    
+    def get_all_configs(self) -> list[SolverConfig]:
+        """Get all solver configurations."""
+        return self.configs
+
+
 class SolverTimeTracker:
     """Track and manage solver execution times."""
     
-    def __init__(self, solver_names: list[str]):
-        self.times = {
-            name: {'total_time': 0.0, 'num_graphs': 0}
-            for name in solver_names
-        }
+    def __init__(self):
+        self.times = {}  # Maps solver_id -> {'solver_name': str, 'total_time': float, 'num_graphs': int}
     
-    def add_time(self, solver_name: str, time: float) -> None:
+    def add_time(self, solver_id: int, solver_name: str, time: float) -> None:
         """Add execution time for a solver."""
-        self.times[solver_name]['total_time'] += time
-        self.times[solver_name]['num_graphs'] += 1
+        if solver_id not in self.times:
+            self.times[solver_id] = {'solver_name': solver_name, 'total_time': 0.0, 'num_graphs': 0}
+        self.times[solver_id]['total_time'] += time
+        self.times[solver_id]['num_graphs'] += 1
     
     def get_summaries(self) -> list[SolverTimeSummary]:
         """Get time summaries for all solvers."""
         summaries = []
-        for solver_name, data in self.times.items():
+        for solver_id, data in self.times.items():
             num_graphs = data['num_graphs']
             avg_time = data['total_time'] / num_graphs if num_graphs > 0 else 0.0
             summaries.append(SolverTimeSummary(
-                solver_name=solver_name,
+                solver_id=solver_id,
+                solver_name=data['solver_name'],
                 total_time=data['total_time'],
                 num_graphs_solved=num_graphs,
                 avg_time_per_graph=avg_time
             ))
         return summaries
     
-    def log_summary(self) -> None:
+    def log_summary(self, config_manager: SolverConfigManager) -> None:
         """Log time summary for all solvers."""
         print("\n" + "=" * 60)
         print("SOLVER TIME SUMMARY")
         print("=" * 60)
-        for solver_name in sorted(self.times.keys()):
-            data = self.times[solver_name]
+        for solver_id in sorted(self.times.keys()):
+            data = self.times[solver_id]
+            config = config_manager.get_config(solver_id)
             num_graphs = data['num_graphs']
             avg_time = data['total_time'] / num_graphs if num_graphs > 0 else 0.0
-            print(f"{solver_name}:")
+            
+            display_name = data['solver_name']
+            if config:
+                display_name += f" ({config.beta_schedule_type})"
+            
+            print(f"{display_name}:")
             print(f"  Total time: {data['total_time']:.2f}s")
             print(f"  Graphs solved: {num_graphs}")
             print(f"  Avg time per graph: {avg_time:.4f}s")
@@ -328,27 +355,32 @@ def calculate_metrics(
     )
 
 
-def init_solvers(config: ExperimentConfig) -> dict[str, object]:
-    """Initialize solvers based on configuration."""
+def init_solvers(config: ExperimentConfig) -> tuple[dict[str, object], SolverConfigManager, dict[str, int]]:
+    """
+    Initialize solvers based on configuration.
+    
+    Returns:
+        Tuple of (solvers_dict, config_manager, solver_id_map)
+    """
     solvers = {}
-    if config.use_openjij:
-        solvers['OpenJij'] = OpenJijSolver()
-    if config.use_qwavesampler:
-        for beta_schedule_type in config.beta_schedule_types:
-            solver = QWaveSamplerSolver()
-            solver.configure(
-                beta_schedule_type=beta_schedule_type, 
-                beta_range=config.beta_range,
-                use_auto_beta_range=config.use_auto_beta_range
-            )
-            solvers[f'QWaveSampler_{beta_schedule_type}'] = solver
-    if config.use_simulated_bifurcation:
-        solvers['SimulatedBifurcation'] = SimulatedBifurcationSolver()
+    config_manager = SolverConfigManager()
+    solver_id_map = {}  # Maps solver_name -> solver_id
     
-    for solver in solvers.values():
-        solver.configure(seed=config.seed, num_reads=config.num_reads)
+    for beta_schedule_type in config.beta_schedule_types:
+        solver = QWaveSamplerSolver()
+        solver.configure(
+            beta_schedule_type=beta_schedule_type, 
+            beta_range=config.beta_range,
+            use_auto_beta_range=config.use_auto_beta_range,
+            seed=config.seed,
+            num_reads=config.num_reads
+        )
+        solver_name = f'QWaveSampler_{beta_schedule_type}'
+        solver_id = config_manager.add_solver(solver_name, solver, config.use_auto_beta_range)
+        solvers[solver_name] = solver
+        solver_id_map[solver_name] = solver_id
     
-    return solvers
+    return solvers, config_manager, solver_id_map
 
 
 def process_single_graph(
@@ -356,8 +388,8 @@ def process_single_graph(
     num_vertices: int,
     solver: object,
     penalty_mode: str,
-    solver_name: str,
-    beta_schedule_type: str,
+    solver_id: int,
+    config_manager: SolverConfigManager,
     config: ExperimentConfig
 ) -> tuple[GraphResult, DetailedResult, float]:
     """
@@ -383,19 +415,10 @@ def process_single_graph(
     if result.is_feasible:
         minla_cost = calculate_min_linear_arrangement(graph, result.ordering)
     
-    # Get the actual beta_range used (from solver if QWaveSampler, otherwise N/A)
-    if hasattr(solver, 'actual_beta_range'):
-        actual_beta = solver.actual_beta_range
-        beta_range_str = f"({actual_beta[0]:.6f}, {actual_beta[1]:.6f})"
-    else:
-        beta_range_str = "N/A"
-    
     graph_result = GraphResult(minla_cost=minla_cost, is_feasible=result.is_feasible)
     
     detailed = DetailedResult(
-        solver_name=solver_name,
-        beta_schedule_type=beta_schedule_type,
-        beta_range=beta_range_str,
+        solver_id=solver_id,
         num_vertices=num_vertices,
         graph_id=graph_id,
         num_edges=num_edges,
@@ -416,8 +439,8 @@ def process_real_world_graph(
     graph_data: dict,
     solver: object,
     penalty_mode: str,
-    solver_name: str,
-    beta_schedule_type: str,
+    solver_id: int,
+    config_manager: SolverConfigManager,
     config: ExperimentConfig
 ) -> RealWorldResult:
     """
@@ -454,17 +477,8 @@ def process_real_world_graph(
         if best_known_cost > 0:
             relative_gap = (objective_value - best_known_cost) / best_known_cost
     
-    # Get the actual beta_range used (from solver if QWaveSampler, otherwise N/A)
-    if hasattr(solver, 'actual_beta_range'):
-        actual_beta = solver.actual_beta_range
-        beta_range_str = f"({actual_beta[0]:.6f}, {actual_beta[1]:.6f})"
-    else:
-        beta_range_str = "N/A"
-    
     return RealWorldResult(
-        solver_name=solver_name,
-        beta_schedule_type=beta_schedule_type,
-        beta_range=beta_range_str,
+        solver_id=solver_id,
         graph_name=graph_name,
         num_vertices=num_vertices,
         num_edges=num_edges,
@@ -534,7 +548,7 @@ def collect_datasets(config: ExperimentConfig, base_dir: str) -> list[tuple[str,
         List of tuples: (dataset_type, vertex_label, dataset_path)
     """
     datasets_to_process = []
-    dataset_dir = os.path.join(base_dir, config.dataset_dir)
+    dataset_dir = os.path.join(base_dir, config.synthetic_dataset_path)
     
     # Add synthetic datasets
     if config.use_synthetic_dataset:
@@ -560,11 +574,12 @@ def process_synthetic_dataset(
     graphs_data: list[dict],
     n: int,
     solver: object,
+    solver_id: int,
     solver_name: str,
     penalty_mode: str,
     config: ExperimentConfig,
-    time_tracker: SolverTimeTracker,
-    beta_schedule_type: str
+    config_manager: SolverConfigManager,
+    time_tracker: SolverTimeTracker
 ) -> tuple[list[GraphResult], list[DetailedResult], list[int], float]:
     """
     Process a synthetic dataset with the given solver.
@@ -581,13 +596,13 @@ def process_synthetic_dataset(
         graph_n = graph_data.get('num_vertices', n)
         
         result, detailed, best_cost = process_single_graph(
-            graph_data, graph_n, solver, penalty_mode, solver_name, beta_schedule_type, config
+            graph_data, graph_n, solver, penalty_mode, solver_id, config_manager, config
         )
         graph_results.append(result)
         best_costs.append(best_cost)
         detailed_results.append(detailed)
         total_time += detailed.solve_time
-        time_tracker.add_time(solver_name, detailed.solve_time)
+        time_tracker.add_time(solver_id, solver_name, detailed.solve_time)
     
     return graph_results, detailed_results, best_costs, total_time
 
@@ -595,10 +610,11 @@ def process_synthetic_dataset(
 def process_realworld_dataset(
     graphs_data: list[dict],
     solver: object,
+    solver_id: int,
     solver_name: str,
     penalty_mode: str,
+    config_manager: SolverConfigManager,
     time_tracker: SolverTimeTracker,
-    beta_schedule_type: str,
     config: ExperimentConfig
 ) -> tuple[list[RealWorldResult], float]:
     """
@@ -611,10 +627,10 @@ def process_realworld_dataset(
     total_time = 0.0
     
     for graph_data in tqdm(graphs_data, desc="    Graphs", leave=False, position=1):
-        result = process_real_world_graph(graph_data, solver, penalty_mode, solver_name, beta_schedule_type, config)
+        result = process_real_world_graph(graph_data, solver, penalty_mode, solver_id, config_manager, config)
         real_world_results.append(result)
         total_time += result.solve_time
-        time_tracker.add_time(solver_name, result.solve_time)
+        time_tracker.add_time(solver_id, solver_name, result.solve_time)
     
     return real_world_results, total_time
 
@@ -625,14 +641,32 @@ def save_experiment_results(
     detailed_results: list[DetailedResult],
     real_world_results: list[RealWorldResult],
     time_tracker: SolverTimeTracker,
+    config_manager: SolverConfigManager,
     config: ExperimentConfig
 ) -> None:
     """Save all experiment results to CSV files."""
+    
+    # Save experiment configuration
+    config_dict = asdict(config)
+    config_path = os.path.join(experiment_folder, 'experiment_config.json')
+    with open(config_path, 'w') as f:
+        json.dump(config_dict, f, indent=2)
+    if config.verbose:
+        print(f"\nExperiment config saved to: {config_path}")
+    
+    # Save solver configurations
+    solver_configs = config_manager.get_all_configs()
+    if solver_configs:
+        solver_config_path = os.path.join(experiment_folder, 'solver_configs.csv')
+        save_results_to_csv(solver_configs, solver_config_path, SOLVER_CONFIG_FIELDS)
+        if config.verbose:
+            print(f"Solver configurations saved to: {solver_config_path}")
+    
     if config.save_aggregated and aggregated_results:
         agg_path = os.path.join(experiment_folder, 'aggregated_results.csv')
         save_results_to_csv(aggregated_results, agg_path, AGGREGATED_FIELDS)
         if config.verbose:
-            print(f"\nAggregated results saved to: {agg_path}")
+            print(f"Aggregated results saved to: {agg_path}")
     
     if config.save_detailed and detailed_results:
         detail_path = os.path.join(experiment_folder, 'detailed_results.csv')
@@ -667,7 +701,7 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
     results_dir = os.path.join(base_dir, config.results_dir)
     os.makedirs(results_dir, exist_ok=True)
     
-    solvers = init_solvers(config)
+    solvers, config_manager, solver_id_map = init_solvers(config)
     if not solvers:
         print("No solvers enabled. Please enable at least one solver in config.")
         return [], [], []
@@ -678,7 +712,7 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
     aggregated_results: list[AggregatedResult] = []
     detailed_results: list[DetailedResult] = []
     real_world_results: list[RealWorldResult] = []
-    time_tracker = SolverTimeTracker(list(solvers.keys()))
+    time_tracker = SolverTimeTracker()
     
     # Collect all datasets to process
     datasets_to_process = collect_datasets(config, base_dir)
@@ -716,19 +750,17 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
             
             for solver_name, solver in solvers.items():
                 pbar_configs.set_description(f"{dataset_name}, {penalty_mode}, {solver_name}")
+                solver_id = solver_id_map[solver_name]
                 
                 if config.verbose:
                     tqdm.write(f"    Solver: {solver_name}...")
                 
                 solver.configure(penalty_mode=penalty_mode)
                 
-                # Get beta_schedule_type for QWaveSampler, "N/A" for others
-                beta_schedule_type = getattr(solver, 'beta_schedule_type', 'N/A')
-                
                 if dataset_type == 'real_world':
                     # Process real-world dataset (no aggregation)
                     rw_results, total_time = process_realworld_dataset(
-                        graphs_data, solver, solver_name, penalty_mode, time_tracker, beta_schedule_type, config
+                        graphs_data, solver, solver_id, solver_name, penalty_mode, config_manager, time_tracker, config
                     )
                     real_world_results.extend(rw_results)
                     
@@ -738,36 +770,25 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
                 else:
                     # Process synthetic dataset (with aggregation)
                     graph_results, details, best_costs, total_time = process_synthetic_dataset(
-                        graphs_data, n, solver, solver_name, penalty_mode, config, time_tracker, beta_schedule_type
+                        graphs_data, n, solver, solver_id, solver_name, penalty_mode, config, config_manager, time_tracker
                     )
                     detailed_results.extend(details)
                     
                     metrics = calculate_metrics(graph_results, best_costs, config.success_gap_threshold)
                     
-                    # Get beta_range string for aggregated result
-                    if hasattr(solver, 'actual_beta_range'):
-                        actual_beta = solver.actual_beta_range
-                        beta_range_str_result = f"({actual_beta[0]:.6f}, {actual_beta[1]:.6f})"
-                    else:
-                        # For non-QWaveSampler solvers
-                        beta_range_str_result = "N/A"
-                    
                     aggregated_results.append(AggregatedResult(
-                        solver_name=solver_name,
-                        beta_schedule_type=beta_schedule_type,
-                        beta_range=beta_range_str_result,
+                        solver_id=solver_id,
                         dataset_name=dataset_name,
                         num_vertices=n if dataset_type == 'synthetic' else int(n),
                         num_graphs=num_graphs,
-                        density=density,
                         penalty_mode=penalty_mode,
+                        num_feasible=metrics.num_feasible,
+                        num_success=metrics.num_success,
                         feasibility_rate=metrics.feasibility_rate,
                         success_rate=metrics.success_rate,
                         dominance_score=metrics.dominance_score,
                         avg_relative_gap=metrics.avg_relative_gap,
                         std_relative_gap=metrics.std_relative_gap,
-                        num_feasible=metrics.num_feasible,
-                        num_success=metrics.num_success,
                         total_time=total_time
                     ))
                     
@@ -780,7 +801,7 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
     
     # Log solver time summary
     if config.verbose:
-        time_tracker.log_summary()
+        time_tracker.log_summary(config_manager)
     
     # Save results to folder with timestamp
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -789,7 +810,7 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
     
     save_experiment_results(
         experiment_folder, aggregated_results, detailed_results,
-        real_world_results, time_tracker, config
+        real_world_results, time_tracker, config_manager, config
     )
     
     if config.verbose:

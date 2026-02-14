@@ -1,0 +1,7 @@
+solver_id,solver_name,beta_schedule_type,beta_range,use_auto_beta_range
+0,QWaveSampler_default,default,"(0.002577, 2.226949)",True
+1,QWaveSampler_linear,linear,"(0.002577, 2.226949)",True
+2,QWaveSampler_geometric,geometric,"(0.002577, 2.226949)",True
+3,QWaveSampler_linear_beta,linear_beta,"(0.002577, 2.226949)",True
+4,QWaveSampler_exponential,exponential,"(0.002577, 2.226949)",True
+5,QWaveSampler_power,power,"(0.002577, 2.226949)",True
