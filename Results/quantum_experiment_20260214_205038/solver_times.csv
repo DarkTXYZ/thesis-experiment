@@ -1,0 +1,2 @@
+solver_id,solver_name,total_time,num_graphs_solved,avg_time_per_graph
+0,QWaveSampler_linear_beta,5056.148489236832,1058,4.778968326310805

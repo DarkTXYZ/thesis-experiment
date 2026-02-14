@@ -1,0 +1,2 @@
+solver_id,solver_name,beta_schedule_type,use_auto_beta_range
+0,QWaveSampler_linear_beta,linear_beta,True

@@ -1,0 +1,33 @@
+{
+  "seed": 42,
+  "verbose": true,
+  "vertex_counts": [
+    5,
+    10,
+    15,
+    20,
+    25,
+    30
+  ],
+  "penalty_methods": [
+    "exact",
+    "lucas"
+  ],
+  "num_reads": 10,
+  "success_gap_threshold": 0.05,
+  "synthetic_dataset_path": "Dataset/quantum_dataset",
+  "real_world_dataset_path": "Dataset/quantum_real_world_dataset/quantum_real_world.pkl",
+  "use_synthetic_dataset": true,
+  "use_real_world_dataset": true,
+  "beta_schedule_types": [
+    "linear_beta"
+  ],
+  "beta_range": [
+    0.0,
+    1.0
+  ],
+  "use_auto_beta_range": true,
+  "results_dir": "Results",
+  "save_detailed": true,
+  "save_aggregated": true
+}
