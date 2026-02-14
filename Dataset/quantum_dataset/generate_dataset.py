@@ -109,7 +109,9 @@ def generate_graphs_for_vertex_count(n: int, num_graphs: int, density: float, se
         
         graph_data = {
             'id': i,
+            'num_vertices': n,
             'num_edges': graph.number_of_edges(),
+            'density': nx.density(graph),
             'edges': list(graph.edges()),
             'spectral_cost': baseline_results['spectral_cost'],
             'successive_augmentation_cost': baseline_results['successive_augmentation_cost'],
@@ -162,11 +164,12 @@ def save_graphs_to_pickle(num_vertices_list: list, num_graphs: int, density: flo
         
         # Calculate statistics
         avg_edges = sum(g['num_edges'] for g in graphs_data) / len(graphs_data)
+        avg_density = sum(g['density'] for g in graphs_data) / len(graphs_data)
         avg_best_cost = sum(g['best_cost'] for g in graphs_data) / len(graphs_data)
         
         print(f"  Saved to {filename}")
         print(f"  Total unique graphs: {len(graphs_data)}")
-        print(f"  Avg edges: {avg_edges:.1f}, Avg best cost: {avg_best_cost:.1f}")
+        print(f"  Avg edges: {avg_edges:.1f}, Avg density: {avg_density:.4f}, Avg best cost: {avg_best_cost:.1f}")
         
         # Store summary for JSON
         result = {
@@ -174,6 +177,7 @@ def save_graphs_to_pickle(num_vertices_list: list, num_graphs: int, density: flo
             'num_vertices': n,
             'num_graphs': num_graphs,
             'density': density,
+            'avg_density': avg_density,
             'avg_edges': avg_edges,
             'avg_best_cost': avg_best_cost
         }
