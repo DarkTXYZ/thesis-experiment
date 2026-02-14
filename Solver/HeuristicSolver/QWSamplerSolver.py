@@ -10,6 +10,9 @@ import dimod
 import numpy as np
 from penalty_coefficients import calculate_lucas_bound, calculate_exact_bound
 import numpy as np
+from collections import defaultdict
+
+import warnings
 
 class QWaveSamplerSolver(BaseSolver):
     
@@ -96,6 +99,57 @@ class QWaveSamplerSolver(BaseSolver):
     def _get_sampler(self):
         return PathIntegralAnnealingSampler()
     
+    def default_ising_beta_range(self, h, J, max_single_qubit_excitation_rate = 0.01,
+                              scale_T_with_N = True):
+        if not 0 < max_single_qubit_excitation_rate < 1:
+            raise ValueError('Targeted single qubit excitations rates must be in range (0,1)')
+
+        sum_abs_bias_dict = defaultdict(int, {k: abs(v) for k, v in h.items()})
+        if sum_abs_bias_dict:
+            min_abs_bias_dict = {k: v for k, v in sum_abs_bias_dict.items() if v != 0}
+        else:
+            min_abs_bias_dict = {}
+        for (k1, k2), v in J.items():
+            for k in [k1,k2]:
+                sum_abs_bias_dict[k] += abs(v)
+                if v != 0:
+                    if k in min_abs_bias_dict:
+                        min_abs_bias_dict[k] = min(abs(v),min_abs_bias_dict[k])
+                    else:
+                        min_abs_bias_dict[k] = abs(v)
+
+        if not min_abs_bias_dict:
+            warn_msg = ('All bqm biases are zero (all energies are zero), this is '
+                        'likely a value error. Temperature range is set arbitrarily '
+                        'to [0.1,1]. Metropolis-Hastings update is non-ergodic.')
+            warnings.warn(warn_msg)
+            return([0.1,1])
+
+
+        max_effective_field = max(sum_abs_bias_dict.values(), default=0)
+
+        if max_effective_field == 0:
+            hot_beta = 1
+        else:
+            hot_beta = np.log(2) / (2*max_effective_field)
+
+        if len(min_abs_bias_dict)==0:
+            cold_beta = hot_beta
+        else:
+            values_array = np.array(list(min_abs_bias_dict.values()),dtype=float)
+            min_effective_field = np.min(values_array)
+            if scale_T_with_N:
+                number_min_gaps = np.sum(min_effective_field == values_array)
+            else:
+                number_min_gaps = 1
+            cold_beta = np.log(number_min_gaps/max_single_qubit_excitation_rate) / (2*min_effective_field)
+
+        return [hot_beta, cold_beta]
+    
+    def default_bqm_beta_range(self, bqm):
+        ising = bqm.spin
+        return self.default_ising_beta_range(ising.linear, ising.quadratic)
+
     def _calculate_beta_range(self, bqm) -> tuple[float, float]:
         """
         Calculate appropriate hot_beta and cold_beta from the BQM.
@@ -150,7 +204,7 @@ class QWaveSamplerSolver(BaseSolver):
         
         return (hot_beta, cold_beta)
 
-    def generate_linear_beta_schedule(self, steps: int, beta_range: tuple[float, float]):
+    def generate_linear_schedule(self, steps: int, beta_range: tuple[float, float]):
         """
         Generate linear annealing schedule.
         
@@ -188,12 +242,11 @@ class QWaveSamplerSolver(BaseSolver):
         
         # Determine beta range - auto-calculate or use configured values
         if self.use_auto_beta_range:
-            beta_range = self._calculate_beta_range(bqm)
+            # Calculate from BQM and store in solver instance
+            self.actual_beta_range = self.default_bqm_beta_range(bqm)
         else:
-            beta_range = (0, 1)
-
-        # Store the actual beta_range used (for results tracking)
-        self.actual_beta_range = beta_range
+            # Use configured beta_range from config
+            self.actual_beta_range = self.beta_range
         
         sample_kwargs = {
             'num_reads': self.num_reads, 
@@ -203,21 +256,37 @@ class QWaveSamplerSolver(BaseSolver):
         if self.seed is not None:
             sample_kwargs['seed'] = self.seed
 
-        if self.beta_schedule_type == 'linear':
-            Hp, Hd = self.generate_linear_schedule(self.num_sweeps, beta_range)
+        if self.beta_schedule_type == 'linear_beta':
+            Hp, Hd = self.generate_linear_schedule(self.num_sweeps, self.actual_beta_range)
+            response = sampler.sample(bqm, 
+                            beta_schedule_type='custom',
+                            Hp_field=Hp,
+                            Hd_field=Hd,
+                        **sample_kwargs)
         elif self.beta_schedule_type == 'exponential':
             Hp, Hd = self.generate_exponential_schedule(self.num_sweeps)
+            response = sampler.sample(bqm, 
+                            beta_schedule_type='custom',
+                            Hp_field=Hp,
+                            Hd_field=Hd,
+                        **sample_kwargs)
         elif self.beta_schedule_type == 'power':
             Hp, Hd = self.generate_power_schedule(self.num_sweeps)
-
-        if self.beta_schedule_type == 'default':
-            response = sampler.sample(bqm, **sample_kwargs)
-        else:
             response = sampler.sample(bqm, 
-                                      beta_schedule_type='custom',
-                                      Hp_field=Hp,
-                                      Hd_field=Hd,
-                                    **sample_kwargs)
+                            beta_schedule_type='custom',
+                            Hp_field=Hp,
+                            Hd_field=Hd,
+                        **sample_kwargs)
+        elif self.beta_schedule_type == 'geometric':
+            response = sampler.sample(bqm, 
+                            beta_schedule_type='geometric',
+                            **sample_kwargs)
+        elif self.beta_schedule_type == 'linear':
+            response = sampler.sample(bqm, 
+                            beta_schedule_type='linear',
+                            **sample_kwargs)
+        elif self.beta_schedule_type == 'default':
+            response = sampler.sample(bqm, **sample_kwargs)
         
         best_sample = response.first.sample
         energy = response.first.energy

@@ -154,16 +154,16 @@ class Metrics:
 # DEFAULT CONFIGURATION
 # =============================================================================
 CONFIG = ExperimentConfig(
-    vertex_counts=[10],
+    vertex_counts=[15],
     penalty_methods=['lucas'],
     num_reads=10,
     seed=42,
     use_openjij=False,
     use_qwavesampler=True,
     use_simulated_bifurcation=False,
-    beta_schedule_types=['power'],  # All beta schedule types
-    beta_range=(0.0, 10.0),  # Custom beta range (hot_beta, cold_beta)
-    use_auto_beta_range=False,  # Set to True to auto-calculate from BQM
+    beta_schedule_types=['linear_beta'],  # All beta schedule types
+    beta_range=(0.0, 1.0),  # Custom beta range (hot_beta, cold_beta)
+    use_auto_beta_range=True,  # Set to True to auto-calculate from BQM
     use_synthetic_dataset=True,  # Set to False to skip synthetic datasets
     use_real_world_dataset=False,  # Set to True to include real-world graphs
     success_gap_threshold=0.05,
@@ -748,10 +748,9 @@ def run_experiment(config: ExperimentConfig = None) -> tuple[list[AggregatedResu
                     if hasattr(solver, 'actual_beta_range'):
                         actual_beta = solver.actual_beta_range
                         beta_range_str_result = f"({actual_beta[0]:.6f}, {actual_beta[1]:.6f})"
-                    elif config.use_auto_beta_range:
-                        beta_range_str_result = "auto"
                     else:
-                        beta_range_str_result = f"({config.beta_range[0]}, {config.beta_range[1]})"
+                        # For non-QWaveSampler solvers
+                        beta_range_str_result = "N/A"
                     
                     aggregated_results.append(AggregatedResult(
                         solver_name=solver_name,
