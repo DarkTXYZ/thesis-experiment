@@ -5,7 +5,7 @@ from pathlib import Path
 import sys
 
 sys.path.append(str(Path(__file__).parent.parent))
-from Utils.min_lin_arrangement import calculate_min_linear_arrangement
+from Utils.MinLA import calculate_min_linear_arrangement
 
 def local_search(G : nx.Graph, ordering: list, iter_max: int = 1000, flip_method: str = "flip2") -> list:
     iter_count = 0

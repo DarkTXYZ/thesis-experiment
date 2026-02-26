@@ -5,7 +5,7 @@ import csv
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent))
-from Utils.min_lin_arrangement import calculate_min_linear_arrangement
+from Utils.MinLA import calculate_min_linear_arrangement
 
 
 def spectral_sequencing(graph: nx.Graph) -> List[int]:

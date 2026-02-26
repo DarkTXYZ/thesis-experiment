@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 sys.path.append(str(Path(__file__).parent.parent))
-from Utils.min_lin_arrangement import calculate_min_linear_arrangement
+from Utils.MinLA import calculate_min_linear_arrangement
 
 def init_ordering(graph: nx.Graph, method: str) -> List[int]:
     """Initialize ordering based on the specified method."""

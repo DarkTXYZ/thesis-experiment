@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent.parent))
-from Utils.min_lin_arrangement import calculate_min_linear_arrangement
+from Utils.MinLA import calculate_min_linear_arrangement
 
 
 def load_graph(filepath: str) -> nx.Graph:

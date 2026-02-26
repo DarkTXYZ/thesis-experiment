@@ -8,6 +8,7 @@ import numpy as np
 import networkx as nx
 import dimod
 from dwave.samplers import PathIntegralAnnealingSampler
+from dwave.embedding.chain_strength import uniform_torque_compensation, scaled
 from pyqubo import Array
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -253,29 +254,32 @@ class QWaveSamplerSolver(BaseSolver):
         """Sample BQM with the configured beta schedule type."""
         schedule_type = self.beta_schedule_type
         
+        chain_strength = scaled(bqm)
+        print(chain_strength)
+        
         # Custom schedules with explicit Hp and Hd fields
         if schedule_type == 'linear_beta':
             Hp, Hd = self.generate_linear_schedule(self.num_sweeps, self.actual_beta_range)
             return sampler.sample(bqm, beta_schedule_type='custom',
-                                Hp_field=Hp, Hd_field=Hd, **sample_kwargs)
+                                Hp_field=Hp, Hd_field=Hd, chain_coupler_strength=chain_strength, **sample_kwargs)
         
         elif schedule_type == 'exponential':
             Hp, Hd = self.generate_exponential_schedule(self.num_sweeps)
             return sampler.sample(bqm, beta_schedule_type='custom',
-                                Hp_field=Hp, Hd_field=Hd, **sample_kwargs)
+                                Hp_field=Hp, Hd_field=Hd, chain_coupler_strength=chain_strength, **sample_kwargs)
         
         elif schedule_type == 'power':
             Hp, Hd = self.generate_power_schedule(self.num_sweeps)
             return sampler.sample(bqm, beta_schedule_type='custom',
-                                Hp_field=Hp, Hd_field=Hd, **sample_kwargs)
+                                Hp_field=Hp, Hd_field=Hd, chain_coupler_strength=chain_strength, **sample_kwargs)
         
         # Built-in schedule types
         elif schedule_type in ['geometric', 'linear']:
-            return sampler.sample(bqm, beta_schedule_type=schedule_type, **sample_kwargs)
+            return sampler.sample(bqm, beta_schedule_type=schedule_type, chain_coupler_strength=chain_strength, **sample_kwargs)
         
         # Default schedule
         else:
-            return sampler.sample(bqm, **sample_kwargs)
+            return sampler.sample(bqm, chain_coupler_strength=chain_strength, **sample_kwargs)
 
     def _decode_solution(self, raw_sample: Dict, num_nodes: int) -> Tuple[np.ndarray, bool]:
         """Decode raw sample into ordering and check feasibility."""
@@ -306,5 +310,27 @@ class QWaveSamplerSolver(BaseSolver):
 
 
 if __name__ == "__main__":
+    import pickle
+
     solver = QWaveSamplerSolver()
-    print(solver.generate_power_schedule(1000))
+    solver.configure(
+        beta_schedule_type='linear_beta',
+        use_auto_beta_range=True
+    )
+    
+    # read graphs from n5 dataset
+    dataset_path = os.path.join(os.path.dirname(__file__), '..', '..', 'Dataset', 'quantum_dataset', 'quantum_n30.pkl')
+    with open(dataset_path, 'rb') as f:
+        dataset = pickle.load(f)
+    
+    for graph_data in dataset['graphs']:
+        G = nx.Graph()
+        G.add_nodes_from(range(graph_data['num_vertices']))
+        G.add_edges_from(graph_data['edges'])
+        
+        result = solver.solve(G)
+        bqm = self.build_qubo(graph)
+        print(f"Graph {graph_data['id']}: Energy: {result.energy}, Feasible: {result.is_feasible}")
+        
+        break
+        

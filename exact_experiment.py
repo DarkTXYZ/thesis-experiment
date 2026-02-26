@@ -5,7 +5,7 @@ import networkx as nx
 from datetime import datetime
 from Solver.ExactSolver.DimodExactSolver import DimodExactSolver
 from Solver.penalty_coefficients import calculate_exact_bound, calculate_lucas_bound
-from Utils.min_lin_arrangement import calculate_min_linear_arrangement
+from Utils.MinLA import calculate_min_linear_arrangement
 
 
 def load_graph(filepath: str) -> nx.Graph:
