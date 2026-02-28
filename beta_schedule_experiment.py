@@ -31,10 +31,13 @@ import Utils.MinLA as minla
 
 SEED = 42
 NUM_READS = 10
-# NUM_SWEEPS_LIST = [100, 500, 1000, 2000, 3000]
-NUM_SWEEPS_LIST = [4000, 5000, 6000, 7000, 8000]
+# NUM_SWEEPS_LIST = [100]
+NUM_SWEEPS_LIST = [100, 500, 1000, 2000, 3000]
+# NUM_SWEEPS_LIST = [4000, 5000, 6000, 7000, 8000]
 GRAPH_SIZES = [40]                     # which quantum_nX.pkl to load
 MAX_GRAPHS_PER_SIZE = 1                # only pick one graph
+QUBITS_PER_CHAIN = 16
+QUBITS_PER_UPDATE = 16
 DATASET_DIR = "Dataset/quantum_dataset"
 RESULTS_DIR = "Results"
 
@@ -135,14 +138,16 @@ def solve_builtin_linear(
 ):
     """Solve using the built-in 'linear' beta_schedule_type."""
     sampler = PathIntegralAnnealingSampler()
-    chain_strength = uniform_torque_compensation(bqm)
     return sampler.sample(
         bqm,
         num_reads=num_reads,
         num_sweeps=num_sweeps,
         seed=seed,
         beta_schedule_type='linear',
-        chain_coupler_strength=chain_strength,
+        # chain_coupler_strength=-uniform_torque_compensation(bqm),
+        qubits_per_chain=QUBITS_PER_CHAIN,
+        qubits_per_update=QUBITS_PER_UPDATE,
+        project_states=(True, True),
     )
 
 
@@ -154,7 +159,6 @@ def solve_custom_linear(
 ):
     """Solve using custom linear schedule (Hp/Hd fields)."""
     sampler = PathIntegralAnnealingSampler()
-    chain_strength = uniform_torque_compensation(bqm)
     beta_range = auto_beta_range(bqm)
     Hp, Hd = generate_custom_linear_schedule(num_sweeps, beta_range)
     return sampler.sample(
@@ -165,7 +169,10 @@ def solve_custom_linear(
         beta_schedule_type='custom',
         Hp_field=Hp,
         Hd_field=Hd,
-        chain_coupler_strength=chain_strength,
+        # chain_coupler_strength=-uniform_torque_compensation(bqm),
+        qubits_per_chain=QUBITS_PER_CHAIN,
+        qubits_per_update=QUBITS_PER_UPDATE,
+        project_states=(True, True),
     )
 
 # ──────────────────────────────────────────────────────────────────────────────
