@@ -36,8 +36,8 @@ NUM_SWEEPS_LIST = [100, 500, 1000, 2000, 3000]
 # NUM_SWEEPS_LIST = [4000, 5000, 6000, 7000, 8000]
 GRAPH_SIZES = [40]                     # which quantum_nX.pkl to load
 MAX_GRAPHS_PER_SIZE = 1                # only pick one graph
-QUBITS_PER_CHAIN = 16
-QUBITS_PER_UPDATE = 16
+QUBITS_PER_CHAIN = 64
+QUBITS_PER_UPDATE = 64
 DATASET_DIR = "Dataset/quantum_dataset"
 RESULTS_DIR = "Results"
 
