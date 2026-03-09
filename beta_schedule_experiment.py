@@ -36,8 +36,8 @@ NUM_SWEEPS_LIST = [100, 500, 1000, 2000, 3000]
 # NUM_SWEEPS_LIST = [4000, 5000, 6000, 7000, 8000]
 GRAPH_SIZES = [40]                     # which quantum_nX.pkl to load
 MAX_GRAPHS_PER_SIZE = 1                # only pick one graph
-QUBITS_PER_CHAIN = 64
-QUBITS_PER_UPDATE = 64
+QUBITS_PER_CHAIN = 1
+QUBITS_PER_UPDATE = 1
 DATASET_DIR = "Dataset/quantum_dataset"
 RESULTS_DIR = "Results"
 
@@ -96,13 +96,12 @@ def generate_custom_linear_schedule(
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Custom linear schedule:
-      Hp_field: hot_beta → cold_beta  (linearly increasing)
-      Hd_field: cold_beta → 0         (linearly decreasing)
+      Hp_field: constant 1
+      Hd_field: 1 → 0 (linearly decreasing)
     """
-    hot_beta, cold_beta = beta_range
     s = np.linspace(0, 1, steps)
-    Hp_field = hot_beta + (cold_beta - hot_beta) * s
-    Hd_field = cold_beta * (1 - s)
+    Hp_field = np.ones(steps)
+    Hd_field = 1 - s
     return Hp_field, Hd_field
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -208,7 +207,7 @@ def run_experiment():
 
             for num_sweeps in NUM_SWEEPS_LIST:
                 for schedule_name, solver_fn in [
-                    ('builtin_linear', solve_builtin_linear),
+                    # ('builtin_linear', solve_builtin_linear),
                     ('custom_linear',  solve_custom_linear),
                 ]:
                     t0 = time.time()

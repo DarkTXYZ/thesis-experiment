@@ -12,7 +12,7 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 from Baseline.local_search import local_search
 from Baseline.spectral_sequencing import spectral_sequencing
 from Baseline.successive_augmentation import successive_augmentation
-from Utils.MinLA import calculate_min_linear_arrangement
+from Utils.MinLA import calculate_min_linear_arrangement, find_one_minimum_solution
 
 
 def calculate_minla_baseline(graph: nx.Graph) -> dict:
