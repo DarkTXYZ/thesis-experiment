@@ -132,7 +132,7 @@ def find_one_minimum_solution(graph: nx.Graph):
     model.minimize(sum(objective_terms))
     
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 60
+    solver.parameters.max_time_in_seconds = 10
     status = solver.solve(model)
     
     obtained_label = [solver.value(node_labels[u]) for u in range(n)]
@@ -158,41 +158,35 @@ def find_all_minimum_solutions(graph: nx.Graph):
     # Step 1: Find the optimal objective value
     model = cp_model.CpModel()
     choices = n
-    node_labels = [model.NewIntVar(0, choices - 1, f'X[{u}]') for u in range(n)]
-    model.AddAllDifferent(node_labels)
+    node_labels = [model.new_int_var(0, choices - 1, f'X[{u}]') for u in range(n)]
+    model.add_all_different(node_labels)
     
     objective_terms = []
     for u, v in graph.edges():
-        diff = model.NewIntVar(0, choices - 1, f'diff[{u}][{v}]')
-        model.AddAbsEquality(diff, node_labels[u] - node_labels[v])
+        diff = model.new_int_var(0, choices - 1, f'diff[{u}][{v}]')
+        model.add_abs_equality(diff, node_labels[u] - node_labels[v])
         objective_terms.append(diff)
     
     total_obj = sum(objective_terms)
-    model.Minimize(total_obj)
+    model.minimize(total_obj)
     
     solver = cp_model.CpSolver()
-    status = solver.Solve(model)
+    solver.parameters.max_time_in_seconds = 60
+    status = solver.solve(model)
     
     if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         return cp_model.INFEASIBLE.name, []
     
-    optimal_value = int(solver.ObjectiveValue())
+    optimal_value = int(solver.objective_value)
     
-    # Step 2: Fix objective as constraint and enumerate all solutions
-    model2 = cp_model.CpModel()
-    node_labels2 = [model2.NewIntVar(0, choices - 1, f'X[{u}]') for u in range(n)]
-    model2.AddAllDifferent(node_labels2)
+    # Step 2: Replace objective with constraint and enumerate all solutions
+    model.clear_objective()
+    model.add(total_obj == optimal_value)
     
-    objective_terms2 = []
-    for u, v in graph.edges():
-        diff = model2.NewIntVar(0, choices - 1, f'diff[{u}][{v}]')
-        model2.AddAbsEquality(diff, node_labels2[u] - node_labels2[v])
-        objective_terms2.append(diff)
-    
-    model2.Add(sum(objective_terms2) == optimal_value)
-    
-    collector = _SolutionCollector(node_labels2)
+    collector = _SolutionCollector(node_labels)
     solver2 = cp_model.CpSolver()
-    status2 = solver2.SearchForAllSolutions(model2, collector)
+    solver2.parameters.max_time_in_seconds = 120
+    solver2.parameters.enumerate_all_solutions = True
+    status2 = solver2.solve(model, collector)
     
     return status2.name, collector.solutions

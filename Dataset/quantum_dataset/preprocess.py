@@ -5,6 +5,7 @@ import json
 import os
 import sys
 import pickle
+import time
 from pathlib import Path
 
 # Add parent directories to path for imports
@@ -107,7 +108,9 @@ def generate_graphs_for_vertex_count(n: int, num_graphs: int, density: float, se
         unique_graphs.append(graph)
         
         # Calculate MinLA using baseline algorithms
+        t0 = time.time()
         baseline_results = calculate_minla_baseline(graph)
+        elapsed = time.time() - t0
         
         graph_data = {
             'id': i,
@@ -119,7 +122,8 @@ def generate_graphs_for_vertex_count(n: int, num_graphs: int, density: float, se
             'successive_augmentation_cost': baseline_results['successive_augmentation_cost'],
             'successive_augmentation_method': baseline_results['successive_augmentation_method'],
             'local_search_cost': baseline_results['local_search_cost'],
-            'best_cost': baseline_results['best_cost']
+            'best_cost': baseline_results['best_cost'],
+            'baseline_time_s': round(elapsed, 3)
         }
         graphs_data.append(graph_data)
         
@@ -217,17 +221,25 @@ def add_optimal_costs():
         graphs = data["graphs"]
         print(f"\n{filename}: {len(graphs)} graphs, n={n_vertices}")
 
+        if n_vertices in [10]:
+            continue
+
         for g_data in graphs:
             G = nx.Graph()
             G.add_nodes_from(range(g_data["num_vertices"]))
             G.add_edges_from(g_data["edges"])
 
+            t0 = time.time()
             status, ordering, obj_value = find_one_minimum_solution(G)
+            elapsed = time.time() - t0
+
             g_data["optimal_cost"] = int(obj_value)
             g_data["optimal_ordering"] = ordering
             g_data["solver_status"] = status
+            g_data["optimal_time_s"] = round(elapsed, 3)
 
-            print(f"  g{g_data['id']}: optimal_cost={int(obj_value)}")
+            label = "OPTIMAL" if status == "OPTIMAL" else "FEASIBLE"
+            print(f"  g{g_data['id']}: cost={int(obj_value)} [{label}] ({elapsed:.3f}s)")
 
         with open(filepath, "wb") as f:
             pickle.dump(data, f)
@@ -238,7 +250,7 @@ def add_optimal_costs():
 def generate():
     """Generate the quantum dataset."""
     seed = 42
-    num_vertices_list = [5, 10, 15, 20, 25, 30, 35, 40]
+    num_vertices_list = [5, 10, 15, 20]
     num_graphs = 100
     density = 0.5
 
