@@ -64,14 +64,16 @@ def solve_with_pia(graph, bqm, n):
     response = sampler.sample(bqm, num_reads=PIA_NUM_READS, num_sweeps=PIA_NUM_SWEEPS)
 
     best_cost = None
+    feasible_count = 0
     for sample, energy in zip(response.samples(), response.data_vectors["energy"]):
         ordering, is_feasible = decode_thermometer(dict(sample), n)
         if is_feasible:
+            feasible_count += 1
             cost = calculate_min_linear_arrangement(graph, ordering)
             if best_cost is None or cost < best_cost:
                 best_cost = cost
 
-    return best_cost
+    return best_cost, feasible_count
 
 
 def report(solver_name, graph_name, graph, gt_obj, gt_solutions, feasible_solutions):
@@ -142,9 +144,10 @@ def main():
             exact_match = False
 
         # Path Integral Annealing
-        pia_best = solve_with_pia(graph, bqm, n)
+        pia_best, pia_feasible_count = solve_with_pia(graph, bqm, n)
         if pia_best is not None:
             print(f"  PathIntegralAnnealing: Best obj: {pia_best} (optimal: {pia_best == gt_obj})")
+            print(f"    Total feasible: {pia_feasible_count}")
         else:
             print(f"  PathIntegralAnnealing: No feasible solutions found!")
 
@@ -161,17 +164,19 @@ def main():
             "Optimal MinLA": gt_obj,
             "# Optimal Permutations": len(gt_set),
             "ExactSolver MinLA": exact_best,
+            "ExactSolver # Feasible": len(exact_results),
             "ExactSolver # Optimal Found": len(exact_optimal),
             "ExactSolver All Found": exact_match,
             "PIA MinLA": pia_best,
+            "PIA # Feasible": pia_feasible_count,
             "PIA Optimal": pia_best == gt_obj if pia_best is not None else False,
         })
 
     fieldnames = [
         "Graph", "|V|", "|E|", "Density", "QUBO Variables",
         "Optimal MinLA", "# Optimal Permutations",
-        "ExactSolver MinLA", "ExactSolver # Optimal Found", "ExactSolver All Found",
-        "PIA MinLA", "PIA Optimal",
+        "ExactSolver MinLA", "ExactSolver # Feasible", "ExactSolver # Optimal Found", "ExactSolver All Found",
+        "PIA MinLA", "PIA # Feasible", "PIA Optimal",
     ]
     with open(CSV_PATH, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
