@@ -157,10 +157,9 @@ def run_experiment():
 
 
 if __name__ == "__main__":
-    df = run_experiment()
+    # df = run_experiment()
     
-    # read tuning_experiment.csv and print top 10 best results with beta range
-    # df_results = pd.read_csv("Results/tuning_experiment_20260316_120652.csv")
-    # top_10_best = df_results.nsmallest(10, 'energy')
-    # for _, row in top_10_best.iterrows():
-    #     print(f"Beta range: ({row['beta_min']}, {row['beta_max']}) | Energy: {row['energy']} | MinLA cost: {row['minla_cost']}")
+    df_results = pd.read_csv("Results/tuning_experiment_total.csv")
+    top_10_best = df_results.nsmallest(10, 'energy')
+    for _, row in top_10_best.iterrows():
+        print(f"Beta range: ({row['beta_min']}, {row['beta_max']}) | Energy: {row['energy']} | MinLA cost: {row['minla_cost']}")
