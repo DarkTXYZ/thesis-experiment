@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 import dimod
+from tqdm import tqdm
 from dwave.samplers import PathIntegralAnnealingSampler
 from dwave.embedding.chain_strength import uniform_torque_compensation
 
@@ -32,10 +33,10 @@ import Utils.MinLA as minla
 SEED = 42
 NUM_READS = 10
 # NUM_SWEEPS_LIST = [100]
-NUM_SWEEPS_LIST = [100, 500, 1000, 2000, 3000]
+NUM_SWEEPS_LIST = [1000]
 # NUM_SWEEPS_LIST = [4000, 5000, 6000, 7000, 8000]
-GRAPH_SIZES = [40]                     # which quantum_nX.pkl to load
-MAX_GRAPHS_PER_SIZE = 1                # only pick one graph
+GRAPH_SIZES = [5,10,15,20,25,30]                     # which quantum_nX.pkl to load
+MAX_GRAPHS_PER_SIZE = 100                
 QUBITS_PER_CHAIN = 1
 QUBITS_PER_UPDATE = 1
 DATASET_DIR = "Dataset/quantum_dataset"
@@ -195,7 +196,7 @@ def run_experiment():
         print(f" Graph size n={size}  ({len(graphs_data)} graphs)")
         print(f"{'='*60}")
 
-        for gidx, graph_data in enumerate(graphs_data):
+        for gidx, graph_data in tqdm(enumerate(graphs_data), total=len(graphs_data), desc=f"n={size}"):
             G = nx.Graph()
             G.add_nodes_from(range(graph_data['num_vertices']))
             G.add_edges_from(graph_data['edges'])
@@ -204,6 +205,10 @@ def run_experiment():
 
             bqm = minla.generate_bqm_instance(G)
             optimal_cost = graph_data.get('optimal_cost', None)
+            spectral_cost = graph_data.get('spectral_cost', None)
+            sa_cost = graph_data.get('successive_augmentation_cost', None)
+            local_search_cost = graph_data.get('local_search_cost', None)
+            best_baseline_cost = graph_data.get('best_cost', None)
 
             for num_sweeps in NUM_SWEEPS_LIST:
                 for schedule_name, solver_fn in [
@@ -235,18 +240,14 @@ def run_experiment():
                         'feasible': feasible,
                         'minla_cost': minla_cost,
                         'optimal_cost': optimal_cost,
+                        'spectral_cost': spectral_cost,
+                        'sa_cost': sa_cost,
+                        'local_search_cost': local_search_cost,
+                        'best_baseline_cost': best_baseline_cost,
                         'relative_gap': rel_gap,
                         'time_s': round(elapsed, 3),
                     }
                     rows.append(row)
-
-                    status = "✓" if feasible else "✗"
-                    gap_str = f"{rel_gap:.4f}" if rel_gap is not None else "N/A"
-                    print(
-                        f"  g{gidx} | {schedule_name:16s} | sweeps={num_sweeps:6d} "
-                        f"| {status} E={best.energy:12.2f} | cost={minla_cost} "
-                        f"| gap={gap_str} | {elapsed:.2f}s"
-                    )
 
     # ── Save results ─────────────────────────────────────────────────────
     df = pd.DataFrame(rows)
