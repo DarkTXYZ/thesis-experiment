@@ -45,8 +45,11 @@ def run_experiment():
     """Run the path integral experiment with different beta ranges."""
     datasets = read_dataset()
     
-    beta_range_min = [1e-6, 5e-5, 1e-5, 5e-4, 1e-4, 5e-3, 1e-3, 5e-2, 1e-2, 5e-1, 1, 5, 10, 50, 100, 500, 1e3, 5e3, 1e4, 5e4, 1e5, 5e5, 1e6]
-    beta_range_max = [1e-6, 5e-5, 1e-5, 5e-4, 1e-4, 5e-3, 1e-3, 5e-2, 1e-2, 5e-1, 1, 5, 10, 50, 100, 500, 1e3, 5e3, 1e4, 5e4, 1e5, 5e5, 1e6]
+    # beta_range_min = [1e-6, 5e-5, 1e-5, 5e-4, 1e-4, 5e-3, 1e-3, 5e-2, 1e-2, 5e-1, 1, 5, 10, 50, 100, 500, 1e3, 5e3, 1e4, 5e4, 1e5, 5e5, 1e6]
+    # beta_range_max = [1e-6, 5e-5, 1e-5, 5e-4, 1e-4, 5e-3, 1e-3, 5e-2, 1e-2, 5e-1, 1, 5, 10, 50, 100, 500, 1e3, 5e3, 1e4, 5e4, 1e5, 5e5, 1e6]
+    
+    beta_range_min = [0.005]
+    beta_range_max = [1]
    
     # Use graph n=30
     graph_data = datasets[25]['graphs'][0]
@@ -62,6 +65,7 @@ def run_experiment():
     rows = []
     total_configs = len(beta_range_min) * len(beta_range_max)
     config_count = 0
+    num_sweeps = 1000
     
     for beta_min in beta_range_min:
         for beta_max in beta_range_max:
@@ -72,14 +76,16 @@ def run_experiment():
             t0 = time.time()
             
             solver = PathIntegralAnnealingSampler()
-            beta_range = (beta_min, beta_max)
-            Hp_field = np.linspace(*beta_range, num=100)
-            Hd_field = 1 - Hp_field
+            # beta_range = (beta_min, beta_max)
+            Hp_field = np.linspace(beta_min, beta_max, num=num_sweeps)
+            Hd_field = np.linspace(beta_max, beta_min, num=num_sweeps)
             
             sampleset = solver.sample(
                 bqm,
-                num_reads=1,
-                num_sweeps=100,
+                num_reads=10,
+                num_sweeps=num_sweeps,
+                # beta_schedule_type='geometric',
+                # beta_range=beta_range
                 beta_schedule_type='custom',
                 Hp_field=Hp_field,
                 Hd_field=Hd_field
@@ -123,7 +129,7 @@ def run_experiment():
     df = pd.DataFrame(rows)
     os.makedirs(RESULTS_DIR, exist_ok=True)
     timestamp = time.strftime("%Y%m%d_%H%M%S")
-    csv_path = os.path.join(RESULTS_DIR, f"path_integral_experiment_{timestamp}.csv")
+    csv_path = os.path.join(RESULTS_DIR, f"tuning_experiment_{timestamp}.csv")
     df.to_csv(csv_path, index=False)
     print(f"\nResults saved to {csv_path}")
     
@@ -152,3 +158,9 @@ def run_experiment():
 
 if __name__ == "__main__":
     df = run_experiment()
+    
+    # read tuning_experiment.csv and print top 10 best results with beta range
+    # df_results = pd.read_csv("Results/tuning_experiment_20260316_120652.csv")
+    # top_10_best = df_results.nsmallest(10, 'energy')
+    # for _, row in top_10_best.iterrows():
+    #     print(f"Beta range: ({row['beta_min']}, {row['beta_max']}) | Energy: {row['energy']} | MinLA cost: {row['minla_cost']}")
