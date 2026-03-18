@@ -56,8 +56,9 @@ def run_experiment():
     
     vertices_count = [5,10,15,20,25]
     num_sweeps = 1000
-    beta_min = 0.005
-    beta_max = 10
+
+    beta_min = 1e-6
+    beta_max = 1
     
     all_rows = []
 
@@ -74,34 +75,34 @@ def run_experiment():
             m = G.number_of_edges()
 
             bqm = minla.generate_bqm_instance(G)
-            bqm.normalize()
+            # bqm.normalize()
             optimal_cost = graph.get('optimal_cost', None)
 
             t0 = time.time()
-            # Hp_field = np.linspace(beta_min, beta_max, num=num_sweeps)
-            # Hd_field = np.linspace(beta_max, beta_min, num=num_sweeps)
-
-            # solver = PathIntegralAnnealingSampler()
+            
+            # solver = oj.SQASampler()
+            
             # sampleset = solver.sample(
             #     bqm,
             #     num_reads=10,
             #     num_sweeps=num_sweeps,
-            #     beta_schedule_type='custom',
-            #     Hp_field=Hp_field,
-            #     Hd_field=Hd_field
+            #     sparse=True,
+            #     seed=SEED
             # )
-            
-            solver = oj.SQASampler()
-            
+
+            solver = PathIntegralAnnealingSampler()
+
+            beta_schedule_type = 'custom'
+            Hp_field = np.linspace(beta_min, beta_max, num=num_sweeps)
+            Hd_field = np.linspace(beta_max, beta_min, num=num_sweeps)
+
             sampleset = solver.sample(
                 bqm,
                 num_reads=10,
                 num_sweeps=num_sweeps,
-                sparse=True,
-                beta=1000,
-                gamma=0.05,
-                trotter=8,
-                seed=SEED
+                beta_schedule_type=beta_schedule_type,
+                Hp_field=Hp_field,
+                Hd_field=Hd_field,
             )
              
             elapsed = time.time() - t0

@@ -39,9 +39,9 @@ SAVE_CSV = True
 
 
 # Hyperparameter search space
-BETA_MIN_LIST = [1e-6, 5e-5, 1e-5, 5e-4, 1e-4, 5e-3, 1e-3, 5e-2, 1e-2, 5e-1, 1, 5, 10, 50, 100, 500, 1e3, 5e3, 1e4, 5e4, 1e5, 5e5, 1e6]
+BETA_MIN_LIST = [1e-4, 5e-3, 1e-3, 5e-2, 1e-2, 5e-1, 1, 5, 10, 50, 100, 500, 1e3, 5e3, 1e4]
 # BETA_MAX_LIST = [1.0, 5.0, 10.0, 50.0]
-GAMMA_LIST = [1e-6, 5e-5, 1e-5, 5e-4, 1e-4, 5e-3, 1e-3, 5e-2, 1e-2, 5e-1, 1, 5, 10, 50, 100, 500, 1e3, 5e3, 1e4, 5e4, 1e5, 5e5, 1e6]
+GAMMA_LIST = [1]
 TROTTER_LIST = [8]
 SPARSE_LIST = [True]
 REINITIALIZE_LIST = [True]
@@ -144,7 +144,6 @@ def run_experiment():
 	optimal_cost = graph_data.get("optimal_cost", None)
 
 	bqm = minla.generate_bqm_instance(graph_nx)
-	bqm.normalize()
 
 	print(f"Graph index: {GRAPH_INDEX} | n={n}, m={m}, optimal_cost={optimal_cost}")
 	print(f"num_reads={NUM_READS}, num_sweeps={NUM_SWEEPS}, seed={SEED}")
