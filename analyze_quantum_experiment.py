@@ -209,24 +209,22 @@ def find_latest_results():
 
 
 if __name__ == "__main__":
-    import sys
+    # Set flags here to control behavior
+    COMPARE_ALL = True  # Set to True to compare all experiments
+    SPECIFIC_FILE = None  # Set to file path to analyze a specific file, e.g., 'Results/quantum_experiment_20260316_145546.csv'
     
-    if len(sys.argv) > 1 and sys.argv[1] == "--all":
+    if COMPARE_ALL:
         # Compare all experiments
         compare_all_experiments()
+    elif SPECIFIC_FILE and os.path.exists(SPECIFIC_FILE):
+        # Analyze specified file
+        analyze_results(SPECIFIC_FILE)
     else:
-        # Try to use the specified file or find the latest
-        file_path = 'Results/quantum_experiment_20260316_145546.csv'
-        
-        if not os.path.exists(file_path):
-            file_paths = find_all_quantum_experiments()
-            if file_paths:
-                file_path = file_paths[0]  # Use latest
-                print(f"Using latest results file: {file_path}")
-        
-        if os.path.exists(file_path):
+        # Try to use the latest file
+        file_paths = find_all_quantum_experiments()
+        if file_paths:
+            file_path = file_paths[0]  # Use latest
+            print(f"Using latest results file: {file_path}\n")
             analyze_results(file_path)
         else:
-            # Default to comparing all if no specific file found
-            print("Specific file not found. Comparing all experiments...\n")
-            compare_all_experiments()
+            print("No quantum experiment files found.")

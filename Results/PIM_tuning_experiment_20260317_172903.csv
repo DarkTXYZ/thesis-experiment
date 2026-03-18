@@ -1,0 +1,2 @@
+n,m,beta_min,beta_max,beta_schedule_type,energy,feasible,minla_cost,optimal_cost,relative_gap,time_s
+5,5,0.005,5,custom,0.6571428571428481,False,,6,,0.283

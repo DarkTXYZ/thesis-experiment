@@ -7,6 +7,7 @@ import networkx as nx
 from dwave.samplers import PathIntegralAnnealingSampler
 import Utils.MinLA as minla
 from typing import Dict, Tuple, List
+import openjij as oj
 
 DATASET_PATH = "Dataset/quantum_dataset"
 RESULTS_DIR = "Results"
@@ -47,9 +48,13 @@ def check_feasibility(sol: np.ndarray, n: int) -> bool:
     return labels == set(range(1, n + 1))
 
 def run_experiment():
+    # Set seed for reproducibility
+    SEED = 42
+    np.random.seed(SEED)
+    
     datasets = read_dataset()
     
-    vertices_count = [5, 10, 15, 20, 25]
+    vertices_count = [5,10,15,20,25]
     num_sweeps = 1000
     beta_min = 0.005
     beta_max = 10
@@ -69,21 +74,36 @@ def run_experiment():
             m = G.number_of_edges()
 
             bqm = minla.generate_bqm_instance(G)
+            bqm.normalize()
             optimal_cost = graph.get('optimal_cost', None)
 
             t0 = time.time()
-            Hp_field = np.linspace(beta_min, beta_max, num=num_sweeps)
-            Hd_field = np.linspace(beta_max, beta_min, num=num_sweeps)
+            # Hp_field = np.linspace(beta_min, beta_max, num=num_sweeps)
+            # Hd_field = np.linspace(beta_max, beta_min, num=num_sweeps)
 
-            solver = PathIntegralAnnealingSampler()
+            # solver = PathIntegralAnnealingSampler()
+            # sampleset = solver.sample(
+            #     bqm,
+            #     num_reads=10,
+            #     num_sweeps=num_sweeps,
+            #     beta_schedule_type='custom',
+            #     Hp_field=Hp_field,
+            #     Hd_field=Hd_field
+            # )
+            
+            solver = oj.SQASampler()
+            
             sampleset = solver.sample(
                 bqm,
                 num_reads=10,
                 num_sweeps=num_sweeps,
-                beta_schedule_type='custom',
-                Hp_field=Hp_field,
-                Hd_field=Hd_field
+                sparse=True,
+                beta=1000,
+                gamma=0.05,
+                trotter=8,
+                seed=SEED
             )
+             
             elapsed = time.time() - t0
 
             best = sampleset.first
@@ -117,6 +137,7 @@ def run_experiment():
                 'approx_ratio': approx_ratio,
                 'relative_gap': rel_gap,
                 'time_s': round(elapsed, 3),
+                'solver': solver.__class__.__name__
             }
             all_rows.append(row)
 

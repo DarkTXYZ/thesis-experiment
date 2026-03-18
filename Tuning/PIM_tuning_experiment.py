@@ -1,15 +1,23 @@
 import os
+import sys
 import pickle
 import time
 import numpy as np
 import pandas as pd
 import networkx as nx
 from dwave.samplers import PathIntegralAnnealingSampler
-import Utils.MinLA as minla
+from dwave.samplers import Neal
 from typing import Dict, Tuple, List
+import openjij as oj
 
-DATASET_PATH = "Dataset/quantum_dataset"
-RESULTS_DIR = "Results"
+# Add parent directory to path to import Utils
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import Utils.MinLA as minla
+
+# Set paths relative to parent directory
+PARENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATASET_PATH = os.path.join(PARENT_DIR, "Dataset/quantum_dataset")
+RESULTS_DIR = os.path.join(PARENT_DIR, "Results")
 
 def read_dataset():
     # read all pickle files in DATASET_PATH
@@ -49,10 +57,10 @@ def run_experiment():
     # beta_range_max = [1e-6, 5e-5, 1e-5, 5e-4, 1e-4, 5e-3, 1e-3, 5e-2, 1e-2, 5e-1, 1, 5, 10, 50, 100, 500, 1e3, 5e3, 1e4, 5e4, 1e5, 5e5, 1e6]
     
     beta_range_min = [0.005]
-    beta_range_max = [1]
+    beta_range_max = [5]
    
     # Use graph n=30
-    graph_data = datasets[25]['graphs'][0]
+    graph_data = datasets[5]['graphs'][0]
     G = nx.Graph()
     G.add_nodes_from(range(graph_data['num_vertices']))
     G.add_edges_from(graph_data['edges'])
@@ -60,6 +68,7 @@ def run_experiment():
     m = G.number_of_edges()
     
     bqm = minla.generate_bqm_instance(G)
+    # bqm.normalize()
     optimal_cost = graph_data.get('optimal_cost', None)
     
     rows = []
@@ -70,23 +79,40 @@ def run_experiment():
     for beta_min in beta_range_min:
         for beta_max in beta_range_max:
             if beta_min > beta_max:
+                total_configs -= 1
                 continue
 
             config_count += 1
             t0 = time.time()
             
+            # beta_schedule_type = 'oj'
+            # solver = oj.SQASampler()
+            
+            # s_values = np.linspace(0, 1, num_sweeps)
+            # beta_values = np.linspace(beta_min, beta_max, num_sweeps)
+            # schedule = [[s, beta, 1] for s, beta in zip(s_values, beta_values)]
+
+            # sampleset = solver.sample(
+            #     bqm,
+            #     num_reads=10,
+            #     num_sweeps=num_sweeps,
+            #     sparse=True
+            # )
+             
             solver = PathIntegralAnnealingSampler()
-            # beta_range = (beta_min, beta_max)
+            
+            beta_schedule_type = 'custom'
+            beta_range = (beta_min, beta_max)
             Hp_field = np.linspace(beta_min, beta_max, num=num_sweeps)
             Hd_field = np.linspace(beta_max, beta_min, num=num_sweeps)
+            
             
             sampleset = solver.sample(
                 bqm,
                 num_reads=10,
                 num_sweeps=num_sweeps,
-                # beta_schedule_type='geometric',
+                beta_schedule_type=beta_schedule_type,
                 # beta_range=beta_range
-                beta_schedule_type='custom',
                 Hp_field=Hp_field,
                 Hd_field=Hd_field
             )
@@ -110,6 +136,7 @@ def run_experiment():
                 'm': m,
                 'beta_min': beta_min,
                 'beta_max': beta_max,
+                'beta_schedule_type': beta_schedule_type,
                 'energy': energy,
                 'feasible': feasible,
                 'minla_cost': minla_cost,
@@ -129,7 +156,7 @@ def run_experiment():
     df = pd.DataFrame(rows)
     os.makedirs(RESULTS_DIR, exist_ok=True)
     timestamp = time.strftime("%Y%m%d_%H%M%S")
-    csv_path = os.path.join(RESULTS_DIR, f"tuning_experiment_{timestamp}.csv")
+    csv_path = os.path.join(RESULTS_DIR, f"PIM_tuning_experiment_{timestamp}.csv")
     df.to_csv(csv_path, index=False)
     print(f"\nResults saved to {csv_path}")
     
@@ -157,9 +184,9 @@ def run_experiment():
 
 
 if __name__ == "__main__":
-    # df = run_experiment()
+    df = run_experiment()
     
-    df_results = pd.read_csv("Results/tuning_experiment_total.csv")
-    top_10_best = df_results.nsmallest(10, 'energy')
-    for _, row in top_10_best.iterrows():
-        print(f"Beta range: ({row['beta_min']}, {row['beta_max']}) | Energy: {row['energy']} | MinLA cost: {row['minla_cost']}")
+    # df_results = pd.read_csv("Results/tuning_experiment_20260316_232311.csv")
+    # top_10_best = df_results.nsmallest(10, 'energy')
+    # for _, row in top_10_best.iterrows():
+    #     print(f"Beta range: ({row['beta_min']}, {row['beta_max']}) | Energy: {row['energy']} | MinLA cost: {row['minla_cost']}")
