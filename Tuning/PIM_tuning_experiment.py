@@ -18,6 +18,7 @@ import Utils.MinLA as minla
 PARENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATASET_PATH = os.path.join(PARENT_DIR, "Dataset/quantum_dataset")
 RESULTS_DIR = os.path.join(PARENT_DIR, "Results")
+SEED = 42
 
 def read_dataset():
     # read all pickle files in DATASET_PATH
@@ -50,17 +51,16 @@ def check_feasibility(sol: np.ndarray, n: int) -> bool:
 
 
 def run_experiment():
-    """Run the path integral experiment with different beta ranges."""
+    np.random.seed(SEED)
     datasets = read_dataset()
     
-    # beta_range_min = [1e-6, 5e-5, 1e-5, 5e-4, 1e-4, 5e-3, 1e-3, 5e-2, 1e-2, 5e-1, 1, 5, 10, 50, 100, 500, 1e3, 5e3, 1e4, 5e4, 1e5, 5e5, 1e6]
-    # beta_range_max = [1e-6, 5e-5, 1e-5, 5e-4, 1e-4, 5e-3, 1e-3, 5e-2, 1e-2, 5e-1, 1, 5, 10, 50, 100, 500, 1e3, 5e3, 1e4, 5e4, 1e5, 5e5, 1e6]
+    # beta_range_min = [1e-6, 5e-5, 1e-5, 5e-4, 1e-4, 5e-3, 1e-3, 5e-2, 1e-2, 5e-1, 1, 5, 10]
+    # beta_range_max = [1e-6, 5e-5, 1e-5, 5e-4, 1e-4, 5e-3, 1e-3, 5e-2, 1e-2, 5e-1, 1, 5, 10]
     
-    beta_range_min = [0.005]
-    beta_range_max = [5]
+    beta_range_min = [1e-6]
+    beta_range_max = [1]
    
-    # Use graph n=30
-    graph_data = datasets[5]['graphs'][0]
+    graph_data = datasets[30]['graphs'][0]
     G = nx.Graph()
     G.add_nodes_from(range(graph_data['num_vertices']))
     G.add_edges_from(graph_data['edges'])
@@ -84,27 +84,15 @@ def run_experiment():
 
             config_count += 1
             t0 = time.time()
-            
-            # beta_schedule_type = 'oj'
-            # solver = oj.SQASampler()
-            
-            # s_values = np.linspace(0, 1, num_sweeps)
-            # beta_values = np.linspace(beta_min, beta_max, num_sweeps)
-            # schedule = [[s, beta, 1] for s, beta in zip(s_values, beta_values)]
-
-            # sampleset = solver.sample(
-            #     bqm,
-            #     num_reads=10,
-            #     num_sweeps=num_sweeps,
-            #     sparse=True
-            # )
              
             solver = PathIntegralAnnealingSampler()
             
             beta_schedule_type = 'custom'
-            beta_range = (beta_min, beta_max)
-            Hp_field = np.linspace(beta_min, beta_max, num=num_sweeps)
-            Hd_field = np.linspace(beta_max, beta_min, num=num_sweeps)
+            # beta_range = (beta_min, beta_max)
+            # Hp_field = np.linspace(beta_min, beta_max, num=num_sweeps)
+            # Hd_field = np.linspace(beta_max, beta_min, num=num_sweeps)
+            Hp_field = np.logspace(beta_min, beta_max, num=num_sweeps)
+            Hd_field = np.logspace(beta_max, beta_min, num=num_sweeps)
             
             
             sampleset = solver.sample(
@@ -112,6 +100,7 @@ def run_experiment():
                 num_reads=10,
                 num_sweeps=num_sweeps,
                 beta_schedule_type=beta_schedule_type,
+                seed=SEED,
                 # beta_range=beta_range
                 Hp_field=Hp_field,
                 Hd_field=Hd_field
