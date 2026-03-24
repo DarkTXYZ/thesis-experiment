@@ -300,10 +300,10 @@ def generate_field(space_type: str, annealing_type: str, beta_min: float, beta_m
     return Hp_field, Hd_field
 
 
-def print_result(config_count: int, total_configs: int, space_type: str, annealing_type: str, beta_min: float, beta_max: float,
+def print_result(config_count: int, total_configs: int, normalized: bool, space_type: str, annealing_type: str, beta_min: float, beta_max: float,
                  feasible: bool, energy: float, minla_cost, optimal_cost, elapsed: float):
     status = "✓" if feasible else "✗"
-    print(f"[{config_count}/{total_configs}] {space_type:9} | annealing={annealing_type} | beta=({beta_min:.2e}, {beta_max:.2e}) | {status} "
+    print(f"[{config_count}/{total_configs}] normalized={normalized} | {space_type:9} | annealing={annealing_type} | beta=({beta_min:.2e}, {beta_max:.2e}) | {status} "
           f"E={energy:12.2f} | cost={minla_cost} | optimal_cost={optimal_cost} | {elapsed:.2f}s")
 
 
@@ -379,13 +379,13 @@ def run_experiment():
                 write_stats['ignored'] += 1
                 processed = config_count
                 print(
-                    f"[{config_count}/{total_configs}] {space_type:9} | annealing={annealing_type} "
+                    f"[{config_count}/{total_configs}] normalized={norm} | {space_type:9} | annealing={annealing_type} "
                     f"| beta=({beta_min:.2e}, {beta_max:.2e}) | skipped (already in database)"
                 )
                 continue
             
             bqm = minla.generate_bqm_instance(G)
-            if normalized:
+            if norm:
                 bqm.normalize()
             optimal_cost = graph_data.get('optimal_cost', None)
 
@@ -434,7 +434,7 @@ def run_experiment():
             existing_keys.add(config_key)
             processed = config_count
 
-            print_result(config_count, total_configs, space_type, annealing_type, beta_min, beta_max, feasible, energy, minla_cost, optimal_cost, elapsed)
+            print_result(config_count, total_configs, norm, space_type, annealing_type, beta_min, beta_max, feasible, energy, minla_cost, optimal_cost, elapsed)
     except KeyboardInterrupt:
         print(f"\nInterrupted at {processed}/{total_configs}. Partial results are already saved.")
 
