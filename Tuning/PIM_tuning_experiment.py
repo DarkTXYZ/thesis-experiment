@@ -93,6 +93,7 @@ class ResultsManager:
             result.get('space_type'),
             result.get('annealing_type'),
             result.get('beta_schedule_type'),
+            result.get('bqm_is_normalized'),
         )
 
     def _key_index(self, results: List[Dict]) -> Dict[Tuple, int]:
@@ -324,6 +325,7 @@ def run_experiment():
     
     space_types = ['linear', 'geometric', 'logspace']
     annealing_types = ['default', 'fixed_Hp']
+    normalized = [True, False]
     # space_types = ['logspace']
     # annealing_types = ['default']
    
@@ -334,27 +336,25 @@ def run_experiment():
     n = G.number_of_nodes()
     m = G.number_of_edges()
     
-    bqm = minla.generate_bqm_instance(G)
-    optimal_cost = graph_data.get('optimal_cost', None)
-    
     solver = PathIntegralAnnealingSampler()
     num_sweeps = 1000
     
     configs = []
-    for annealing_type in annealing_types:
-        for space_type in space_types:
-            if space_type == 'logspace':
-                beta_min_range = beta_range_min_logspace
-                beta_max_range = beta_range_max_logspace
-            else:
-                beta_min_range = beta_range_min
-                beta_max_range = beta_range_max
-            
-            for beta_min in beta_min_range:
-                for beta_max in beta_max_range:
-                    if beta_min > beta_max:
-                        continue
-                    configs.append((space_type, annealing_type, beta_min, beta_max))
+    for norm in normalized:
+        for annealing_type in annealing_types:
+            for space_type in space_types:
+                if space_type == 'logspace':
+                    beta_min_range = beta_range_min_logspace
+                    beta_max_range = beta_range_max_logspace
+                else:
+                    beta_min_range = beta_range_min
+                    beta_max_range = beta_range_max
+                
+                for beta_min in beta_min_range:
+                    for beta_max in beta_max_range:
+                        if beta_min > beta_max:
+                            continue
+                        configs.append((norm, space_type, annealing_type, beta_min, beta_max))
     
     total_configs = len(configs)
     db = ResultsManager(RESULTS_JSON)
@@ -364,7 +364,7 @@ def run_experiment():
     existing_keys = set(state['_key_to_pos'].keys())
 
     try:
-        for config_count, (space_type, annealing_type, beta_min, beta_max) in enumerate(configs, 1):
+        for config_count, (norm, space_type, annealing_type, beta_min, beta_max) in enumerate(configs, 1):
             config_key = (
                 int(n),
                 int(m),
@@ -373,6 +373,7 @@ def run_experiment():
                 space_type,
                 annealing_type,
                 'custom',
+                norm,
             )
             if config_key in existing_keys:
                 write_stats['ignored'] += 1
@@ -382,6 +383,11 @@ def run_experiment():
                     f"| beta=({beta_min:.2e}, {beta_max:.2e}) | skipped (already in database)"
                 )
                 continue
+            
+            bqm = minla.generate_bqm_instance(G)
+            if normalized:
+                bqm.normalize()
+            optimal_cost = graph_data.get('optimal_cost', None)
 
             t0 = time.time()
 
@@ -410,6 +416,7 @@ def run_experiment():
                 'm': m,
                 'beta_min': beta_min,
                 'beta_max': beta_max,
+                'bqm_is_normalized': norm,
                 'space_type': space_type,
                 'annealing_type': annealing_type,
                 'beta_schedule_type': 'custom',
