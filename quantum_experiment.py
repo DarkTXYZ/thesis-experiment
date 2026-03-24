@@ -57,8 +57,8 @@ def run_experiment():
     vertices_count = [5,10,15,20,25]
     num_sweeps = 1000
 
-    beta_min = 0
-    beta_max = 2
+    beta_min = 1e-9
+    beta_max = 1
     
     all_rows = []
 
