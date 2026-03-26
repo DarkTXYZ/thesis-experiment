@@ -15,8 +15,9 @@ import Utils.MinLA as minla
 PARENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATASET_PATH = os.path.join(PARENT_DIR, "Dataset/quantum_dataset")
 RESULTS_DIR = os.path.join(PARENT_DIR, "Results")
-SEED = 42
+SEEDS = [42, 123, 456, 789, 999]  # 5 different seeds
 RESULTS_JSON = os.path.join(RESULTS_DIR, "PIM_tuning_results.json")
+BEST_RESULTS_JSON = os.path.join(RESULTS_DIR, "PIM_tuning_best_results.json")
 
 
 class ResultsManager:
@@ -94,6 +95,7 @@ class ResultsManager:
             result.get('annealing_type'),
             result.get('beta_schedule_type'),
             result.get('bqm_is_normalized'),
+            result.get('seed'),  # Include seed as part of unique key
         )
 
     def _key_index(self, results: List[Dict]) -> Dict[Tuple, int]:
@@ -108,10 +110,27 @@ class ResultsManager:
         data = self._load()
         return set(self._key_index(data['results']).keys())
 
+    def _is_result_better(self, new_result: Dict, existing_result: Dict) -> bool:
+        """Compare if new result is better than existing result.
+        Criteria: feasible > not feasible, then lower energy > higher energy"""
+        new_feasible = new_result.get('feasible', False)
+        existing_feasible = existing_result.get('feasible', False)
+        
+        # If new is feasible and existing is not, new is better
+        if new_feasible and not existing_feasible:
+            return True
+        # If both have same feasibility, compare energy
+        if new_feasible == existing_feasible:
+            new_energy = new_result.get('energy', float('inf'))
+            existing_energy = existing_result.get('energy', float('inf'))
+            return new_energy < existing_energy
+        # If new is not feasible but existing is, new is worse
+        return False
+
     def upsert_result_in_state(self, data: Dict, result: Dict, on_conflict: str = 'update') -> str:
         """Upsert one result into in-memory state. Returns inserted/updated/ignored."""
-        if on_conflict not in {'update', 'ignore'}:
-            raise ValueError("on_conflict must be 'update' or 'ignore'")
+        if on_conflict not in {'update', 'ignore', 'better'}:
+            raise ValueError("on_conflict must be 'update', 'ignore', or 'better'")
 
         if '_key_to_pos' not in data:
             data['_key_to_pos'] = self._key_index(data['results'])
@@ -122,7 +141,15 @@ class ResultsManager:
             if on_conflict == 'ignore':
                 return 'ignored'
             pos = key_to_pos[key]
-            existing_id = data['results'][pos]['id']
+            existing_result = data['results'][pos]
+            
+            if on_conflict == 'better':
+                # Only update if new result is better than existing
+                if not self._is_result_better(result, existing_result):
+                    return 'ignored'
+            
+            # Update the result
+            existing_id = existing_result['id']
             data['results'][pos] = {'id': existing_id, **result}
             return 'updated'
 
@@ -308,7 +335,6 @@ def print_result(config_count: int, total_configs: int, normalized: bool, space_
 
 
 def run_experiment():
-    np.random.seed(SEED)
     datasets = read_dataset()
     
     beta_range_min = np.array([1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1, 10])
@@ -357,6 +383,7 @@ def run_experiment():
                         configs.append((norm, space_type, annealing_type, beta_min, beta_max))
     
     total_configs = len(configs)
+    num_seeds = len(SEEDS)
     db = ResultsManager(RESULTS_JSON)
     write_stats = {'inserted': 0, 'updated': 0, 'ignored': 0}
     processed = 0
@@ -365,78 +392,78 @@ def run_experiment():
 
     try:
         for config_count, (norm, space_type, annealing_type, beta_min, beta_max) in enumerate(configs, 1):
-            config_key = (
-                int(n),
-                int(m),
-                float(beta_min),
-                float(beta_max),
-                space_type,
-                annealing_type,
-                'custom',
-                norm,
-            )
-            if config_key in existing_keys:
-                write_stats['ignored'] += 1
-                processed = config_count
-                print(
-                    f"[{config_count}/{total_configs}] normalized={norm} | {space_type:9} | annealing={annealing_type} "
-                    f"| beta=({beta_min:.2e}, {beta_max:.2e}) | skipped (already in database)"
+            # Run each configuration with all 5 seeds
+            for seed_idx, seed in enumerate(SEEDS, 1):
+                config_key = (
+                    int(n),
+                    int(m),
+                    float(beta_min),
+                    float(beta_max),
+                    space_type,
+                    annealing_type,
+                    'custom',
+                    norm,
+                    seed,
                 )
-                continue
-            
-            bqm = minla.generate_bqm_instance(G)
-            if norm:
-                bqm.normalize()
-            optimal_cost = graph_data.get('optimal_cost', None)
+                if config_key in existing_keys:
+                    write_stats['ignored'] += 1
+                    continue
+                
+                bqm = minla.generate_bqm_instance(G)
+                if norm:
+                    bqm.normalize()
+                optimal_cost = graph_data.get('optimal_cost', None)
 
-            t0 = time.time()
+                t0 = time.time()
 
-            Hp_field, Hd_field = generate_field(space_type, annealing_type, beta_min, beta_max, num_sweeps)
+                Hp_field, Hd_field = generate_field(space_type, annealing_type, beta_min, beta_max, num_sweeps)
 
-            sampleset = solver.sample(
-                bqm,
-                num_reads=10,
-                num_sweeps=num_sweeps,
-                beta_schedule_type='custom',
-                seed=SEED,
-                Hp_field=Hp_field,
-                Hd_field=Hd_field
-            )
+                sampleset = solver.sample(
+                    bqm,
+                    num_reads=10,
+                    num_sweeps=num_sweeps,
+                    beta_schedule_type='custom',
+                    seed=seed,
+                    Hp_field=Hp_field,
+                    Hd_field=Hd_field
+                )
 
-            elapsed = time.time() - t0
+                elapsed = time.time() - t0
 
-            best = sampleset.first
-            energy = best.energy
-            ordering, feasible = decode_solution(best.sample, n)
-            minla_cost = minla.calculate_min_linear_arrangement(G, ordering) if feasible else None
-            rel_gap = (minla_cost - optimal_cost) / optimal_cost if (feasible and optimal_cost) else None
+                best = sampleset.first
+                energy = best.energy
+                ordering, feasible = decode_solution(best.sample, n)
+                minla_cost = minla.calculate_min_linear_arrangement(G, ordering) if feasible else None
+                rel_gap = (minla_cost - optimal_cost) / optimal_cost if (feasible and optimal_cost) else None
 
-            row = {
-                'n': n,
-                'm': m,
-                'beta_min': beta_min,
-                'beta_max': beta_max,
-                'bqm_is_normalized': norm,
-                'space_type': space_type,
-                'annealing_type': annealing_type,
-                'beta_schedule_type': 'custom',
-                'energy': energy,
-                'feasible': feasible,
-                'minla_cost': minla_cost,
-                'optimal_cost': optimal_cost,
-                'relative_gap': rel_gap,
-                'time_s': round(elapsed, 3),
-            }
+                row = {
+                    'n': n,
+                    'm': m,
+                    'beta_min': beta_min,
+                    'beta_max': beta_max,
+                    'bqm_is_normalized': norm,
+                    'space_type': space_type,
+                    'annealing_type': annealing_type,
+                    'beta_schedule_type': 'custom',
+                    'seed': seed,  # Track which seed produced this result
+                    'energy': energy,
+                    'feasible': feasible,
+                    'minla_cost': minla_cost,
+                    'optimal_cost': optimal_cost,
+                    'relative_gap': rel_gap,
+                    'time_s': round(elapsed, 3),
+                }
 
-            outcome = db.upsert_result_in_state(state, row, on_conflict='update')
-            write_stats[outcome] += 1
-            db.save_state(state)
-            existing_keys.add(config_key)
-            processed = config_count
+                outcome = db.upsert_result_in_state(state, row, on_conflict='better')
+                write_stats[outcome] += 1
+                db.save_state(state)
+                existing_keys.add(config_key)
+                processed = config_count
 
-            print_result(config_count, total_configs, norm, space_type, annealing_type, beta_min, beta_max, feasible, energy, minla_cost, optimal_cost, elapsed)
+                print_result(config_count * num_seeds, total_configs * num_seeds, norm, space_type, annealing_type, beta_min, beta_max, feasible, energy, minla_cost, optimal_cost, elapsed)
+                print(f"    └─ Seed {seed} ({seed_idx}/{num_seeds})")
     except KeyboardInterrupt:
-        print(f"\nInterrupted at {processed}/{total_configs}. Partial results are already saved.")
+        print(f"\nInterrupted at config {processed}/{total_configs}. Partial results are already saved.")
 
     print(
         f"\n✓ Database write complete | inserted={write_stats['inserted']}, "
@@ -468,7 +495,73 @@ def run_experiment():
             print(f"  MinLA cost: {best['minla_cost']}")
     
     df = db.get_all_results()
+    
+    # Select best results from each configuration across all seeds
+    print("\n" + "=" * 70)
+    print(" SELECTING BEST RESULTS ACROSS SEEDS")
+    print("=" * 70)
+    best_df = select_best_results_per_config()
+    print(f"✓ Best results selected and saved to {BEST_RESULTS_JSON}")
+    
     return df
+
+
+def select_best_results_per_config() -> pd.DataFrame:
+    """Select the best result from each configuration across all seeds"""
+    db = ResultsManager(RESULTS_JSON)
+    df = db.get_all_results()
+    
+    if len(df) == 0:
+        print("No results to select from")
+        return pd.DataFrame()
+    
+    # Group by configuration (excluding seed)
+    config_cols = ['n', 'm', 'beta_min', 'beta_max', 'bqm_is_normalized', 'space_type', 'annealing_type']
+    
+    best_results = []
+    grouped = df.groupby(config_cols)
+    
+    for config, group in grouped:
+        # For each config, select best based on: feasible first, then lowest energy, then highest minla_cost
+        feasible_results = group[group['feasible'] == 1]
+        
+        if len(feasible_results) > 0:
+            best = feasible_results.nsmallest(1, 'energy').iloc[0]
+        else:
+            # If no feasible, take lowest energy
+            best = group.nsmallest(1, 'energy').iloc[0]
+        
+        best_results.append(best.to_dict())
+    
+    best_df = pd.DataFrame(best_results)
+    
+    # Save best results
+    best_results_data = {
+        'results': best_df.to_dict('records'),
+        'summary': {
+            'total_unique_configs': len(best_df),
+            'total_seeds_per_config': len(SEEDS),
+            'feasible_count': int(best_df['feasible'].sum()),
+            'feasible_percentage': round(best_df['feasible'].sum() / len(best_df) * 100, 1),
+            'best_energy': float(best_df['energy'].min()),
+            'avg_energy': round(float(best_df['energy'].mean()), 2),
+            'best_minla_cost': int(best_df[best_df['feasible'] == 1]['minla_cost'].min()) if (best_df['feasible'] == 1).any() else None,
+        }
+    }
+    
+    with open(BEST_RESULTS_JSON, 'w') as f:
+        json.dump(best_results_data, f, indent=2, default=str)
+    
+    # Print summary
+    print(f"\nBest Results Summary (across {len(SEEDS)} seeds per config):")
+    print(f"  Total unique configurations: {len(best_df)}")
+    print(f"  Feasible solutions: {best_results_data['summary']['feasible_count']} ({best_results_data['summary']['feasible_percentage']}%)")
+    print(f"  Best energy: {best_results_data['summary']['best_energy']:.2f}")
+    print(f"  Average energy: {best_results_data['summary']['avg_energy']}")
+    if best_results_data['summary']['best_minla_cost']:
+        print(f"  Best MinLA cost: {best_results_data['summary']['best_minla_cost']}")
+    
+    return best_df
 
 def view_results(space_type: str = None, annealing_type: str = None, feasible_only: bool = False):
     """View results from database with optional filters"""
