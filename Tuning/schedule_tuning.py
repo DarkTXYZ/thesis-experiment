@@ -125,14 +125,16 @@ def run_schedule_tuning_experiment():
     print("Loading quantum_dataset...")
     datasets = read_dataset()
     
-    # Check if 30-vertex dataset exists
-    if 30 not in datasets:
-        print(f"Error: No 30-vertex graphs in dataset. Available sizes: {sorted(datasets.keys())}")
+    n = 25
+    
+    # Check if 25-vertex dataset exists
+    if n not in datasets:
+        print(f"Error: No {n}-vertex graphs in dataset. Available sizes: {sorted(datasets.keys())}")
         return
     
-    # Get first 30-vertex graph
-    print("Loading 30-vertex graph from quantum_dataset...")
-    graph_data = datasets[30]['graphs'][0]
+    # Get first 25-vertex graph
+    print(f"Loading {n}-vertex graph from quantum_dataset...")
+    graph_data = datasets[25]['graphs'][0]
     G = convert_graph_data_to_nx(graph_data)
     n = G.number_of_nodes()
     m = G.number_of_edges()
@@ -156,7 +158,7 @@ def run_schedule_tuning_experiment():
     
     all_rows = []
     
-    print(f"\nTesting {len(schedules)} schedules on 30-vertex graph with 5 seeds...\n")
+    print(f"\nTesting {len(schedules)} schedules on {n}-vertex graph with 5 seeds...\n")
     
     # Test each schedule (forward and inverse for standard, just forward for fixed Hd)
     schedule_counter = 0
@@ -229,14 +231,14 @@ def run_schedule_tuning_experiment():
             'best_seed': best_result['seed'],
         }
         all_rows.append(row)
-        print(f"  ✓ Best seed: {best_result['seed']}, Energy: {best_result['energy']:.4f}, Feasible: {best_result['feasible']}")
+        print(f"  ✓ Best seed: {best_result['seed']}, Energy: {best_result['energy']:.4f}, Feasible: {best_result['feasible']}, Time: {best_result['time_s']:.2f}s")
 
     
     # Save results
     df = pd.DataFrame(all_rows)
     os.makedirs(RESULTS_DIR, exist_ok=True)
     timestamp = time.strftime("%Y%m%d_%H%M%S")
-    csv_path = os.path.join(RESULTS_DIR, f"schedule_tuning_30v_{timestamp}.csv")
+    csv_path = os.path.join(RESULTS_DIR, f"schedule_tuning_{n}v_{timestamp}.csv")
     df.to_csv(csv_path, index=False)
     
     print(f"\n{'='*70}")

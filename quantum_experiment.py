@@ -50,6 +50,8 @@ def check_feasibility(sol: np.ndarray, n: int) -> bool:
 def run_experiment():
     SEEDS = [42, 123, 456, 789, 999]
     
+    start_time = time.time()
+    
     datasets = read_dataset()
     
     vertices_count = [5,10,15,20,25]
@@ -62,12 +64,14 @@ def run_experiment():
 
     for vertex_count in vertices_count:
         print(f"\nRunning experiment for graph with {vertex_count} vertices...")
+        vertex_start_time = time.time()
         graphs = datasets[vertex_count]['graphs']
 
         feasibility_cnt = 0
         approx_ratios = []
 
         for graph_id, graph in enumerate(graphs):
+            graph_start_time = time.time()
             G = convert_graph_data_to_nx(graph)
             n = G.number_of_nodes()
             m = G.number_of_edges()
@@ -100,7 +104,7 @@ def run_experiment():
                 # Hp_field = np.linspace(beta_min, beta_max, num=num_sweeps)
                 # Hd_field = np.linspace(beta_max, beta_min, num=num_sweeps)
                 
-                Hp_field = np.power(np.linspace(0, 1, num_sweeps), 2)
+                Hp_field = np.power(np.linspace(0, 1, num_sweeps), 1/2)
                 Hd_field = np.ones(num_sweeps)
 
                 sampleset = solver.sample(
@@ -174,12 +178,15 @@ def run_experiment():
             }
             all_rows.append(row)
 
-            print(f'  Graph {graph_id}: Feasible={best_result["feasible"]} | Energy={best_result["energy"]} | Optimal={optimal_cost} | Best Seed={best_result["seed"]}')
+            graph_elapsed = time.time() - graph_start_time
+            print(f'  Graph {graph_id}: Feasible={best_result["feasible"]} | Energy={best_result["energy"]} | Optimal={optimal_cost} | Best Seed={best_result["seed"]} | Time={graph_elapsed:.2f}s')
         
         feasibility_rate = feasibility_cnt / len(graphs)
         avg_approx_ratio = sum(approx_ratios) / len(approx_ratios) if approx_ratios else None
+        vertex_elapsed = time.time() - vertex_start_time
         print(f'  Feasibility rate: {feasibility_rate:.2%}')
         print(f'  Avg approx ratio: {avg_approx_ratio}')
+        print(f'  Time for {vertex_count} vertices: {vertex_elapsed:.2f}s')
     
     # Save results to CSV
     df = pd.DataFrame(all_rows)
@@ -187,8 +194,17 @@ def run_experiment():
     timestamp = time.strftime("%Y%m%d_%H%M%S")
     csv_path = os.path.join(RESULTS_DIR, f"quantum_experiment_{timestamp}.csv")
     df.to_csv(csv_path, index=False)
+    
+    # Display total time
+    total_time = time.time() - start_time
+    hours = int(total_time // 3600)
+    minutes = int((total_time % 3600) // 60)
+    seconds = int(total_time % 60)
+    
     print(f"\n{'='*70}")
     print(f"Results saved to {csv_path}")
+    print(f"{'='*70}")
+    print(f"Total time: {hours:02d}:{minutes:02d}:{seconds:02d} ({total_time:.2f}s)")
     print(f"{'='*70}")
 
 
