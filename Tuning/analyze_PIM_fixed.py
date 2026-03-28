@@ -17,7 +17,7 @@ def print_result(row):
     print(f"  ID: {row['id']}")
     print(f"  Status: {feasible_str}")
     print(f"  Graph: n={row['n']}, m={row['m']}")
-    print(f"  Beta range: ({row['beta_min']}, {row['beta_max']})")
+    print(f"  Beta: {row['beta']:g}")
     print(f"  Space type: {row['space_type']}, Annealing: {row['annealing_type']}")
     print(f"  BQM Normalized: {row['bqm_is_normalized']}")
     print(f"  Energy: {row['energy']:.6f}")
@@ -41,7 +41,7 @@ def get_top_feasible(n=10):
     print("-" * 100)
     for idx, (_, row) in enumerate(top.iterrows(), 1):
         print(f"{idx}. ID={row['id']:3d} | Cost={row['minla_cost']:4d} | Gap={row['relative_gap']:6.2%} | "
-              f"Beta=({row['beta_min']:.0e}, {row['beta_max']:.0e}) | {row['space_type']:9s} | "
+              f"Beta={row['beta']:<7g} | {row['space_type']:9s} | "
               f"Norm={str(row['bqm_is_normalized']):5s} | Time={row['time_s']:6.2f}s")
     return top
 
@@ -58,7 +58,7 @@ def get_top_infeasible(n=10):
     print("-" * 100)
     for idx, (_, row) in enumerate(top.iterrows(), 1):
         print(f"{idx}. ID={row['id']:3d} | Energy={row['energy']:12.6f} | "
-              f"Beta=({row['beta_min']:.0e}, {row['beta_max']:.0e}) | {row['space_type']:9s} | "
+              f"Beta={row['beta']:<7g} | {row['space_type']:9s} | "
               f"Annealing={row['annealing_type']:9s} | Norm={str(row['bqm_is_normalized']):5s} | Time={row['time_s']:6.2f}s")
     return top
 
@@ -89,7 +89,7 @@ def compare_normalized():
         print(f"    Energy: {best['energy']:.6f}")
         print(f"    Feasible: {best['feasible']}")
         print(f"    Graph: n={best['n']}, m={best['m']}")
-        print(f"    Beta range: ({best['beta_min']}, {best['beta_max']})")
+        print(f"    Beta: {best['beta']:g}")
         print(f"    Space type: {best['space_type']}")
         print(f"    Annealing: {best['annealing_type']}")
         print(f"    Time: {best['time_s']:.3f}s")
@@ -100,7 +100,7 @@ def compare_normalized():
         for idx, (_, row) in enumerate(top5.iterrows(), 1):
             feasible_str = "✓" if row['feasible'] else "✗"
             print(f"    {idx}. Energy={row['energy']:12.6f} | {feasible_str} | "
-                  f"Beta=({row['beta_min']:.0e}, {row['beta_max']:.0e}) | {row['space_type']:9s} | "
+                  f"Beta={row['beta']:<7g} | {row['space_type']:9s} | "
                   f"{row['annealing_type']:9s}")
     
     # Show the comparison
@@ -122,9 +122,9 @@ def get_top_10_by_normalized(n=10):
     """Get top N results grouped by normalization status (feasible or not)"""
     df = load_results()
     
-    print("\n" + "=" * 150)
+    print("\n" + "=" * 140)
     print(" TOP 10 RESULTS GROUPED BY NORMALIZED STATUS (Feasible & Infeasible)")
-    print("=" * 150)
+    print("=" * 140)
     
     for norm_status in [True, False]:
         status_str = "NORMALIZED" if norm_status else "NOT NORMALIZED"
@@ -138,21 +138,21 @@ def get_top_10_by_normalized(n=10):
         top_n = norm_df.nsmallest(n, 'energy')
         
         print(f"\n{status_str}: ({len(norm_df)} total results)")
-        print("-" * 150)
+        print("-" * 140)
         print(f"{'Rank':<5} {'ID':<5} {'Energy':<14} {'Feasible':<10} {'Cost':<8} {'Gap':<8} "
-              f"{'Beta Range':<30} {'Space Type':<12} {'Annealing':<12} {'Time(s)':<8}")
-        print("-" * 150)
+              f"{'Beta':<12} {'Space Type':<12} {'Annealing':<12} {'Time(s)':<8}")
+        print("-" * 140)
         
         for idx, (_, row) in enumerate(top_n.iterrows(), 1):
             feasible_str = "✓ YES" if row['feasible'] else "✗ NO"
             cost_str = f"{row['minla_cost']}" if row['feasible'] else "-"
             gap_str = f"{row['relative_gap']:.2%}" if (row['feasible'] and row['relative_gap'] is not None) else "-"
-            beta_range = f"({row['beta_min']:.0e}, {row['beta_max']:.0e})"
+            beta_val = f"{row['beta']:g}"
             
             print(f"{idx:<5} {row['id']:<5} {row['energy']:<14.6f} {feasible_str:<10} {cost_str:<8} "
-                  f"{gap_str:<8} {beta_range:<30} {row['space_type']:<12} {row['annealing_type']:<12} {row['time_s']:<8.3f}")
+                  f"{gap_str:<8} {beta_val:<12} {row['space_type']:<12} {row['annealing_type']:<12} {row['time_s']:<8.3f}")
     
-    print("\n" + "=" * 150)
+    print("\n" + "=" * 140)
 
 if __name__ == "__main__":
     get_top_feasible(10)

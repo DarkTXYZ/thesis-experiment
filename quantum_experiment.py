@@ -48,17 +48,15 @@ def check_feasibility(sol: np.ndarray, n: int) -> bool:
     return labels == set(range(1, n + 1))
 
 def run_experiment():
-    # Set seed for reproducibility
-    SEED = 42
-    np.random.seed(SEED)
+    SEEDS = [42, 123, 456, 789, 999]
     
     datasets = read_dataset()
     
     vertices_count = [5,10,15,20,25]
     num_sweeps = 1000
 
-    beta_min = 1e-9
-    beta_max = 1
+    beta_min = -9
+    beta_max = 0
     
     all_rows = []
 
@@ -78,75 +76,105 @@ def run_experiment():
             # bqm.normalize()
             optimal_cost = graph.get('optimal_cost', None)
 
-            t0 = time.time()
+            # Store results for all seeds
+            seed_results = []
+
+            for seed in SEEDS:
+                np.random.seed(seed)
+                
+                t0 = time.time()
+                
+                # solver = oj.SQASampler()
+                
+                # sampleset = solver.sample(
+                #     bqm,
+                #     num_reads=10,
+                #     num_sweeps=num_sweeps,
+                #     sparse=True,
+                #     seed=seed
+                # )
+
+                solver = PathIntegralAnnealingSampler()
+
+                beta_schedule_type = 'custom'
+                # Hp_field = np.linspace(beta_min, beta_max, num=num_sweeps)
+                # Hd_field = np.linspace(beta_max, beta_min, num=num_sweeps)
+                
+                Hp_field = np.power(np.linspace(0, 1, num_sweeps), 2)
+                Hd_field = np.ones(num_sweeps)
+
+                sampleset = solver.sample(
+                    bqm,
+                    num_reads=10,
+                    num_sweeps=num_sweeps,
+                    beta_schedule_type=beta_schedule_type,
+                    Hp_field=Hp_field,
+                    Hd_field=Hd_field,
+                    seed=seed
+                )
+                 
+                elapsed = time.time() - t0
+
+                best = sampleset.first
+                energy = best.energy
+                ordering, feasible = decode_solution(best.sample, n)
+                minla_cost = (
+                    minla.calculate_min_linear_arrangement(G, ordering)
+                    if feasible else None
+                )
+                
+                rel_gap = (
+                    (minla_cost - optimal_cost) / optimal_cost
+                    if (feasible and optimal_cost) else None
+                )
+
+                seed_results.append({
+                    'seed': seed,
+                    'energy': energy,
+                    'feasible': feasible,
+                    'minla_cost': minla_cost,
+                    'rel_gap': rel_gap,
+                    'time_s': elapsed
+                })
             
-            # solver = oj.SQASampler()
-            
-            # sampleset = solver.sample(
-            #     bqm,
-            #     num_reads=10,
-            #     num_sweeps=num_sweeps,
-            #     sparse=True,
-            #     seed=SEED
-            # )
+            # Select best result: prefer feasible solutions, then lowest cost
+            best_result = None
+            for result in seed_results:
+                if best_result is None:
+                    best_result = result
+                elif result['feasible'] and not best_result['feasible']:
+                    best_result = result
+                elif result['feasible'] and best_result['feasible']:
+                    if result['minla_cost'] < best_result['minla_cost']:
+                        best_result = result
+                elif not result['feasible'] and not best_result['feasible']:
+                    if result['energy'] < best_result['energy']:
+                        best_result = result
 
-            solver = PathIntegralAnnealingSampler()
-
-            beta_schedule_type = 'custom'
-            # Hp_field = np.linspace(beta_min, beta_max, num=num_sweeps)
-            # Hd_field = np.linspace(beta_max, beta_min, num=num_sweeps)
-            Hp_field = np.logspace(beta_min, beta_max, num=num_sweeps)
-            Hd_field = np.logspace(beta_max, beta_min, num=num_sweeps)
-            
-
-            sampleset = solver.sample(
-                bqm,
-                num_reads=10,
-                num_sweeps=num_sweeps,
-                beta_schedule_type=beta_schedule_type,
-                Hp_field=Hp_field,
-                Hd_field=Hd_field,
-                seed=SEED
-            )
-             
-            elapsed = time.time() - t0
-
-            best = sampleset.first
-            energy = best.energy
-            ordering, feasible = decode_solution(best.sample, n)
-            minla_cost = (
-                minla.calculate_min_linear_arrangement(G, ordering)
-                if feasible else None
-            )
-            
-            rel_gap = (
-                (minla_cost - optimal_cost) / optimal_cost
-                if (feasible and optimal_cost) else None
-            )
-
-            if feasible:
+            # Add best result to output
+            approx_ratio = None
+            if best_result['feasible']:
                 feasibility_cnt += 1
-                approx_ratio = minla_cost / optimal_cost
+                approx_ratio = best_result['minla_cost'] / optimal_cost
                 approx_ratios.append(approx_ratio)
-            else:
-                approx_ratio = None
 
             row = {
                 'n': n,
                 'm': m,
                 'graph_id': graph_id,
-                'energy': energy,
-                'feasible': feasible,
-                'minla_cost': minla_cost,
+                'energy': best_result['energy'],
+                'feasible': best_result['feasible'],
+                'minla_cost': best_result['minla_cost'],
                 'optimal_cost': optimal_cost,
                 'approx_ratio': approx_ratio,
-                'relative_gap': rel_gap,
-                'time_s': round(elapsed, 3),
-                'solver': solver.__class__.__name__
+                'relative_gap': best_result['rel_gap'],
+                'time_s': round(best_result['time_s'], 3),
+                'best_seed': best_result['seed'],
+                'solver': 'PathIntegralAnnealingSampler'
             }
             all_rows.append(row)
 
-            print(f'  Graph {graph_id}: Feasible={feasible} | Energy={energy} | Optimal={optimal_cost} | Time={elapsed:.2f}s')
+            print(f'  Graph {graph_id}: Feasible={best_result["feasible"]} | Energy={best_result["energy"]} | Optimal={optimal_cost} | Best Seed={best_result["seed"]}')
         
         feasibility_rate = feasibility_cnt / len(graphs)
         avg_approx_ratio = sum(approx_ratios) / len(approx_ratios) if approx_ratios else None
