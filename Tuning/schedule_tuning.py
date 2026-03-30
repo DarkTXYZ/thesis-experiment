@@ -68,6 +68,27 @@ def create_schedules(num_sweeps):
     logarithmic = _logarithmic_schedule(num_sweeps)
     schedules['Logarithmic'] = (logarithmic, 1 - logarithmic)
     
+    # Exponential schedules (fast cooling)
+    exponential = _exponential_schedule(num_sweeps)
+    schedules['Exponential'] = (exponential, 1 - exponential)
+    
+    # Cosine annealing schedules
+    cosine = _cosine_schedule(num_sweeps)
+    schedules['Cosine'] = (cosine, 1 - cosine)
+    
+    # Square root schedules
+    schedules['Power (1/4)'] = (np.power(np.linspace(0, 1, num_sweeps), 1/4), np.power(np.linspace(1, 0, num_sweeps), 1/4))
+    schedules['Power (4)'] = (np.power(np.linspace(0, 1, num_sweeps), 4), np.power(np.linspace(1, 0, num_sweeps), 4))
+    schedules['Power (5)'] = (np.power(np.linspace(0, 1, num_sweeps), 5), np.power(np.linspace(1, 0, num_sweeps), 5))
+    
+    # Hyperbolic schedules
+    hyperbolic = _hyperbolic_schedule(num_sweeps)
+    schedules['Hyperbolic'] = (hyperbolic, 1 - hyperbolic)
+    
+    # Piecewise schedules (steep start, gradual end)
+    piecewise = _piecewise_schedule(num_sweeps)
+    schedules['Piecewise (Fast-Slow)'] = (piecewise, 1 - piecewise)
+    
     # Fixed Hd with different Hp schedules
     hd = np.ones(num_sweeps)
     schedules['Fixed Hd, Linear Hp'] = (schedules['Linear'][0], hd)
@@ -77,6 +98,8 @@ def create_schedules(num_sweeps):
     schedules['Fixed Hd, Trigonometric Hp'] = (schedules['Trigonometric'][0], hd)
     schedules['Fixed Hd, Sigmoid Hp'] = (schedules['Sigmoid'][0], hd)
     schedules['Fixed Hd, Logarithmic Hp'] = (schedules['Logarithmic'][0], hd)
+    schedules['Fixed Hd, Exponential Hp'] = (schedules['Exponential'][0], hd)
+    schedules['Fixed Hd, Cosine Hp'] = (schedules['Cosine'][0], hd)
     
     return schedules
 
@@ -92,6 +115,37 @@ def _logarithmic_schedule(num_steps):
     """Generate logarithmic schedule."""
     t = np.arange(1, num_steps + 1)
     s = np.log(t + 1)
+    return (s - s.min()) / (s.max() - s.min())
+
+
+def _exponential_schedule(num_steps, base=2.0):
+    """Generate exponential schedule (fast cooling)."""
+    t = np.linspace(0, 1, num_steps)
+    s = (np.exp(base * t) - 1) / (np.exp(base) - 1)
+    return (s - s.min()) / (s.max() - s.min())
+
+
+def _cosine_schedule(num_steps):
+    """Generate cosine annealing schedule."""
+    t = np.linspace(0, 1, num_steps)
+    s = 0.5 * (1 + np.cos(np.pi * t))
+    return (s - s.min()) / (s.max() - s.min())
+
+
+def _hyperbolic_schedule(num_steps):
+    """Generate hyperbolic schedule (smooth transitions)."""
+    t = np.linspace(0, 2, num_steps)
+    s = np.tanh(t - 1)
+    return (s - s.min()) / (s.max() - s.min())
+
+
+def _piecewise_schedule(num_steps):
+    """Generate piecewise schedule (fast start, gradual end)."""
+    mid = num_steps // 2
+    s = np.concatenate([
+        np.linspace(0, 0.8, mid),  # Fast initial cooling to 80%
+        np.linspace(0.8, 1, num_steps - mid)  # Slow final refinement
+    ])
     return (s - s.min()) / (s.max() - s.min())
 
 
@@ -116,10 +170,11 @@ def check_feasibility(sol, n):
 
 
 def run_schedule_tuning_experiment():
-    """Run schedule tuning experiment on a 30-vertex graph from quantum_dataset with all schedules."""
+    """Run schedule tuning experiment on five graphs from quantum_dataset with all schedules."""
     SEEDS = [42, 123, 456, 789, 999]
     num_sweeps = 1000
     num_reads = 10
+    NUM_GRAPHS = 5  # Test on 5 different graphs
     
     # Load dataset
     print("Loading quantum_dataset...")
@@ -132,116 +187,150 @@ def run_schedule_tuning_experiment():
         print(f"Error: No {n}-vertex graphs in dataset. Available sizes: {sorted(datasets.keys())}")
         return
     
-    # Get first 25-vertex graph
-    print(f"Loading {n}-vertex graph from quantum_dataset...")
-    graph_data = datasets[25]['graphs'][0]
-    G = convert_graph_data_to_nx(graph_data)
-    n = G.number_of_nodes()
-    m = G.number_of_edges()
+    # Get first NUM_GRAPHS 25-vertex graphs
+    graphs_data = datasets[25]['graphs'][:NUM_GRAPHS]
+    if len(graphs_data) < NUM_GRAPHS:
+        print(f"Warning: Only {len(graphs_data)} graphs available, using all of them")
+        NUM_GRAPHS = len(graphs_data)
     
-    print(f"Graph: {n} vertices, {m} edges")
-    
-    # Create BQM
-    bqm = minla.generate_bqm_instance(G)
+    print(f"Loading {NUM_GRAPHS} {n}-vertex graphs from quantum_dataset...")
     
     # Create all schedules
     print(f"Creating {len(create_schedules(num_sweeps))} schedules...")
     schedules = create_schedules(num_sweeps)
     
-    # Define which schedules are standard (forward/inverse pairs) vs fixed Hd
+    # Define schedule names
     schedule_names = [
-        'Linear', 'Geometric', 'Power (1/3)', 'Power (1/2)', 'Power (2)', 'Power (3)',
-        'Trigonometric', 'Sigmoid', 'Logarithmic', 'Fixed Hd, Linear Hp', 'Fixed Hd, Geometric Hp', 'Fixed Hd, Power Hp (1/2)',
+        'Linear', 'Geometric', 'Power (1/3)', 'Power (1/4)', 'Power (1/2)', 'Power (2)', 'Power (3)', 'Power (4)', 'Power (5)',
+        'Trigonometric', 'Sigmoid', 'Logarithmic', 'Exponential', 'Cosine', 'Hyperbolic', 'Piecewise (Fast-Slow)',
+        'Fixed Hd, Linear Hp', 'Fixed Hd, Geometric Hp', 'Fixed Hd, Power Hp (1/2)',
         'Fixed Hd, Power Hp (2)', 'Fixed Hd, Trigonometric Hp', 'Fixed Hd, Sigmoid Hp',
-        'Fixed Hd, Logarithmic Hp'
+        'Fixed Hd, Logarithmic Hp', 'Fixed Hd, Exponential Hp', 'Fixed Hd, Cosine Hp'
     ]
     
+    # Check for existing results
+    existing_schedules = set()
     all_rows = []
+    results_files = sorted([f for f in os.listdir(RESULTS_DIR) if f.startswith(f"schedule_tuning_{NUM_GRAPHS}graphs_{n}v_")], reverse=True)
     
-    print(f"\nTesting {len(schedules)} schedules on {n}-vertex graph with 5 seeds...\n")
+    if results_files:
+        latest_results = os.path.join(RESULTS_DIR, results_files[0])
+        print(f"Found existing results: {results_files[0]}")
+        existing_df = pd.read_csv(latest_results)
+        existing_schedules = set(existing_df['schedule'].unique())
+        all_rows = existing_df.to_dict('records')
+        print(f"Loaded {len(existing_schedules)} previously tested schedules")
     
-    # Test each schedule (forward and inverse for standard, just forward for fixed Hd)
+    # Filter to only untested schedules
+    new_schedules = [s for s in schedule_names if s not in existing_schedules]
+    
+    print(f"\nSchedules to test: {len(new_schedules)} new, {len(existing_schedules)} already tested")
+    
+    if not new_schedules:
+        print("✓ All schedules have been tested!")
+        df = pd.DataFrame(all_rows)
+        print("\nSchedule Tuning Results Summary:")
+        print(df.to_string(index=False))
+        df_sorted = df.sort_values('feasible_percentage', ascending=False)
+        print(f"\n{'='*70}")
+        print("Top 5 schedules by feasibility:")
+        print(df_sorted[['schedule', 'feasible_count', 'total_runs', 'feasible_percentage']].head(5).to_string(index=False))
+        print(f"{'='*70}")
+        return
+    
+    print(f"\nTesting {len(new_schedules)} new schedules on {NUM_GRAPHS} graphs with {len(SEEDS)} seeds each...\n")
+    
+    # Test each schedule
     schedule_counter = 0
     
-    # Test standard schedules (both forward and inverse)
-    for sched_base_name in schedule_names:
-        sched_name = sched_base_name
+    for sched_name in new_schedules:
         if sched_name not in schedules:
             continue
         
         schedule_counter += 1
-        print(f"[{schedule_counter}/{len(schedules)}] Testing {sched_name}...")
+        print(f"[{schedule_counter}/{len(new_schedules)}] Testing {sched_name}...")
         
-        seed_results = []
+        feasible_count = 0  # Count of feasible solutions across all graphs and seeds
+        total_runs = 0      # Total number of runs
+        total_energy = 0    # Sum of best energies
+        total_time = 0      # Total computation time
         
-        for seed in SEEDS:
-            np.random.seed(seed)
+        # Test on each of the NUM_GRAPHS graphs
+        for graph_idx, graph_data in enumerate(graphs_data):
+            G = convert_graph_data_to_nx(graph_data)
+            num_vertices = G.number_of_nodes()
+            num_edges = G.number_of_edges()
             
-            t0 = time.time()
+            # Create BQM
+            bqm = minla.generate_bqm_instance(G)
             
-            solver = PathIntegralAnnealingSampler()
-            
-            hp_field, hd_field = schedules[sched_name]
-            
-            sampleset = solver.sample(
-                bqm,
-                num_reads=num_reads,
-                num_sweeps=num_sweeps,
-                beta_schedule_type='custom',
-                Hp_field=hp_field,
-                Hd_field=hd_field,
-                seed=seed
-            )
-            
-            elapsed = time.time() - t0
-            
-            best = sampleset.first
-            energy = best.energy
-            ordering, feasible = decode_solution(best.sample, n)
-            
-            seed_results.append({
-                'seed': seed,
-                'energy': energy,
-                'feasible': feasible,
-                'time_s': elapsed,
-                'ordering': ordering
-            })
+            # Test with each seed
+            for seed in SEEDS:
+                np.random.seed(seed)
+                total_runs += 1
+                
+                t0 = time.time()
+                
+                solver = PathIntegralAnnealingSampler()
+                
+                hp_field, hd_field = schedules[sched_name]
+                
+                sampleset = solver.sample(
+                    bqm,
+                    num_reads=num_reads,
+                    num_sweeps=num_sweeps,
+                    beta_schedule_type='custom',
+                    Hp_field=hp_field,
+                    Hd_field=hd_field,
+                    seed=seed
+                )
+                
+                elapsed = time.time() - t0
+                total_time += elapsed
+                
+                best = sampleset.first
+                energy = best.energy
+                total_energy += energy
+                ordering, feasible = decode_solution(best.sample, num_vertices)
+                
+                if feasible:
+                    feasible_count += 1
         
-        # Select best result across seeds
-        best_result = None
-        for result in seed_results:
-            if best_result is None:
-                best_result = result
-            elif result['feasible'] and not best_result['feasible']:
-                best_result = result
-            elif result['feasible'] and best_result['feasible']:
-                # Both feasible - need to evaluate ordering quality
-                pass
-            elif not result['feasible'] and not best_result['feasible']:
-                if result['energy'] < best_result['energy']:
-                    best_result = result
+        # Calculate average metrics
+        avg_energy = total_energy / total_runs
+        avg_time = total_time / total_runs
+        feasible_percentage = (feasible_count / total_runs) * 100
         
         row = {
             'schedule': sched_name,
+            'n_graphs': NUM_GRAPHS,
             'n_vertices': n,
-            'm_edges': m,
-            'energy': best_result['energy'],
-            'feasible': best_result['feasible'],
-            'time_s': round(best_result['time_s'], 3),
-            'best_seed': best_result['seed'],
+            'feasible_count': feasible_count,
+            'total_runs': total_runs,
+            'feasible_percentage': round(feasible_percentage, 2),
+            'avg_energy': round(avg_energy, 4),
+            'avg_time_s': round(avg_time, 3),
         }
         all_rows.append(row)
-        print(f"  ✓ Best seed: {best_result['seed']}, Energy: {best_result['energy']:.4f}, Feasible: {best_result['feasible']}, Time: {best_result['time_s']:.2f}s")
+        print(f"  ✓ Feasible: {feasible_count}/{total_runs} ({feasible_percentage:.1f}%), Avg Energy: {avg_energy:.4f}, Avg Time: {avg_time:.2f}s")
 
     
     # Save results
     df = pd.DataFrame(all_rows)
     os.makedirs(RESULTS_DIR, exist_ok=True)
-    timestamp = time.strftime("%Y%m%d_%H%M%S")
-    csv_path = os.path.join(RESULTS_DIR, f"schedule_tuning_{n}v_{timestamp}.csv")
-    df.to_csv(csv_path, index=False)
     
-    print(f"\n{'='*70}")
+    # Use the original filename if updating, otherwise create new one
+    if results_files:
+        csv_path = os.path.join(RESULTS_DIR, results_files[0])
+        print(f"\n{'='*70}")
+        print(f"Appending {len(new_schedules)} new results to {results_files[0]}")
+    else:
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        csv_path = os.path.join(RESULTS_DIR, f"schedule_tuning_{NUM_GRAPHS}graphs_{n}v_{timestamp}.csv")
+        print(f"\n{'='*70}")
+        print(f"Creating new results file")
+    
+    df.to_csv(csv_path, index=False)
     print(f"Results saved to {csv_path}")
     print(f"{'='*70}")
     
@@ -249,11 +338,12 @@ def run_schedule_tuning_experiment():
     print("\nSchedule Tuning Results Summary:")
     print(df.to_string(index=False))
     
-    # Find best schedule
-    best_idx = df['energy'].idxmin()
-    print(f"\nBest schedule: {df.loc[best_idx, 'schedule']}")
-    print(f"Best energy: {df.loc[best_idx, 'energy']:.4f}")
-    print(f"Feasible: {df.loc[best_idx, 'feasible']}")
+    # Find best schedules by feasibility rate
+    df_sorted = df.sort_values('feasible_percentage', ascending=False)
+    print(f"\n{'='*70}")
+    print("Top 5 schedules by feasibility:")
+    print(df_sorted[['schedule', 'feasible_count', 'total_runs', 'feasible_percentage']].head(5).to_string(index=False))
+    print(f"{'='*70}")
 
 
 if __name__ == "__main__":

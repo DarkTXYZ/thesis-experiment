@@ -101,11 +101,11 @@ def run_experiment():
                 solver = PathIntegralAnnealingSampler()
 
                 beta_schedule_type = 'custom'
-                # Hp_field = np.linspace(beta_min, beta_max, num=num_sweeps)
-                # Hd_field = np.linspace(beta_max, beta_min, num=num_sweeps)
+                Hp_field = np.linspace(0, 1, num=num_sweeps)
+                Hd_field = np.linspace(1, 0, num=num_sweeps)
                 
-                Hp_field = np.power(np.linspace(0, 1, num_sweeps), 1/2)
-                Hd_field = np.ones(num_sweeps)
+                # Hp_field = np.power(np.linspace(0, 1, num_sweeps), 1/2)
+                # Hd_field = np.ones(num_sweeps)
 
                 sampleset = solver.sample(
                     bqm,

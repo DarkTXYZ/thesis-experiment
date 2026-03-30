@@ -40,6 +40,14 @@ def create_schedules(num_sweeps):
     schedules['Logarithmic'] = logarithmic
     schedules['Logarithmic Inverse'] = 1 - logarithmic
     
+    schedules['Exponential'] = _exponential_schedule(num_sweeps)
+    schedules['Exponential Inverse'] = np.ones(num_sweeps)
+    
+    schedules['Exponential2'] = schedules['Power (2)']
+    schedules['Exponential2 Inverse'] = np.ones(num_sweeps)
+        
+        # Cosine schedule
+    
     # Fixed Hd with different Hp schedules
     hd = np.ones(num_sweeps)
     schedules['Fixed Hd, Linear Hp'] = hd
@@ -79,6 +87,12 @@ def _logarithmic_schedule(num_steps):
     s = np.log(t + 1)
     return (s - s.min()) / (s.max() - s.min())
 
+def _exponential_schedule(num_steps, base=2.0):
+    """Generate exponential schedule (fast cooling)."""
+    t = np.linspace(0, 1, num_steps)
+    s = (np.exp(base * t) - 1) / (np.exp(base) - 1)
+    return (s - s.min()) / (s.max() - s.min())
+
 
 def plot_schedules(schedules, num_sweeps):
     """Plot schedule pairs side by side."""
@@ -89,6 +103,12 @@ def plot_schedules(schedules, num_sweeps):
         ('Trigonometric', 'Trigonometric Inverse'),
         ('Sigmoid', 'Sigmoid Inverse'),
         ('Logarithmic', 'Logarithmic Inverse'),
+    ]
+    
+    # Exponential variants - plot together
+    exponential_variants = [
+        ('Exponential', 'Exponential Inverse'),
+        ('Exponential2', 'Exponential2 Inverse'),
     ]
     
     # Fixed Hd pairs (Hd is constant, Hp varies)
@@ -113,7 +133,7 @@ def plot_schedules(schedules, num_sweeps):
         ('Fixed Hd, Power Hp (2)', 'Fixed Hd, Power Hp (2) (Forward)'),
     ]
     
-    num_pairs = len(schedule_pairs) + len(fixed_hd_pairs) + 2  # +2 for power and fixed_hd_power subplots
+    num_pairs = len(schedule_pairs) + len(fixed_hd_pairs) + 3  # +3 for exponential, power and fixed_hd_power subplots
     cols = 3
     rows = (num_pairs + cols - 1) // cols
     
@@ -134,6 +154,17 @@ def plot_schedules(schedules, num_sweeps):
         axes[ax_idx].legend()
         axes[ax_idx].grid(True, which="both", ls="--")
         ax_idx += 1
+    
+    # Plot exponential variants together
+    for forward_name, inverse_name in exponential_variants:
+        axes[ax_idx].plot(schedules[forward_name], label=forward_name, linewidth=2)
+        axes[ax_idx].plot(schedules[inverse_name], label=inverse_name, linewidth=2)
+    axes[ax_idx].set_xlabel('Sweep')
+    axes[ax_idx].set_ylabel('Beta')
+    axes[ax_idx].set_title('Exponential Schedules')
+    axes[ax_idx].legend()
+    axes[ax_idx].grid(True, which="both", ls="--")
+    ax_idx += 1
     
     # Plot all power variants together
     for forward_name, inverse_name in power_variants:
