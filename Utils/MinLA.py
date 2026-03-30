@@ -4,6 +4,8 @@ from pyqubo import Array
 from typing import List
 from itertools import permutations
 from ortools.sat.python import cp_model 
+import gurobipy as gp
+from gurobipy import GRB
 
 def calculate_upper_obj_bound(G: nx.Graph):
     n = G.number_of_nodes()
@@ -190,3 +192,76 @@ def find_all_minimum_solutions(graph: nx.Graph):
     status2 = solver2.solve(model, collector)
     
     return status2.name, collector.solutions
+
+def solve_MinLA_gurobi(graph: nx.Graph):
+    """
+    Solve the Minimum Linear Arrangement (MinLA) problem using Gurobi.
+    """
+    n = graph.number_of_nodes()
+    
+    # Extract actual node labels to prevent KeyErrors
+    nodes = list(graph.nodes())
+    positions = list(range(n))
+    
+    # Create a new Gurobi model
+    model = gp.Model("MinLA")
+    model.setParam('OutputFlag', 1)  # Set to 0 to suppress output
+    
+    # 1. Assignment Variables: x[u, p] is 1 if node u is at position p
+    x = model.addVars(nodes, positions, vtype=GRB.BINARY, name="x")
+    
+    # Position variables (can be continuous because x dictates the integer value)
+    pos = model.addVars(nodes, lb=0, ub=n-1, vtype=GRB.CONTINUOUS, name="pos")
+    
+    # Constraint: Each node gets exactly one position
+    for u in nodes:
+        model.addConstr(gp.quicksum(x[u, p] for p in positions) == 1, name=f"node_{u}_assign")
+        
+    # Constraint: Each position is assigned to exactly one node (The "AllDifferent" fix)
+    for p in positions:
+        model.addConstr(gp.quicksum(x[u, p] for u in nodes) == 1, name=f"pos_{p}_assign")
+        
+    # Link pos[u] to the binary assignment matrix
+    for u in nodes:
+        model.addConstr(pos[u] == gp.quicksum(p * x[u, p] for p in positions), name=f"link_{u}")
+    
+    # Auxiliary variables for absolute differences
+    edge_list = list(graph.edges())
+    num_edges = len(edge_list)
+    abs_diff = model.addVars(num_edges, lb=0, vtype=GRB.CONTINUOUS, name="abs_diff")
+    
+    # For each edge, add constraints for absolute difference
+    for i, (u, v) in enumerate(edge_list):
+        # Create auxiliary variables for the difference
+        diff_var = model.addVar(lb=-(n-1), ub=n-1, vtype=GRB.CONTINUOUS, name=f"diff_{i}")
+        
+        # diff_var = pos[u] - pos[v]
+        model.addConstr(diff_var == pos[u] - pos[v])
+        
+        # abs_diff[i] = |diff_var|
+        model.addConstr(abs_diff[i] >= diff_var)
+        model.addConstr(abs_diff[i] >= -diff_var)
+    
+    # Objective: minimize sum of absolute differences
+    objective = gp.quicksum(abs_diff[i] for i in range(num_edges))
+    model.setObjective(objective, GRB.MINIMIZE)
+    
+    # Optimize
+    model.optimize()
+    
+    # Extract solution
+    if model.status in [GRB.OPTIMAL, GRB.SUBOPTIMAL]:
+        ordering = [None] * n
+        for u in nodes:
+            # Find the position p where x[u, p] is 1
+            for p in positions:
+                if x[u, p].X > 0.5:  # Check binary threshold
+                    ordering[p] = u
+                    break
+        
+        objective_value = int(round(model.objVal))
+        status = "OPTIMAL" if model.status == GRB.OPTIMAL else "SUBOPTIMAL"
+        
+        return status, ordering, objective_value
+    else:
+        return "NOT_SOLVED", [], float('inf')

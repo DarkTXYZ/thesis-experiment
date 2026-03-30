@@ -13,6 +13,7 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 from Baseline.local_search import local_search
 from Baseline.spectral_sequencing import spectral_sequencing
 from Baseline.successive_augmentation import successive_augmentation
+from Baseline.lower_bound import calculate_lower_obj_bound
 from Utils.MinLA import calculate_min_linear_arrangement, find_one_minimum_solution
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -24,6 +25,9 @@ def calculate_minla_baseline(graph: nx.Graph) -> dict:
     Returns dict with costs from each algorithm.
     """
     n = graph.number_of_nodes()
+    
+    # Lower bound
+    lower_bound = calculate_lower_obj_bound(graph)
     
     # Spectral sequencing
     spectral_ordering = spectral_sequencing(graph)
@@ -41,6 +45,7 @@ def calculate_minla_baseline(graph: nx.Graph) -> dict:
     local_search_cost = local_search(graph, spectral_ordering, iter_max=1000, flip_method="flip2")
     
     return {
+        'lower_bound': lower_bound,
         'spectral_cost': spectral_cost,
         'successive_augmentation_cost': best_sa_cost,
         'successive_augmentation_method': best_sa_method,
@@ -250,7 +255,7 @@ def add_optimal_costs():
 def generate():
     """Generate the quantum dataset."""
     seed = 42
-    num_vertices_list = [5, 10, 15, 20]
+    num_vertices_list = [5, 10, 15, 20, 25, 30, 35, 40]
     num_graphs = 100
     density = 0.5
 
@@ -275,7 +280,7 @@ def generate():
 # ──────────────────────────────────────────────────────────────────────────────
 # CONFIGURATION
 # ──────────────────────────────────────────────────────────────────────────────
-RUN_GENERATE = False
+RUN_GENERATE = True
 RUN_SOLVE = True
 
 

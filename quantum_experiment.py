@@ -8,6 +8,7 @@ from dwave.samplers import PathIntegralAnnealingSampler
 import Utils.MinLA as minla
 from typing import Dict, Tuple, List
 import openjij as oj
+from Baseline.lower_bound import calculate_lower_obj_bound
 
 DATASET_PATH = "Dataset/quantum_dataset"
 RESULTS_DIR = "Results"
@@ -48,65 +49,46 @@ def check_feasibility(sol: np.ndarray, n: int) -> bool:
     return labels == set(range(1, n + 1))
 
 def run_experiment():
-    SEEDS = [42, 123, 456, 789, 999]
-    
-    start_time = time.time()
-    
     datasets = read_dataset()
     
-    vertices_count = [5,10,15,20,25]
+    vertices_count = [5, 10, 15, 20, 25]
     num_sweeps = 1000
+    num_seeds = 5
 
-    beta_min = -9
-    beta_max = 0
+    beta_min = 1e-9
+    beta_max = 1
     
     all_rows = []
 
     for vertex_count in vertices_count:
         print(f"\nRunning experiment for graph with {vertex_count} vertices...")
-        vertex_start_time = time.time()
         graphs = datasets[vertex_count]['graphs']
 
         feasibility_cnt = 0
         approx_ratios = []
+        total_time = 0
 
         for graph_id, graph in enumerate(graphs):
-            graph_start_time = time.time()
             G = convert_graph_data_to_nx(graph)
             n = G.number_of_nodes()
             m = G.number_of_edges()
 
             bqm = minla.generate_bqm_instance(G)
-            # bqm.normalize()
-            optimal_cost = graph.get('optimal_cost', None)
+            lower_bound = calculate_lower_obj_bound(G)
 
-            # Store results for all seeds
-            seed_results = []
+            # Collect best feasible solutions from each seed
+            best_feasible_costs = []
+            total_elapsed = 0
 
-            for seed in SEEDS:
-                np.random.seed(seed)
-                
+            for seed in range(num_seeds):
                 t0 = time.time()
                 
-                # solver = oj.SQASampler()
-                
-                # sampleset = solver.sample(
-                #     bqm,
-                #     num_reads=10,
-                #     num_sweeps=num_sweeps,
-                #     sparse=True,
-                #     seed=seed
-                # )
-
                 solver = PathIntegralAnnealingSampler()
 
                 beta_schedule_type = 'custom'
                 Hp_field = np.linspace(0, 1, num=num_sweeps)
                 Hd_field = np.linspace(1, 0, num=num_sweeps)
                 
-                # Hp_field = np.power(np.linspace(0, 1, num_sweeps), 1/2)
-                # Hd_field = np.ones(num_sweeps)
-
                 sampleset = solver.sample(
                     bqm,
                     num_reads=10,
@@ -116,77 +98,61 @@ def run_experiment():
                     Hd_field=Hd_field,
                     seed=seed
                 )
-                 
-                elapsed = time.time() - t0
-
-                best = sampleset.first
-                energy = best.energy
-                ordering, feasible = decode_solution(best.sample, n)
-                minla_cost = (
-                    minla.calculate_min_linear_arrangement(G, ordering)
-                    if feasible else None
-                )
                 
-                rel_gap = (
-                    (minla_cost - optimal_cost) / optimal_cost
-                    if (feasible and optimal_cost) else None
-                )
+                elapsed = time.time() - t0
+                total_elapsed += elapsed
 
-                seed_results.append({
-                    'seed': seed,
-                    'energy': energy,
-                    'feasible': feasible,
-                    'minla_cost': minla_cost,
-                    'rel_gap': rel_gap,
-                    'time_s': elapsed
-                })
-            
-            # Select best result: prefer feasible solutions, then lowest cost
-            best_result = None
-            for result in seed_results:
-                if best_result is None:
-                    best_result = result
-                elif result['feasible'] and not best_result['feasible']:
-                    best_result = result
-                elif result['feasible'] and best_result['feasible']:
-                    if result['minla_cost'] < best_result['minla_cost']:
-                        best_result = result
-                elif not result['feasible'] and not best_result['feasible']:
-                    if result['energy'] < best_result['energy']:
-                        best_result = result
+                # Find the best feasible solution from this seed
+                best_feasible_cost = None
+                best_energy = None
+                for sample in sampleset.samples():
+                    ordering, feasible = decode_solution(sample, n)
+                    if feasible:
+                        minla_cost = minla.calculate_min_linear_arrangement(G, ordering)
+                        if best_feasible_cost is None or minla_cost < best_feasible_cost:
+                            best_feasible_cost = minla_cost
+                            best_energy = sampleset.data_vectors['energy'][list(sampleset.samples()).index(sample)]
+                
+                if best_feasible_cost is not None:
+                    best_feasible_costs.append(best_feasible_cost)
 
-            # Add best result to output
-            approx_ratio = None
-            if best_result['feasible']:
+            total_time = total_elapsed
+
+            # Calculate average of best feasible solutions
+            if best_feasible_costs:
+                avg_minla_cost = np.mean(best_feasible_costs)
                 feasibility_cnt += 1
-                approx_ratio = best_result['minla_cost'] / optimal_cost
+                approx_ratio = avg_minla_cost / lower_bound
                 approx_ratios.append(approx_ratio)
+                feasible = True
+            else:
+                avg_minla_cost = None
+                approx_ratio = None
+                feasible = False
 
             row = {
                 'n': n,
                 'm': m,
                 'graph_id': graph_id,
-                'energy': best_result['energy'],
-                'feasible': best_result['feasible'],
-                'minla_cost': best_result['minla_cost'],
-                'optimal_cost': optimal_cost,
+                'feasible': feasible,
+                'avg_minla_cost': avg_minla_cost,
+                'lower_bound': lower_bound,
                 'approx_ratio': approx_ratio,
-                'relative_gap': best_result['rel_gap'],
-                'time_s': round(best_result['time_s'], 3),
-                'best_seed': best_result['seed'],
-                'solver': 'PathIntegralAnnealingSampler'
+                'time_s': round(total_time, 3),
+                'num_seeds': num_seeds,
+                'solver': solver.__class__.__name__
             }
             all_rows.append(row)
 
-            graph_elapsed = time.time() - graph_start_time
-            print(f'  Graph {graph_id}: Feasible={best_result["feasible"]} | Energy={best_result["energy"]} | Optimal={optimal_cost} | Best Seed={best_result["seed"]} | Time={graph_elapsed:.2f}s')
+            if feasible:
+                print(f'  Graph {graph_id}: Feasible={feasible} | Avg Cost={avg_minla_cost:.2f} | Lower Bound={lower_bound} | Approx Ratio={approx_ratio:.4f} | Time={total_time:.2f}s')
+            else:
+                print(f'  Graph {graph_id}: Feasible={feasible} | Lower Bound={lower_bound} | Time={total_time:.2f}s')
         
         feasibility_rate = feasibility_cnt / len(graphs)
         avg_approx_ratio = sum(approx_ratios) / len(approx_ratios) if approx_ratios else None
-        vertex_elapsed = time.time() - vertex_start_time
         print(f'  Feasibility rate: {feasibility_rate:.2%}')
         print(f'  Avg approx ratio: {avg_approx_ratio}')
-        print(f'  Time for {vertex_count} vertices: {vertex_elapsed:.2f}s')
     
     # Save results to CSV
     df = pd.DataFrame(all_rows)
@@ -194,17 +160,8 @@ def run_experiment():
     timestamp = time.strftime("%Y%m%d_%H%M%S")
     csv_path = os.path.join(RESULTS_DIR, f"quantum_experiment_{timestamp}.csv")
     df.to_csv(csv_path, index=False)
-    
-    # Display total time
-    total_time = time.time() - start_time
-    hours = int(total_time // 3600)
-    minutes = int((total_time % 3600) // 60)
-    seconds = int(total_time % 60)
-    
     print(f"\n{'='*70}")
     print(f"Results saved to {csv_path}")
-    print(f"{'='*70}")
-    print(f"Total time: {hours:02d}:{minutes:02d}:{seconds:02d} ({total_time:.2f}s)")
     print(f"{'='*70}")
 
 
