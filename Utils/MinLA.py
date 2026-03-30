@@ -193,75 +193,97 @@ def find_all_minimum_solutions(graph: nx.Graph):
     
     return status2.name, collector.solutions
 
-def solve_MinLA_gurobi(graph: nx.Graph):
+def solve_minla_gurobi(G: nx.Graph):
     """
-    Solve the Minimum Linear Arrangement (MinLA) problem using Gurobi.
+    Solves the Minimum Linear Arrangement exactly using Gurobi 
+    via the Linear Ordering Polytope formulation.
     """
-    n = graph.number_of_nodes()
+    n = G.number_of_nodes()
+    nodes = list(G.nodes())
     
-    # Extract actual node labels to prevent KeyErrors
-    nodes = list(graph.nodes())
-    positions = list(range(n))
+    # Initialize the Gurobi environment and model
+    # For academic licenses, create environment without empty=True first
+    try:
+        # Try with academic license (requires proper license setup)
+        env = gp.Env()
+        m = gp.Model("MinLA_LinearOrdering", env=env)
+    except gp.GurobiError as e:
+        print(f"Gurobi license error: {e}")
+        print("Trying alternative environment setup...")
+        # Fallback: create environment with empty=True
+        env = gp.Env(empty=True)
+        env.setParam('OutputFlag', 1)
+        env.start()
+        m = gp.Model("MinLA_LinearOrdering", env=env)
     
-    # Create a new Gurobi model
-    model = gp.Model("MinLA")
-    model.setParam('OutputFlag', 1)  # Set to 0 to suppress output
+    # 1. Variables: y[i, j] = 1 if node i precedes node j
+    y = {}
+    for i in range(n):
+        for j in range(i + 1, n):
+            y[nodes[i], nodes[j]] = m.addVar(vtype=GRB.BINARY, name=f"y_{nodes[i]}_{nodes[j]}")
+            
+    # Helper function to evaluate order regardless of index
+    def Y(u, v):
+        if u == v: return 0
+        # If u < v, return y_uv. If u > v, return 1 - y_vu
+        return y[u, v] if (u, v) in y else 1 - y[v, u]
+
+    # Continuous variables for positions and distances (integrality is guaranteed by y)
+    pos = {v: m.addVar(lb=1, ub=n, vtype=GRB.CONTINUOUS, name=f"pos_{v}") for v in nodes}
+    dist = {e: m.addVar(lb=1, ub=n-1, vtype=GRB.CONTINUOUS, name=f"dist_{e[0]}_{e[1]}") for e in G.edges()}
     
-    # 1. Assignment Variables: x[u, p] is 1 if node u is at position p
-    x = model.addVars(nodes, positions, vtype=GRB.BINARY, name="x")
-    
-    # Position variables (can be continuous because x dictates the integer value)
-    pos = model.addVars(nodes, lb=0, ub=n-1, vtype=GRB.CONTINUOUS, name="pos")
-    
-    # Constraint: Each node gets exactly one position
-    for u in nodes:
-        model.addConstr(gp.quicksum(x[u, p] for p in positions) == 1, name=f"node_{u}_assign")
+    # 2. Position Constraints: pos(i) = 1 + (number of nodes placed before i)
+    for i in nodes:
+        m.addConstr(pos[i] == 1 + gp.quicksum(Y(j, i) for j in nodes if j != i), name=f"def_pos_{i}")
         
-    # Constraint: Each position is assigned to exactly one node (The "AllDifferent" fix)
-    for p in positions:
-        model.addConstr(gp.quicksum(x[u, p] for u in nodes) == 1, name=f"pos_{p}_assign")
+    # 3. Distance Constraints: dist >= |pos_u - pos_v|
+    for u, v in G.edges():
+        m.addConstr(dist[u, v] >= pos[u] - pos[v], name=f"dist_pos_{u}_{v}")
+        m.addConstr(dist[u, v] >= pos[v] - pos[u], name=f"dist_neg_{u}_{v}")
         
-    # Link pos[u] to the binary assignment matrix
-    for u in nodes:
-        model.addConstr(pos[u] == gp.quicksum(p * x[u, p] for p in positions), name=f"link_{u}")
+    # 4. Transitivity Constraints (The core of the tight LP relaxation)
+    for i in range(n):
+        for j in range(i + 1, n):
+            for k in range(j + 1, n):
+                u, v, w = nodes[i], nodes[j], nodes[k]
+                m.addConstr(y[u, v] + y[v, w] - y[u, w] <= 1, name=f"trans_up_{u}_{v}_{w}")
+                m.addConstr(y[u, v] + y[v, w] - y[u, w] >= 0, name=f"trans_dn_{u}_{v}_{w}")
+                
+    # 5. Objective: Minimize total edge distances
+    m.setObjective(gp.quicksum(dist[e] for e in G.edges()), GRB.MINIMIZE)
     
-    # Auxiliary variables for absolute differences
-    edge_list = list(graph.edges())
-    num_edges = len(edge_list)
-    abs_diff = model.addVars(num_edges, lb=0, vtype=GRB.CONTINUOUS, name="abs_diff")
+    # --- Solver Tuning for MinLA ---
+    # Focus heavily on proving the lower bound (optimality) since heuristics find good upper bounds fast
+    m.Params.MIPFocus = 2 
+    # Use aggressive Gomory fractional cuts
+    m.Params.GomoryPasses = 5 
+    # Set a reasonable time limit (e.g., 1 hour)
+    m.Params.TimeLimit = 3600 
     
-    # For each edge, add constraints for absolute difference
-    for i, (u, v) in enumerate(edge_list):
-        # Create auxiliary variables for the difference
-        diff_var = model.addVar(lb=-(n-1), ub=n-1, vtype=GRB.CONTINUOUS, name=f"diff_{i}")
+    # Solve
+    m.optimize()
+    
+    if m.status in [GRB.OPTIMAL, GRB.TIME_LIMIT, GRB.INTERRUPTED]:
+        if m.SolCount > 0:
+            # Extract the 1D layout
+            layout = {v: int(round(pos[v].X)) for v in nodes}
+            # Sort the dictionary by position for easy reading
+            sorted_layout = dict(sorted(layout.items(), key=lambda item: item[1]))
+            return sorted_layout, m.ObjVal
+    
+    return None, None
+
+if __name__ == "__main__":
+    # Generate a random general graph with N=25
+    G = nx.erdos_renyi_graph(25, 0.5, seed=42)
+    
+    # Ensure it's connected for a meaningful MinLA
+    if not nx.is_connected(G):
+        largest_cc = max(nx.connected_components(G), key=len)
+        G = G.subgraph(largest_cc).copy()
         
-        # diff_var = pos[u] - pos[v]
-        model.addConstr(diff_var == pos[u] - pos[v])
-        
-        # abs_diff[i] = |diff_var|
-        model.addConstr(abs_diff[i] >= diff_var)
-        model.addConstr(abs_diff[i] >= -diff_var)
+    print(f"Solving MinLA for N={G.number_of_nodes()}...")
+    layout, cost = solve_minla_gurobi(G)
     
-    # Objective: minimize sum of absolute differences
-    objective = gp.quicksum(abs_diff[i] for i in range(num_edges))
-    model.setObjective(objective, GRB.MINIMIZE)
-    
-    # Optimize
-    model.optimize()
-    
-    # Extract solution
-    if model.status in [GRB.OPTIMAL, GRB.SUBOPTIMAL]:
-        ordering = [None] * n
-        for u in nodes:
-            # Find the position p where x[u, p] is 1
-            for p in positions:
-                if x[u, p].X > 0.5:  # Check binary threshold
-                    ordering[p] = u
-                    break
-        
-        objective_value = int(round(model.objVal))
-        status = "OPTIMAL" if model.status == GRB.OPTIMAL else "SUBOPTIMAL"
-        
-        return status, ordering, objective_value
-    else:
-        return "NOT_SOLVED", [], float('inf')
+    print(f"\nOptimal Layout: {layout}")
+    print(f"Minimum Linear Arrangement Cost: {cost}")

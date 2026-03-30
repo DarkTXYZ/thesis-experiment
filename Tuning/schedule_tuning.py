@@ -100,7 +100,19 @@ def create_schedules(num_sweeps):
     schedules['Fixed Hd, Logarithmic Hp'] = (schedules['Logarithmic'][0], hd)
     schedules['Fixed Hd, Exponential Hp'] = (schedules['Exponential'][0], hd)
     schedules['Fixed Hd, Cosine Hp'] = (schedules['Cosine'][0], hd)
-    
+
+    # Fixed Hp with different Hp schedules
+    hp = np.ones(num_sweeps)
+    schedules['Fixed Hp, Linear Hd'] = (hp, schedules['Linear'][1])
+    schedules['Fixed Hp, Geometric Hd'] = (hp, schedules['Geometric'][1])
+    schedules['Fixed Hp, Power Hd (1/2)'] = (hp, schedules['Power (1/2)'][1])
+    schedules['Fixed Hp, Power Hd (2)'] = (hp, schedules['Power (2)'][1])
+    schedules['Fixed Hp, Trigonometric Hd'] = (hp, schedules['Trigonometric'][1])
+    schedules['Fixed Hp, Sigmoid Hd'] = (hp, schedules['Sigmoid'][1])
+    schedules['Fixed Hp, Logarithmic Hd'] = (hp, schedules['Logarithmic'][1])
+    schedules['Fixed Hp, Exponential Hd'] = (hp, schedules['Exponential'][1])
+    schedules['Fixed Hp, Cosine Hd'] = (hp, schedules['Cosine'][1])
+
     return schedules
 
 
@@ -174,8 +186,8 @@ def run_schedule_tuning_experiment():
     SEEDS = [42, 123, 456, 789, 999]
     num_sweeps = 1000
     num_reads = 10
-    NUM_GRAPHS = 5  # Test on 5 different graphs
-    
+    NUM_GRAPHS = 5  # Test on 1 different graph
+
     # Load dataset
     print("Loading quantum_dataset...")
     datasets = read_dataset()
@@ -205,7 +217,10 @@ def run_schedule_tuning_experiment():
         'Trigonometric', 'Sigmoid', 'Logarithmic', 'Exponential', 'Cosine', 'Hyperbolic', 'Piecewise (Fast-Slow)',
         'Fixed Hd, Linear Hp', 'Fixed Hd, Geometric Hp', 'Fixed Hd, Power Hp (1/2)',
         'Fixed Hd, Power Hp (2)', 'Fixed Hd, Trigonometric Hp', 'Fixed Hd, Sigmoid Hp',
-        'Fixed Hd, Logarithmic Hp', 'Fixed Hd, Exponential Hp', 'Fixed Hd, Cosine Hp'
+        'Fixed Hd, Logarithmic Hp', 'Fixed Hd, Exponential Hp', 'Fixed Hd, Cosine Hp',
+        'Fixed Hp, Linear Hd', 'Fixed Hp, Geometric Hd', 'Fixed Hp, Power Hd (1/2)',
+        'Fixed Hp, Power Hd (2)', 'Fixed Hp, Trigonometric Hd', 'Fixed Hp, Sigmoid Hd',
+        'Fixed Hp, Logarithmic Hd', 'Fixed Hp, Exponential Hd', 'Fixed Hp, Cosine Hd'
     ]
     
     # Check for existing results
@@ -234,7 +249,7 @@ def run_schedule_tuning_experiment():
         df_sorted = df.sort_values('feasible_percentage', ascending=False)
         print(f"\n{'='*70}")
         print("Top 5 schedules by feasibility:")
-        print(df_sorted[['schedule', 'feasible_count', 'total_runs', 'feasible_percentage']].head(5).to_string(index=False))
+        print(df_sorted[['schedule', 'feasible_instances', 'total_instances', 'feasible_percentage']].head(10).to_string(index=False))
         print(f"{'='*70}")
         return
     
@@ -250,10 +265,10 @@ def run_schedule_tuning_experiment():
         schedule_counter += 1
         print(f"[{schedule_counter}/{len(new_schedules)}] Testing {sched_name}...")
         
-        feasible_count = 0  # Count of feasible solutions across all graphs and seeds
+        feasible_energies_per_instance = []  # Store best feasible energy for each instance (graph)
         total_runs = 0      # Total number of runs
-        total_energy = 0    # Sum of best energies
         total_time = 0      # Total computation time
+        feasible_count = 0  # Count of instances with feasible solutions
         
         # Test on each of the NUM_GRAPHS graphs
         for graph_idx, graph_data in enumerate(graphs_data):
@@ -263,6 +278,8 @@ def run_schedule_tuning_experiment():
             
             # Create BQM
             bqm = minla.generate_bqm_instance(G)
+            
+            feasible_energies_per_seed = []  # Store best feasible energy for each seed
             
             # Test with each seed
             for seed in SEEDS:
@@ -288,31 +305,48 @@ def run_schedule_tuning_experiment():
                 elapsed = time.time() - t0
                 total_time += elapsed
                 
-                best = sampleset.first
-                energy = best.energy
-                total_energy += energy
-                ordering, feasible = decode_solution(best.sample, num_vertices)
+                # Find the best feasible solution in the sampleset
+                best_feasible_energy = None
+                for sample, energy in zip(sampleset.samples(), sampleset.data_vectors['energy']):
+                    ordering, feasible = decode_solution(sample, num_vertices)
+                    if feasible:
+                        if best_feasible_energy is None or energy < best_feasible_energy:
+                            best_feasible_energy = energy
                 
-                if feasible:
-                    feasible_count += 1
+                if best_feasible_energy is not None:
+                    feasible_energies_per_seed.append(best_feasible_energy)
+            
+            # Average the best feasible energies across seeds for this instance
+            if feasible_energies_per_seed:
+                avg_feasible_energy = np.mean(feasible_energies_per_seed)
+                feasible_energies_per_instance.append(avg_feasible_energy)
+                feasible_count += 1
         
-        # Calculate average metrics
-        avg_energy = total_energy / total_runs
+        # Calculate overall statistics
         avg_time = total_time / total_runs
-        feasible_percentage = (feasible_count / total_runs) * 100
+        feasible_percentage = (feasible_count / NUM_GRAPHS) * 100
         
+        # Create row with individual energies for each graph
         row = {
             'schedule': sched_name,
             'n_graphs': NUM_GRAPHS,
             'n_vertices': n,
-            'feasible_count': feasible_count,
-            'total_runs': total_runs,
+            'feasible_instances': feasible_count,
+            'total_instances': NUM_GRAPHS,
             'feasible_percentage': round(feasible_percentage, 2),
-            'avg_energy': round(avg_energy, 4),
             'avg_time_s': round(avg_time, 3),
         }
+        
+        # Add individual energies for each graph
+        for i in range(NUM_GRAPHS):
+            if i < len(feasible_energies_per_instance):
+                row[f'graph_{i+1}_energy'] = round(feasible_energies_per_instance[i], 4)
+            else:
+                row[f'graph_{i+1}_energy'] = None
+        
         all_rows.append(row)
-        print(f"  ✓ Feasible: {feasible_count}/{total_runs} ({feasible_percentage:.1f}%), Avg Energy: {avg_energy:.4f}, Avg Time: {avg_time:.2f}s")
+        energy_str = ', '.join([f"{e:.4f}" if e is not None else "N/A" for e in feasible_energies_per_instance])
+        print(f"  ✓ Feasible instances: {feasible_count}/{NUM_GRAPHS} ({feasible_percentage:.1f}%), Energies: [{energy_str}], Avg Time: {avg_time:.2f}s")
 
     
     # Save results
@@ -342,7 +376,7 @@ def run_schedule_tuning_experiment():
     df_sorted = df.sort_values('feasible_percentage', ascending=False)
     print(f"\n{'='*70}")
     print("Top 5 schedules by feasibility:")
-    print(df_sorted[['schedule', 'feasible_count', 'total_runs', 'feasible_percentage']].head(5).to_string(index=False))
+    print(df_sorted[['schedule', 'feasible_instances', 'total_instances', 'feasible_percentage']].head(5).to_string(index=False))
     print(f"{'='*70}")
 
 

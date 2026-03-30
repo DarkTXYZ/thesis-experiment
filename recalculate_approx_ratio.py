@@ -78,6 +78,7 @@ def recalculate_with_new_lower_bounds(
     df = results_df.copy()
     new_lower_bounds = []
     new_approx_ratios = []
+    cnt = 0
     
     for idx, row in df.iterrows():
         n = row['n']
@@ -110,7 +111,7 @@ def recalculate_with_new_lower_bounds(
         
         if (idx + 1) % 10 == 0:
             print(f"Processed {idx + 1}/{len(df)} rows...")
-    
+
     # Update DataFrame
     df['lower_bound'] = new_lower_bounds
     df['approx_ratio'] = new_approx_ratios
