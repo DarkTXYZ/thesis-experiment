@@ -184,6 +184,6 @@ def calculate_lower_obj_bound(G: nx.Graph):
 
 if __name__ == "__main__":
     # create erdos_renyi graph until connected
-    G = nx.erdos_renyi_graph(20, 0.5, seed = 42)
+    G = nx.erdos_renyi_graph(25, 0.5, seed = 42)
     j = calculate_lower_obj_bound(G)
     print("Lower Bound:", j)

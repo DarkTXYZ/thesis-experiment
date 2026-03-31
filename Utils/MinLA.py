@@ -258,7 +258,7 @@ def solve_minla_gurobi(G: nx.Graph):
     # Use aggressive Gomory fractional cuts
     m.Params.GomoryPasses = 5 
     # Set a reasonable time limit (e.g., 1 hour)
-    m.Params.TimeLimit = 3600 
+    m.Params.TimeLimit = 600 
     
     # Solve
     m.optimize()
@@ -269,9 +269,11 @@ def solve_minla_gurobi(G: nx.Graph):
             layout = {v: int(round(pos[v].X)) for v in nodes}
             # Sort the dictionary by position for easy reading
             sorted_layout = dict(sorted(layout.items(), key=lambda item: item[1]))
-            return sorted_layout, m.ObjVal
+            # Determine if solution is optimal or suboptimal
+            status_str = "OPTIMAL" if m.status == GRB.OPTIMAL else "SUBOPTIMAL"
+            return sorted_layout, m.ObjVal, status_str
     
-    return None, None
+    return None, None, "INFEASIBLE"
 
 if __name__ == "__main__":
     # Generate a random general graph with N=25
@@ -283,7 +285,12 @@ if __name__ == "__main__":
         G = G.subgraph(largest_cc).copy()
         
     print(f"Solving MinLA for N={G.number_of_nodes()}...")
-    layout, cost = solve_minla_gurobi(G)
+    layout, cost, status = solve_minla_gurobi(G)
     
-    print(f"\nOptimal Layout: {layout}")
-    print(f"Minimum Linear Arrangement Cost: {cost}")
+    if layout is not None:
+        print(f"\nSolution Status: {status}")
+        print(f"Layout: {layout}")
+        print(f"Minimum Linear Arrangement Cost: {cost}")
+    else:
+        print(f"\nSolution Status: {status}")
+        print("No feasible solution found.")
