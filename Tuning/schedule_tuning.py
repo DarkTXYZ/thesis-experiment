@@ -193,6 +193,7 @@ def run_schedule_tuning_experiment():
     datasets = read_dataset()
     
     n = 25
+    normalized = True
     
     # Check if 25-vertex dataset exists
     if n not in datasets:
@@ -226,15 +227,33 @@ def run_schedule_tuning_experiment():
     # Check for existing results
     existing_schedules = set()
     all_rows = []
-    results_files = sorted([f for f in os.listdir(RESULTS_DIR) if f.startswith(f"schedule_tuning_{NUM_GRAPHS}graphs_{n}v_")], reverse=True)
+    
+    # Filter results files based on normalization status
+    all_results_files = sorted([f for f in os.listdir(RESULTS_DIR) if f.startswith(f"schedule_tuning_{NUM_GRAPHS}graphs_{n}v_")], reverse=True)
+    
+    # Only use results files that match the normalization status
+    if normalized:
+        results_files = [f for f in all_results_files if 'normalized' in f]
+        print(f"Looking for normalized results files...")
+    else:
+        results_files = [f for f in all_results_files if 'normalized' not in f]
+        print(f"Looking for non-normalized results files...")
     
     if results_files:
         latest_results = os.path.join(RESULTS_DIR, results_files[0])
-        print(f"Found existing results: {results_files[0]}")
+        normalization_status = "normalized" if normalized else "non-normalized"
+        print(f"Found existing {normalization_status} results: {results_files[0]}")
         existing_df = pd.read_csv(latest_results)
         existing_schedules = set(existing_df['schedule'].unique())
         all_rows = existing_df.to_dict('records')
-        print(f"Loaded {len(existing_schedules)} previously tested schedules")
+        print(f"Loaded {len(existing_schedules)} previously tested schedules from {normalization_status} results")
+    else:
+        if all_results_files:
+            print(f"⚠️  Warning: No {('normalized' if normalized else 'non-normalized')} results found.")
+            print(f"    Available results: {[f for f in all_results_files]}")
+            print(f"    Starting fresh with {('normalized' if normalized else 'non-normalized')} BQM experiments.")
+        else:
+            print(f"No existing results found. Starting fresh {('normalized' if normalized else 'non-normalized')} BQM experiments.")
     
     # Filter to only untested schedules
     new_schedules = [s for s in schedule_names if s not in existing_schedules]
@@ -278,6 +297,8 @@ def run_schedule_tuning_experiment():
             
             # Create BQM
             bqm = minla.generate_bqm_instance(G)
+            if normalized:
+                bqm.normalize()
             
             feasible_energies_per_seed = []  # Store best feasible energy for each seed
             
@@ -360,7 +381,10 @@ def run_schedule_tuning_experiment():
         print(f"Appending {len(new_schedules)} new results to {results_files[0]}")
     else:
         timestamp = time.strftime("%Y%m%d_%H%M%S")
-        csv_path = os.path.join(RESULTS_DIR, f"schedule_tuning_{NUM_GRAPHS}graphs_{n}v_{timestamp}.csv")
+        if normalized:
+            csv_path = os.path.join(RESULTS_DIR, f"schedule_tuning_{NUM_GRAPHS}graphs_{n}v_normalized_{timestamp}.csv")
+        else:
+            csv_path = os.path.join(RESULTS_DIR, f"schedule_tuning_{NUM_GRAPHS}graphs_{n}v_{timestamp}.csv")
         print(f"\n{'='*70}")
         print(f"Creating new results file")
     
