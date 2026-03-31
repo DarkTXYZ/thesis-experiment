@@ -34,7 +34,9 @@ class MinLALowerBounds:
             f = 0
             lb = 0
             
-            while f + n - i < m:
+            while f + n - i <= m:
+                if n == i:
+                    break
                 f = f + n - i
                 lb = lb + i * (n - i)
                 i = i + 1
