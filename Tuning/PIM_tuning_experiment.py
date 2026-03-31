@@ -96,7 +96,7 @@ def run_experiment():
     # beta_range_max_logspace = np.array([0])
     
     space_types = ['linear', 'geometric']
-    annealing_types = ['default']
+    annealing_types = ['default', 'fixed']
     normalized = [True]
     # space_types = ['logspace']
     # annealing_types = ['default']
