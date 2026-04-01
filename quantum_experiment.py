@@ -4,14 +4,12 @@ import time
 import numpy as np
 import pandas as pd
 import networkx as nx
-from dwave.samplers import PathIntegralAnnealingSampler
+from dwave.samplers import PathIntegralAnnealingSampler, RandomSampler
 import Utils.MinLA as minla
-from typing import Dict, Tuple, List
-import openjij as oj
 from Baseline.lower_bound import calculate_lower_obj_bound
 
 DATASET_PATH = "Dataset/quantum_dataset"
-RESULTS_DIR = "Results"
+RESULTS_DIR = "Results/quantum_experiment"
 
 def read_dataset():
     # read all pickle files in DATASET_PATH
@@ -31,29 +29,51 @@ def convert_graph_data_to_nx(graph_data):
     G.add_edges_from(graph_data['edges'])
     return G
 
-def decode_solution(raw_sample: Dict, n: int) -> Tuple[np.ndarray, bool]:
-    sol = np.array([
-        [raw_sample.get(f'X[{u}][{k}]', 0) for k in range(n)]
-        for u in range(n)
-    ], dtype=int)
-    is_feasible = check_feasibility(sol, n)
-    ordering = np.sum(sol, axis=1)
-    return ordering, is_feasible
-
-
-def check_feasibility(sol: np.ndarray, n: int) -> bool:
-    for u in range(n):
-        if np.any((sol[u, :-1] == 0) & (sol[u, 1:] == 1)):
-            return False
-    labels = set(np.sum(sol, axis=1))
-    return labels == set(range(1, n + 1))
+def run_random_sampler_baseline(G, bqm, seeds, num_reads=10):
+    """Run RandomSampler as a baseline for comparison."""
+    n = G.number_of_nodes()
+    best_feasible_costs = []
+    total_elapsed = 0
+    
+    solver = RandomSampler()
+    
+    for seed in seeds:
+        t0 = time.time()
+        
+        sampleset = solver.sample(bqm, num_reads=num_reads, seed=seed)
+        
+        elapsed = time.time() - t0
+        total_elapsed += elapsed
+        
+        # Find the best feasible solution from this seed
+        best_feasible_cost = None
+        for sample in sampleset.samples():
+            ordering, feasible = minla.decode_solution(sample, n)
+            if feasible:
+                minla_cost = minla.calculate_min_linear_arrangement(G, ordering)
+                if best_feasible_cost is None or minla_cost < best_feasible_cost:
+                    best_feasible_cost = minla_cost
+        
+        if best_feasible_cost is not None:
+            best_feasible_costs.append(best_feasible_cost)
+    
+    # Calculate average of best feasible solutions
+    if best_feasible_costs:
+        avg_minla_cost = np.mean(best_feasible_costs)
+        feasible = True
+    else:
+        avg_minla_cost = None
+        feasible = False
+    
+    return feasible, avg_minla_cost, total_elapsed
 
 def run_experiment():
     datasets = read_dataset()
     
     vertices_count = [5, 10, 15, 20, 25]
     num_sweeps = 1000
-    num_seeds = 5
+    seeds = [42, 123, 456, 789, 999]
+    num_seeds = len(seeds)
 
     beta_min = 1e-9
     beta_max = 1
@@ -64,9 +84,10 @@ def run_experiment():
         print(f"\nRunning experiment for graph with {vertex_count} vertices...")
         graphs = datasets[vertex_count]['graphs']
 
-        feasibility_cnt = 0
-        approx_ratios = []
-        total_time = 0
+        feasibility_cnt_pim = 0
+        feasibility_cnt_random = 0
+        approx_ratios_pim = []
+        approx_ratios_random = []
 
         for graph_id, graph in enumerate(graphs):
             G = convert_graph_data_to_nx(graph)
@@ -76,11 +97,15 @@ def run_experiment():
             bqm = minla.generate_bqm_instance(G)
             lower_bound = calculate_lower_obj_bound(G)
 
+            # ============ PathIntegralAnnealingSampler ============
+            print(f'\n  Graph {graph_id}:')
+            print(f'    Running PathIntegralAnnealingSampler...')
+            
             # Collect best feasible solutions from each seed
-            best_feasible_costs = []
-            total_elapsed = 0
+            best_feasible_costs_pim = []
+            total_elapsed_pim = 0
 
-            for seed in range(num_seeds):
+            for seed in seeds:
                 t0 = time.time()
                 
                 solver = PathIntegralAnnealingSampler()
@@ -100,13 +125,13 @@ def run_experiment():
                 )
                 
                 elapsed = time.time() - t0
-                total_elapsed += elapsed
+                total_elapsed_pim += elapsed
 
                 # Find the best feasible solution from this seed
                 best_feasible_cost = None
                 best_energy = None
                 for sample in sampleset.samples():
-                    ordering, feasible = decode_solution(sample, n)
+                    ordering, feasible = minla.decode_solution(sample, n)
                     if feasible:
                         minla_cost = minla.calculate_min_linear_arrangement(G, ordering)
                         if best_feasible_cost is None or minla_cost < best_feasible_cost:
@@ -114,45 +139,83 @@ def run_experiment():
                             best_energy = sampleset.data_vectors['energy'][list(sampleset.samples()).index(sample)]
                 
                 if best_feasible_cost is not None:
-                    best_feasible_costs.append(best_feasible_cost)
-
-            total_time = total_elapsed
+                    best_feasible_costs_pim.append(best_feasible_cost)
 
             # Calculate average of best feasible solutions
-            if best_feasible_costs:
-                avg_minla_cost = np.mean(best_feasible_costs)
-                feasibility_cnt += 1
-                approx_ratio = avg_minla_cost / lower_bound
-                approx_ratios.append(approx_ratio)
-                feasible = True
+            if best_feasible_costs_pim:
+                avg_minla_cost_pim = np.mean(best_feasible_costs_pim)
+                feasibility_cnt_pim += 1
+                approx_ratio_pim = avg_minla_cost_pim / lower_bound
+                approx_ratios_pim.append(approx_ratio_pim)
+                feasible_pim = True
             else:
-                avg_minla_cost = None
-                approx_ratio = None
-                feasible = False
+                avg_minla_cost_pim = None
+                approx_ratio_pim = None
+                feasible_pim = False
 
-            row = {
+            # ============ RandomSampler Baseline ============
+            print(f'    Running RandomSampler baseline...')
+            feasible_random, avg_minla_cost_random, total_elapsed_random = run_random_sampler_baseline(
+                G, bqm, seeds, num_reads=10
+            )
+            
+            if feasible_random:
+                feasibility_cnt_random += 1
+                approx_ratio_random = avg_minla_cost_random / lower_bound
+                approx_ratios_random.append(approx_ratio_random)
+            else:
+                approx_ratio_random = None
+
+            # ============ Record Results ============
+            # PIM Results
+            row_pim = {
                 'n': n,
                 'm': m,
                 'graph_id': graph_id,
-                'feasible': feasible,
-                'avg_minla_cost': avg_minla_cost,
+                'solver': 'PathIntegralAnnealingSampler',
+                'feasible': feasible_pim,
+                'avg_minla_cost': avg_minla_cost_pim,
                 'lower_bound': lower_bound,
-                'approx_ratio': approx_ratio,
-                'time_s': round(total_time, 3),
-                'num_seeds': num_seeds,
-                'solver': solver.__class__.__name__
+                'approx_ratio': approx_ratio_pim,
+                'time_s': round(total_elapsed_pim, 3),
+                'num_seeds': num_seeds
             }
-            all_rows.append(row)
+            all_rows.append(row_pim)
+            
+            # Random Sampler Results
+            row_random = {
+                'n': n,
+                'm': m,
+                'graph_id': graph_id,
+                'solver': 'RandomSampler',
+                'feasible': feasible_random,
+                'avg_minla_cost': avg_minla_cost_random,
+                'lower_bound': lower_bound,
+                'approx_ratio': approx_ratio_random,
+                'time_s': round(total_elapsed_random, 3),
+                'num_seeds': num_seeds
+            }
+            all_rows.append(row_random)
 
-            if feasible:
-                print(f'  Graph {graph_id}: Feasible={feasible} | Avg Cost={avg_minla_cost:.2f} | Lower Bound={lower_bound} | Approx Ratio={approx_ratio:.4f} | Time={total_time:.2f}s')
+            # Print Results
+            if feasible_pim:
+                print(f'      PIM: Feasible={feasible_pim} | Avg Cost={avg_minla_cost_pim:.2f} | Approx Ratio={approx_ratio_pim:.4f} | Time={total_elapsed_pim:.2f}s')
             else:
-                print(f'  Graph {graph_id}: Feasible={feasible} | Lower Bound={lower_bound} | Time={total_time:.2f}s')
+                print(f'      PIM: Feasible={feasible_pim} | Time={total_elapsed_pim:.2f}s')
+            
+            if feasible_random:
+                print(f'      Random: Feasible={feasible_random} | Avg Cost={avg_minla_cost_random:.2f} | Approx Ratio={approx_ratio_random:.4f} | Time={total_elapsed_random:.2f}s')
+            else:
+                print(f'      Random: Feasible={feasible_random} | Time={total_elapsed_random:.2f}s')
         
-        feasibility_rate = feasibility_cnt / len(graphs)
-        avg_approx_ratio = sum(approx_ratios) / len(approx_ratios) if approx_ratios else None
-        print(f'  Feasibility rate: {feasibility_rate:.2%}')
-        print(f'  Avg approx ratio: {avg_approx_ratio}')
+        feasibility_rate_pim = feasibility_cnt_pim / len(graphs)
+        feasibility_rate_random = feasibility_cnt_random / len(graphs)
+        avg_approx_ratio_pim = sum(approx_ratios_pim) / len(approx_ratios_pim) if approx_ratios_pim else None
+        avg_approx_ratio_random = sum(approx_ratios_random) / len(approx_ratios_random) if approx_ratios_random else None
+        
+        print(f'\n  ====== Summary for {vertex_count} vertices ======')
+        print(f'  PIM - Feasibility rate: {feasibility_rate_pim:.2%} | Avg approx ratio: {avg_approx_ratio_pim}')
+        print(f'  Random - Feasibility rate: {feasibility_rate_random:.2%} | Avg approx ratio: {avg_approx_ratio_random}')
     
     # Save results to CSV
     df = pd.DataFrame(all_rows)

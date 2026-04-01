@@ -13,10 +13,9 @@ import Utils.MinLA as minla
 
 PARENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATASET_PATH = os.path.join(PARENT_DIR, "Dataset/quantum_dataset")
-RESULTS_DIR = os.path.join(PARENT_DIR, "Results")
-SEEDS = [42, 123, 456, 789, 999]  # 5 different seeds
+RESULTS_DIR = os.path.join(PARENT_DIR, "Results/tuning_experiment")
+SEEDS = [42, 123, 456, 789, 999]
 TIMESTAMP = time.strftime('%Y%m%d_%H%M%S')
-RESULTS_CSV = os.path.join(RESULTS_DIR, f"PIM_tuning_experiment_{TIMESTAMP}.csv")
 
 
 def read_dataset():
@@ -29,79 +28,60 @@ def read_dataset():
                 datasets[data['num_vertices']] = data
     return datasets
 
-def decode_solution(raw_sample: Dict, n: int) -> Tuple[np.ndarray, bool]:
-    sol = np.zeros((n, n), dtype=int)
-    for u in range(n):
-        for k in range(n):
-            val = raw_sample.get(f'X[{u}][{k}]', 0)
-            if val:
-                sol[u, k] = 1
-    is_feasible = check_feasibility(sol, n)
-    ordering = np.sum(sol, axis=1)
-    return ordering, is_feasible
+def generate_field_beta(
+    space_type: str, 
+    annealing_type: str, 
+    num_sweeps: int, 
+    start: float = 0.0, 
+    end: float = 1.0
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Generates an annealing schedule across a defined [start, end] range."""
+    Hp_field = None
+    Hd_field = None
+    
+    if space_type == 'linear':
+        Hp_field = np.linspace(start, end, num_sweeps)
+    elif space_type == 'geometric':
+        Hp_field = np.geomspace(max(start, 1e-9), end, num_sweeps)
+    elif space_type == 'power (1/2)':
+        Hp_field = np.linspace(start, end, num_sweeps) ** 0.5
+    elif space_type == 'power (2)':
+        Hp_field = np.linspace(start, end, num_sweeps) ** 2
+        
+    Hd_field = (start + end) - Hp_field
+    
+    if annealing_type == 'fixed_Hp':
+        Hp_field = np.full(num_sweeps, end)
+    elif annealing_type == 'fixed_Hd':
+        Hd_field = np.full(num_sweeps, end)
 
-
-def check_feasibility(sol: np.ndarray, n: int) -> bool:
-    for u in range(n):
-        if np.any((sol[u, :-1] == 0) & (sol[u, 1:] == 1)):
-            return False
-    labels = np.sum(sol, axis=1)
-    return len(np.unique(labels)) == n and np.all(labels > 0) and np.all(labels <= n)
-
-
-def generate_field(space_type: str, annealing_type: str, beta_min: float, beta_max: float, num_sweeps: int) -> Tuple[np.ndarray, np.ndarray]:
-    if annealing_type == 'default':
-        if space_type == 'linear':
-            Hp_field = np.linspace(beta_min, beta_max, num=num_sweeps)
-            Hd_field = np.linspace(beta_max, beta_min, num=num_sweeps)
-        elif space_type == 'geometric':
-            Hp_field = np.geomspace(beta_min, beta_max, num=num_sweeps)
-            Hd_field = np.geomspace(beta_max, beta_min, num=num_sweeps)
-        else:
-            Hp_field = np.logspace(beta_min, beta_max, num=num_sweeps)
-            Hd_field = np.logspace(beta_max, beta_min, num=num_sweeps)
-    elif annealing_type == 'fixed_Hp':
-        if space_type == 'linear':
-            Hp_field = np.linspace(beta_max, beta_max, num=num_sweeps)
-            Hd_field = np.linspace(beta_max, beta_min, num=num_sweeps)
-        elif space_type == 'geometric':
-            Hp_field = np.geomspace(beta_max, beta_max, num=num_sweeps)
-            Hd_field = np.geomspace(beta_max, beta_min, num=num_sweeps)
-        else:
-            Hp_field = np.logspace(beta_max, beta_max, num=num_sweeps)
-            Hd_field = np.logspace(beta_max, beta_min, num=num_sweeps)
     return Hp_field, Hd_field
 
 
 def print_result(config_count: int, total_configs: int, normalized: bool, space_type: str, annealing_type: str, beta_min: float, beta_max: float,
                  feasible: bool, energy: float, minla_cost, optimal_cost, elapsed: float):
     status = "✓" if feasible else "✗"
+    energy_str = f"{energy:12.2f}" if energy is not None else "         N/A"
     print(f"[{config_count}/{total_configs}] normalized={normalized} | {space_type:9} | annealing={annealing_type} | beta=({beta_min:.2e}, {beta_max:.2e}) | {status} "
-          f"E={energy:12.2f} | cost={minla_cost} | optimal_cost={optimal_cost} | {elapsed:.2f}s")
+          f"E={energy_str} | cost={minla_cost} | optimal_cost={optimal_cost} | {elapsed:.2f}s")
 
 
 def run_experiment():
     datasets = read_dataset()
     
-    beta_range_min = np.array([1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1, 10])
-    beta_range_max = np.array([1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1, 10])
+    # beta_range_min = np.array([1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1])
+    beta_range_min = np.array([1e-9])
+    # beta_range_max = np.array([1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1])
+    beta_range_max = np.array([1])
     
-    # beta_range_min_logspace = np.array([-9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1])
-    # beta_range_max_logspace = np.array([-9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1])
+    space_types = ['linear', 'power (1/2)', 'power (2)']
+    annealing_types = ['default', 'fixed_Hp', 'fixed_Hd']
+    normalized = [True, False]
     
-    # beta_range_min = np.array([1e-4])
-    # beta_range_max = np.array([1])
+    N = 10
+    num_graphs = 1
     
-    # beta_range_min_logspace = np.array([-1])
-    # beta_range_max_logspace = np.array([0])
-    
-    space_types = ['linear', 'geometric']
-    annealing_types = ['default', 'fixed']
-    normalized = [True]
-    # space_types = ['logspace']
-    # annealing_types = ['default']
-   
-    graph_data = datasets[30]['graphs'][0]
+    graph_data = datasets[N]['graphs'][0]
     G = nx.Graph()
     G.add_nodes_from(range(graph_data['num_vertices']))
     G.add_edges_from(graph_data['edges'])
@@ -111,19 +91,14 @@ def run_experiment():
     solver = PathIntegralAnnealingSampler()
     num_sweeps = 1000
     
+    RESULTS_CSV = os.path.join(RESULTS_DIR, f"PIM_tuning_experiment_{N}v_{num_graphs}graphs_{TIMESTAMP}.csv")
+    
     configs = []
     for norm in normalized:
         for annealing_type in annealing_types:
             for space_type in space_types:
-                if space_type == 'logspace':
-                    beta_min_range = beta_range_min_logspace
-                    beta_max_range = beta_range_max_logspace
-                else:
-                    beta_min_range = beta_range_min
-                    beta_max_range = beta_range_max
-                
-                for beta_min in beta_min_range:
-                    for beta_max in beta_max_range:
+                for beta_min in beta_range_min:
+                    for beta_max in beta_range_max:
                         if beta_min > beta_max:
                             continue
                         configs.append((norm, space_type, annealing_type, beta_min, beta_max))
@@ -132,7 +107,7 @@ def run_experiment():
     num_seeds = len(SEEDS)
     all_results = []
     processed = 0
-
+    
     try:
         for config_count, (norm, space_type, annealing_type, beta_min, beta_max) in enumerate(configs, 1):
             # Run each configuration with all 5 seeds
@@ -140,11 +115,12 @@ def run_experiment():
                 bqm = minla.generate_bqm_instance(G)
                 if norm:
                     bqm.normalize()
+                    
                 optimal_cost = graph_data.get('optimal_cost', None)
 
                 t0 = time.time()
 
-                Hp_field, Hd_field = generate_field(space_type, annealing_type, beta_min, beta_max, num_sweeps)
+                Hp_field, Hd_field = generate_field_beta(space_type, annealing_type, num_sweeps, beta_min, beta_max)
 
                 sampleset = solver.sample(
                     bqm,
@@ -158,38 +134,40 @@ def run_experiment():
 
                 elapsed = time.time() - t0
 
-                # Find the best feasible solution from all 10 reads
-                best_feasible = None
+                best_feasible_sample = None
                 best_feasible_energy = float('inf')
-                best_infeasible = None
-                best_infeasible_energy = float('inf')
+                best_feasible_ordering = None
                 
+                best_infeasible_sample = None
+                best_infeasible_energy = float('inf')
+
                 for sample, energy in zip(sampleset.samples(), sampleset.data_vectors['energy']):
-                    ordering, feasible = decode_solution(sample, n)
+                    ordering, feasible = minla.decode_solution(sample, n)
                     if feasible:
                         if energy < best_feasible_energy:
-                            best_feasible = sample
+                            best_feasible_sample = sample
                             best_feasible_energy = energy
+                            best_feasible_ordering = ordering
                     else:
                         if energy < best_infeasible_energy:
-                            best_infeasible = sample
+                            best_infeasible_sample = sample
                             best_infeasible_energy = energy
                 
-                # Use best feasible if available, otherwise use best infeasible
-                if best_feasible is not None:
-                    energy = best_feasible_energy
-                    ordering, feasible = decode_solution(best_feasible, n)
-                elif best_infeasible is not None:
-                    energy = best_infeasible_energy
-                    ordering, feasible = decode_solution(best_infeasible, n)
-                else:
-                    # Fallback to first sample if nothing found
-                    best = sampleset.first
-                    energy = best.energy
-                    ordering, feasible = decode_solution(best.sample, n)
+                best_energy = None
+                best_feasible = None
+                best_ordering = None
                 
-                minla_cost = minla.calculate_min_linear_arrangement(G, ordering) if feasible else None
-                rel_gap = (minla_cost - optimal_cost) / optimal_cost if (feasible and optimal_cost) else None
+                if best_feasible_sample is not None:
+                    best_energy = best_feasible_energy
+                    best_ordering = best_feasible_ordering
+                    best_feasible = True
+                elif best_infeasible_sample is not None:
+                    best_energy = best_infeasible_energy
+                    best_feasible = False
+                
+                minla_cost = minla.calculate_min_linear_arrangement(G, best_ordering) if best_feasible else None
+                
+                rel_gap = (minla_cost - optimal_cost) / optimal_cost if (best_feasible and optimal_cost) else None
 
                 row = {
                     'n': n,
@@ -200,8 +178,8 @@ def run_experiment():
                     'space_type': space_type,
                     'annealing_type': annealing_type,
                     'seed': seed,
-                    'energy': energy,
-                    'feasible': feasible,
+                    'energy': best_energy,
+                    'feasible': best_feasible,
                     'minla_cost': minla_cost,
                     'optimal_cost': optimal_cost,
                     'relative_gap': rel_gap,
@@ -211,8 +189,9 @@ def run_experiment():
                 all_results.append(row)
                 processed = config_count
 
-                print_result(config_count * num_seeds, total_configs * num_seeds, norm, space_type, annealing_type, beta_min, beta_max, feasible, energy, minla_cost, optimal_cost, elapsed)
+                print_result(config_count * num_seeds, total_configs * num_seeds, norm, space_type, annealing_type, beta_min, beta_max, best_feasible, best_energy, minla_cost, optimal_cost, elapsed)
                 print(f"    └─ Seed {seed} ({seed_idx}/{num_seeds})")
+                
     except KeyboardInterrupt:
         print(f"\nInterrupted at config {processed}/{total_configs}. Partial results saved.")
 

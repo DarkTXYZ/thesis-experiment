@@ -1,0 +1,91 @@
+n,m,beta_min,beta_max,bqm_is_normalized,space_type,annealing_type,seed,energy,feasible,minla_cost,optimal_cost,relative_gap,time_s
+10,26,1e-09,1,True,linear,default,42,4.0805369127517865,False,,,,0.376
+10,26,1e-09,1,True,linear,default,123,3.5838926174497745,False,,,,0.359
+10,26,1e-09,1,True,linear,default,456,3.617449664429632,False,,,,0.356
+10,26,1e-09,1,True,linear,default,789,3.234899328859168,False,,,,0.353
+10,26,1e-09,1,True,linear,default,999,4.671140939597422,False,,,,0.356
+10,26,1e-09,1,True,power (1/2),default,42,3.9194630872484337,False,,,,0.332
+10,26,1e-09,1,True,power (1/2),default,123,4.5033557046980945,False,,,,0.325
+10,26,1e-09,1,True,power (1/2),default,456,3.3221476510068273,False,,,,0.335
+10,26,1e-09,1,True,power (1/2),default,789,3.724832214765212,False,,,,0.33
+10,26,1e-09,1,True,power (1/2),default,999,4.73154362416118,False,,,,0.323
+10,26,1e-09,1,True,power (2),default,42,3.8926174496645336,False,,,,0.383
+10,26,1e-09,1,True,power (2),default,123,3.637583892617556,False,,,,0.388
+10,26,1e-09,1,True,power (2),default,456,4.885906040268563,False,,,,0.391
+10,26,1e-09,1,True,power (2),default,789,3.986577181208159,False,,,,0.393
+10,26,1e-09,1,True,power (2),default,999,4.147651006711516,False,,,,0.396
+10,26,1e-09,1,True,linear,fixed_Hp,42,4.040268456375944,False,,,,0.365
+10,26,1e-09,1,True,linear,fixed_Hp,123,3.248322147651101,False,,,,0.361
+10,26,1e-09,1,True,linear,fixed_Hp,456,3.651006711409506,False,,,,0.359
+10,26,1e-09,1,True,linear,fixed_Hp,789,4.107382550335674,False,,,,0.363
+10,26,1e-09,1,True,linear,fixed_Hp,999,4.395973154362528,False,,,,0.36
+10,26,1e-09,1,True,power (1/2),fixed_Hp,42,4.429530201342385,False,,,,0.331
+10,26,1e-09,1,True,power (1/2),fixed_Hp,123,3.979865771812192,False,,,,0.332
+10,26,1e-09,1,True,power (1/2),fixed_Hp,456,3.7449664429531273,False,,,,0.333
+10,26,1e-09,1,True,power (1/2),fixed_Hp,789,3.7046979865772895,False,,,,0.335
+10,26,1e-09,1,True,power (1/2),fixed_Hp,999,3.4093959731544716,False,,,,0.332
+10,26,1e-09,1,True,power (2),fixed_Hp,42,4.174496644295407,False,,,,0.393
+10,26,1e-09,1,True,power (2),fixed_Hp,123,4.885906040268562,False,,,,0.399
+10,26,1e-09,1,True,power (2),fixed_Hp,456,2.9060402684564854,False,,,,0.395
+10,26,1e-09,1,True,power (2),fixed_Hp,789,4.483221476510174,False,,,,0.394
+10,26,1e-09,1,True,power (2),fixed_Hp,999,4.046979865771918,False,,,,0.396
+10,26,1e-09,1,True,linear,fixed_Hd,42,4.859060402684669,False,,,,0.47
+10,26,1e-09,1,True,linear,fixed_Hd,123,3.4899328859061534,False,,,,0.47
+10,26,1e-09,1,True,linear,fixed_Hd,456,4.221476510067218,False,,,,0.471
+10,26,1e-09,1,True,linear,fixed_Hd,789,5.19463087248333,False,,,,0.463
+10,26,1e-09,1,True,linear,fixed_Hd,999,5.570469798657827,False,,,,0.481
+10,26,1e-09,1,True,power (1/2),fixed_Hd,42,4.382550335570574,False,,,,0.469
+10,26,1e-09,1,True,power (1/2),fixed_Hd,123,4.3959731543625225,False,,,,0.467
+10,26,1e-09,1,True,power (1/2),fixed_Hd,456,5.677852348993397,False,,,,0.469
+10,26,1e-09,1,True,power (1/2),fixed_Hd,789,4.255033557047094,False,,,,0.478
+10,26,1e-09,1,True,power (1/2),fixed_Hd,999,4.194630872483325,False,,,,0.48
+10,26,1e-09,1,True,power (2),fixed_Hd,42,4.14765100671152,False,,,,0.462
+10,26,1e-09,1,True,power (2),fixed_Hd,123,4.369127516778631,False,,,,0.468
+10,26,1e-09,1,True,power (2),fixed_Hd,456,3.758389261745072,False,,,,0.463
+10,26,1e-09,1,True,power (2),fixed_Hd,789,4.7516778523491,False,,,,0.462
+10,26,1e-09,1,True,power (2),fixed_Hd,999,5.201342281879303,False,,,,0.47
+10,26,1e-09,1,False,linear,default,42,67.0,False,,,,0.347
+10,26,1e-09,1,False,linear,default,123,,,,,,0.349
+10,26,1e-09,1,False,linear,default,456,,,,,,0.358
+10,26,1e-09,1,False,linear,default,789,67.0,False,,,,0.349
+10,26,1e-09,1,False,linear,default,999,71.0,False,,,,0.354
+10,26,1e-09,1,False,power (1/2),default,42,68.0,False,,,,0.333
+10,26,1e-09,1,False,power (1/2),default,123,,,,,,0.326
+10,26,1e-09,1,False,power (1/2),default,456,79.0,False,,,,0.337
+10,26,1e-09,1,False,power (1/2),default,789,68.0,False,,,,0.332
+10,26,1e-09,1,False,power (1/2),default,999,72.0,False,,,,0.318
+10,26,1e-09,1,False,power (2),default,42,73.0,False,,,,0.383
+10,26,1e-09,1,False,power (2),default,123,80.0,False,,,,0.387
+10,26,1e-09,1,False,power (2),default,456,71.0,False,,,,0.408
+10,26,1e-09,1,False,power (2),default,789,68.0,False,,,,0.389
+10,26,1e-09,1,False,power (2),default,999,,,,,,0.387
+10,26,1e-09,1,False,linear,fixed_Hp,42,,,,,,0.334
+10,26,1e-09,1,False,linear,fixed_Hp,123,78.0,False,,,,0.325
+10,26,1e-09,1,False,linear,fixed_Hp,456,72.0,False,,,,0.335
+10,26,1e-09,1,False,linear,fixed_Hp,789,72.0,False,,,,0.33
+10,26,1e-09,1,False,linear,fixed_Hp,999,71.0,False,,,,0.326
+10,26,1e-09,1,False,power (1/2),fixed_Hp,42,74.0,False,,,,0.311
+10,26,1e-09,1,False,power (1/2),fixed_Hp,123,78.0,False,,,,0.307
+10,26,1e-09,1,False,power (1/2),fixed_Hp,456,,,,,,0.314
+10,26,1e-09,1,False,power (1/2),fixed_Hp,789,90.0,False,,,,0.307
+10,26,1e-09,1,False,power (1/2),fixed_Hp,999,78.0,False,,,,0.309
+10,26,1e-09,1,False,power (2),fixed_Hp,42,77.0,False,,,,0.341
+10,26,1e-09,1,False,power (2),fixed_Hp,123,,,,,,0.345
+10,26,1e-09,1,False,power (2),fixed_Hp,456,75.0,False,,,,0.352
+10,26,1e-09,1,False,power (2),fixed_Hp,789,,,,,,0.35
+10,26,1e-09,1,False,power (2),fixed_Hp,999,,,,,,0.347
+10,26,1e-09,1,False,linear,fixed_Hd,42,67.0,False,,,,0.415
+10,26,1e-09,1,False,linear,fixed_Hd,123,76.0,False,,,,0.42
+10,26,1e-09,1,False,linear,fixed_Hd,456,72.0,False,,,,0.417
+10,26,1e-09,1,False,linear,fixed_Hd,789,72.0,False,,,,0.419
+10,26,1e-09,1,False,linear,fixed_Hd,999,73.0,False,,,,0.418
+10,26,1e-09,1,False,power (1/2),fixed_Hd,42,70.0,False,,,,0.401
+10,26,1e-09,1,False,power (1/2),fixed_Hd,123,71.0,False,,,,0.403
+10,26,1e-09,1,False,power (1/2),fixed_Hd,456,76.0,False,,,,0.405
+10,26,1e-09,1,False,power (1/2),fixed_Hd,789,74.0,False,,,,0.405
+10,26,1e-09,1,False,power (1/2),fixed_Hd,999,67.0,False,,,,0.403
+10,26,1e-09,1,False,power (2),fixed_Hd,42,69.0,False,,,,0.432
+10,26,1e-09,1,False,power (2),fixed_Hd,123,67.0,False,,,,0.446
+10,26,1e-09,1,False,power (2),fixed_Hd,456,68.0,False,,,,0.457
+10,26,1e-09,1,False,power (2),fixed_Hd,789,69.0,False,,,,0.435
+10,26,1e-09,1,False,power (2),fixed_Hd,999,68.0,False,,,,0.437

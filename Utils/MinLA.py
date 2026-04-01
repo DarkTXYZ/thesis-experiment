@@ -5,6 +5,8 @@ from typing import List
 from itertools import permutations
 from ortools.sat.python import cp_model 
 import gurobipy as gp
+from typing import Dict, Tuple
+import numpy as np
 from gurobipy import GRB
 
 def calculate_upper_obj_bound(G: nx.Graph):
@@ -114,6 +116,26 @@ def calculate_min_linear_arrangement(graph: nx.Graph, ordering: List[int]):
     for u, v in graph.edges():
         cost += abs(position[u] - position[v])
     return cost
+
+def decode_solution(raw_sample: Dict, n: int) -> Tuple[np.ndarray, bool]:
+    sol = np.zeros((n, n), dtype=int)
+    for u in range(n):
+        for k in range(n):
+            val = raw_sample.get(f'X[{u}][{k}]', 0)
+            if val:
+                sol[u, k] = 1
+    is_feasible = check_feasibility(sol, n)
+    ordering = np.sum(sol, axis=1)
+    return ordering, is_feasible
+
+
+def check_feasibility(sol: np.ndarray, n: int) -> bool:
+    for u in range(n):
+        if np.any((sol[u, :-1] == 0) & (sol[u, 1:] == 1)):
+            return False
+    labels = np.sum(sol, axis=1)
+    return len(np.unique(labels)) == n and np.all(labels > 0) and np.all(labels <= n)
+
 
 def find_one_minimum_solution(graph: nx.Graph):
     n = graph.number_of_nodes()

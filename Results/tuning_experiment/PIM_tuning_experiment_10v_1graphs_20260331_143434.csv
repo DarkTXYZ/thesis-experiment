@@ -1,0 +1,91 @@
+n,m,beta_min,beta_max,bqm_is_normalized,space_type,annealing_type,seed,energy,feasible,minla_cost,optimal_cost,relative_gap,time_s
+10,26,1e-09,1,True,linear,default,42,4.0805369127517865,False,,,,0.355
+10,26,1e-09,1,True,linear,default,123,3.5838926174497745,False,,,,0.365
+10,26,1e-09,1,True,linear,default,456,3.617449664429632,False,,,,0.361
+10,26,1e-09,1,True,linear,default,789,3.234899328859168,False,,,,0.365
+10,26,1e-09,1,True,linear,default,999,4.671140939597422,False,,,,0.369
+10,26,1e-09,1,True,power (1/2),default,42,3.9194630872484337,False,,,,0.33
+10,26,1e-09,1,True,power (1/2),default,123,4.5033557046980945,False,,,,0.329
+10,26,1e-09,1,True,power (1/2),default,456,3.3221476510068273,False,,,,0.33
+10,26,1e-09,1,True,power (1/2),default,789,3.724832214765212,False,,,,0.33
+10,26,1e-09,1,True,power (1/2),default,999,4.73154362416118,False,,,,0.33
+10,26,1e-09,1,True,power (2),default,42,3.8926174496645336,False,,,,0.393
+10,26,1e-09,1,True,power (2),default,123,3.637583892617556,False,,,,0.388
+10,26,1e-09,1,True,power (2),default,456,4.885906040268563,False,,,,0.394
+10,26,1e-09,1,True,power (2),default,789,3.986577181208159,False,,,,0.4
+10,26,1e-09,1,True,power (2),default,999,4.147651006711516,False,,,,0.393
+10,26,1e-09,1,True,linear,fixed_Hp,42,4.040268456375944,False,,,,0.362
+10,26,1e-09,1,True,linear,fixed_Hp,123,3.248322147651101,False,,,,0.361
+10,26,1e-09,1,True,linear,fixed_Hp,456,3.651006711409506,False,,,,0.365
+10,26,1e-09,1,True,linear,fixed_Hp,789,4.107382550335674,False,,,,0.362
+10,26,1e-09,1,True,linear,fixed_Hp,999,4.395973154362528,False,,,,0.365
+10,26,1e-09,1,True,power (1/2),fixed_Hp,42,4.429530201342385,False,,,,0.334
+10,26,1e-09,1,True,power (1/2),fixed_Hp,123,3.979865771812192,False,,,,0.331
+10,26,1e-09,1,True,power (1/2),fixed_Hp,456,3.7449664429531273,False,,,,0.328
+10,26,1e-09,1,True,power (1/2),fixed_Hp,789,3.7046979865772895,False,,,,0.33
+10,26,1e-09,1,True,power (1/2),fixed_Hp,999,3.4093959731544716,False,,,,0.334
+10,26,1e-09,1,True,power (2),fixed_Hp,42,4.174496644295407,False,,,,0.395
+10,26,1e-09,1,True,power (2),fixed_Hp,123,4.885906040268562,False,,,,0.392
+10,26,1e-09,1,True,power (2),fixed_Hp,456,2.9060402684564854,False,,,,0.398
+10,26,1e-09,1,True,power (2),fixed_Hp,789,4.483221476510174,False,,,,0.395
+10,26,1e-09,1,True,power (2),fixed_Hp,999,4.046979865771918,False,,,,0.387
+10,26,1e-09,1,True,linear,fixed_Hd,42,4.859060402684669,False,,,,0.464
+10,26,1e-09,1,True,linear,fixed_Hd,123,3.4899328859061534,False,,,,0.461
+10,26,1e-09,1,True,linear,fixed_Hd,456,4.221476510067218,False,,,,0.461
+10,26,1e-09,1,True,linear,fixed_Hd,789,5.19463087248333,False,,,,0.466
+10,26,1e-09,1,True,linear,fixed_Hd,999,5.570469798657827,False,,,,0.47
+10,26,1e-09,1,True,power (1/2),fixed_Hd,42,4.382550335570574,False,,,,0.466
+10,26,1e-09,1,True,power (1/2),fixed_Hd,123,4.3959731543625225,False,,,,0.467
+10,26,1e-09,1,True,power (1/2),fixed_Hd,456,5.677852348993397,False,,,,0.467
+10,26,1e-09,1,True,power (1/2),fixed_Hd,789,4.255033557047094,False,,,,0.466
+10,26,1e-09,1,True,power (1/2),fixed_Hd,999,4.194630872483325,False,,,,0.474
+10,26,1e-09,1,True,power (2),fixed_Hd,42,4.14765100671152,False,,,,0.467
+10,26,1e-09,1,True,power (2),fixed_Hd,123,4.369127516778631,False,,,,0.463
+10,26,1e-09,1,True,power (2),fixed_Hd,456,3.758389261745072,False,,,,0.468
+10,26,1e-09,1,True,power (2),fixed_Hd,789,4.7516778523491,False,,,,0.464
+10,26,1e-09,1,True,power (2),fixed_Hd,999,5.201342281879303,False,,,,0.472
+10,26,1e-09,1,False,linear,default,42,67.0,True,80.0,,,0.361
+10,26,1e-09,1,False,linear,default,123,67.0,True,73.0,,,0.353
+10,26,1e-09,1,False,linear,default,456,68.0,True,73.0,,,0.359
+10,26,1e-09,1,False,linear,default,789,72.0,True,81.0,,,0.352
+10,26,1e-09,1,False,linear,default,999,68.0,True,71.0,,,0.357
+10,26,1e-09,1,False,power (1/2),default,42,70.0,True,70.0,,,0.323
+10,26,1e-09,1,False,power (1/2),default,123,67.0,True,81.0,,,0.321
+10,26,1e-09,1,False,power (1/2),default,456,67.0,True,75.0,,,0.318
+10,26,1e-09,1,False,power (1/2),default,789,67.0,True,67.0,,,0.323
+10,26,1e-09,1,False,power (1/2),default,999,68.0,True,69.0,,,0.327
+10,26,1e-09,1,False,power (2),default,42,68.0,True,73.0,,,0.386
+10,26,1e-09,1,False,power (2),default,123,69.0,True,88.0,,,0.39
+10,26,1e-09,1,False,power (2),default,456,69.0,True,73.0,,,0.396
+10,26,1e-09,1,False,power (2),default,789,67.0,True,83.0,,,0.39
+10,26,1e-09,1,False,power (2),default,999,67.0,True,75.0,,,0.391
+10,26,1e-09,1,False,linear,fixed_Hp,42,68.0,True,69.0,,,0.34
+10,26,1e-09,1,False,linear,fixed_Hp,123,67.0,True,73.0,,,0.33
+10,26,1e-09,1,False,linear,fixed_Hp,456,74.0,True,72.0,,,0.336
+10,26,1e-09,1,False,linear,fixed_Hp,789,68.0,True,68.0,,,0.338
+10,26,1e-09,1,False,linear,fixed_Hp,999,69.0,True,83.0,,,0.336
+10,26,1e-09,1,False,power (1/2),fixed_Hp,42,70.0,True,70.0,,,0.322
+10,26,1e-09,1,False,power (1/2),fixed_Hp,123,71.0,True,78.0,,,0.335
+10,26,1e-09,1,False,power (1/2),fixed_Hp,456,67.0,True,67.0,,,0.322
+10,26,1e-09,1,False,power (1/2),fixed_Hp,789,69.0,True,76.0,,,0.322
+10,26,1e-09,1,False,power (1/2),fixed_Hp,999,69.0,True,78.0,,,0.323
+10,26,1e-09,1,False,power (2),fixed_Hp,42,69.0,True,77.0,,,0.351
+10,26,1e-09,1,False,power (2),fixed_Hp,123,69.0,True,77.0,,,0.352
+10,26,1e-09,1,False,power (2),fixed_Hp,456,69.0,True,84.0,,,0.347
+10,26,1e-09,1,False,power (2),fixed_Hp,789,68.0,True,80.0,,,0.343
+10,26,1e-09,1,False,power (2),fixed_Hp,999,68.0,True,73.0,,,0.341
+10,26,1e-09,1,False,linear,fixed_Hd,42,68.0,True,67.0,,,0.413
+10,26,1e-09,1,False,linear,fixed_Hd,123,68.0,True,68.0,,,0.423
+10,26,1e-09,1,False,linear,fixed_Hd,456,73.0,True,73.0,,,0.415
+10,26,1e-09,1,False,linear,fixed_Hd,789,69.0,True,72.0,,,0.419
+10,26,1e-09,1,False,linear,fixed_Hd,999,67.0,True,73.0,,,0.443
+10,26,1e-09,1,False,power (1/2),fixed_Hd,42,68.0,True,70.0,,,0.399
+10,26,1e-09,1,False,power (1/2),fixed_Hd,123,68.0,True,69.0,,,0.398
+10,26,1e-09,1,False,power (1/2),fixed_Hd,456,68.0,True,71.0,,,0.405
+10,26,1e-09,1,False,power (1/2),fixed_Hd,789,100.0,True,75.0,,,0.404
+10,26,1e-09,1,False,power (1/2),fixed_Hd,999,68.0,True,68.0,,,0.405
+10,26,1e-09,1,False,power (2),fixed_Hd,42,67.0,True,67.0,,,0.44
+10,26,1e-09,1,False,power (2),fixed_Hd,123,90.0,True,70.0,,,0.439
+10,26,1e-09,1,False,power (2),fixed_Hd,456,70.0,True,68.0,,,0.436
+10,26,1e-09,1,False,power (2),fixed_Hd,789,76.0,True,69.0,,,0.431
+10,26,1e-09,1,False,power (2),fixed_Hd,999,73.0,True,76.0,,,0.432
