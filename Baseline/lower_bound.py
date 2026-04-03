@@ -113,8 +113,6 @@ class MinLALowerBounds:
 
         return minla_p_k_n
 
-    
-
     def evaluate_all(self):
         logger.info(f"evaluate_all: Starting evaluation for graph with n={self.n}, m={self.m}")
         start_time = time.time()

@@ -1,0 +1,1264 @@
+n,m,graph_id,solver,feasible,avg_minla_cost,lower_bound,approx_ratio,time_s,num_seeds
+5,5,0,Spectral Sequencing,True,6,6.0,1.0,0.0011,1
+5,5,0,Successive Augmentation (DFS),True,9,6.0,1.5,0.0,1
+5,5,0,Successive Augmentation (BFS),True,7,6.0,1.1666666666666667,0.0,1
+5,5,1,Spectral Sequencing,True,6,6.0,1.0,0.001,1
+5,5,1,Successive Augmentation (DFS),True,7,6.0,1.1666666666666667,0.0,1
+5,5,1,Successive Augmentation (BFS),True,6,6.0,1.0,0.0,1
+5,4,2,Spectral Sequencing,True,7,4.0,1.75,0.0,1
+5,4,2,Successive Augmentation (DFS),True,5,4.0,1.25,0.0,1
+5,4,2,Successive Augmentation (BFS),True,6,4.0,1.5,0.0,1
+5,7,3,Spectral Sequencing,True,16,10.0,1.6,0.0,1
+5,7,3,Successive Augmentation (DFS),True,13,10.0,1.3,0.001,1
+5,7,3,Successive Augmentation (BFS),True,16,10.0,1.6,0.0,1
+5,5,4,Spectral Sequencing,True,10,6.0,1.6666666666666667,0.0,1
+5,5,4,Successive Augmentation (DFS),True,9,6.0,1.5,0.0,1
+5,5,4,Successive Augmentation (BFS),True,9,6.0,1.5,0.0,1
+5,8,5,Spectral Sequencing,True,16,13.0,1.2307692307692308,0.001,1
+5,8,5,Successive Augmentation (DFS),True,16,13.0,1.2307692307692308,0.0,1
+5,8,5,Successive Augmentation (BFS),True,15,13.0,1.1538461538461537,0.0,1
+5,4,6,Spectral Sequencing,True,5,4.5,1.1111111111111112,0.001,1
+5,4,6,Successive Augmentation (DFS),True,5,4.5,1.1111111111111112,0.0,1
+5,4,6,Successive Augmentation (BFS),True,6,4.5,1.3333333333333333,0.001,1
+5,6,7,Spectral Sequencing,True,12,9.0,1.3333333333333333,0.001,1
+5,6,7,Successive Augmentation (DFS),True,10,9.0,1.1111111111111112,0.0,1
+5,6,7,Successive Augmentation (BFS),True,13,9.0,1.4444444444444444,0.0,1
+5,6,8,Spectral Sequencing,True,11,9.0,1.2222222222222223,0.0,1
+5,6,8,Successive Augmentation (DFS),True,9,9.0,1.0,0.0,1
+5,6,8,Successive Augmentation (BFS),True,9,9.0,1.0,0.0,1
+5,6,9,Spectral Sequencing,True,12,8.0,1.5,0.001,1
+5,6,9,Successive Augmentation (DFS),True,12,8.0,1.5,0.0,1
+5,6,9,Successive Augmentation (BFS),True,12,8.0,1.5,0.0,1
+5,5,10,Spectral Sequencing,True,10,7.0,1.4285714285714286,0.001,1
+5,5,10,Successive Augmentation (DFS),True,7,7.0,1.0,0.0,1
+5,5,10,Successive Augmentation (BFS),True,10,7.0,1.4285714285714286,0.0,1
+5,6,11,Spectral Sequencing,True,12,8.0,1.5,0.001,1
+5,6,11,Successive Augmentation (DFS),True,12,8.0,1.5,0.0,1
+5,6,11,Successive Augmentation (BFS),True,8,8.0,1.0,0.0,1
+5,7,12,Spectral Sequencing,True,17,11.0,1.5454545454545454,0.0,1
+5,7,12,Successive Augmentation (DFS),True,12,11.0,1.0909090909090908,0.0,1
+5,7,12,Successive Augmentation (BFS),True,12,11.0,1.0909090909090908,0.0,1
+5,5,13,Spectral Sequencing,True,8,8.0,1.0,0.001,1
+5,5,13,Successive Augmentation (DFS),True,8,8.0,1.0,0.0,1
+5,5,13,Successive Augmentation (BFS),True,8,8.0,1.0,0.0,1
+5,7,14,Spectral Sequencing,True,11,10.0,1.1,0.001,1
+5,7,14,Successive Augmentation (DFS),True,14,10.0,1.4,0.0,1
+5,7,14,Successive Augmentation (BFS),True,12,10.0,1.2,0.0,1
+5,8,15,Spectral Sequencing,True,17,13.0,1.3076923076923077,0.001,1
+5,8,15,Successive Augmentation (DFS),True,17,13.0,1.3076923076923077,0.0,1
+5,8,15,Successive Augmentation (BFS),True,15,13.0,1.1538461538461537,0.0,1
+5,6,16,Spectral Sequencing,True,12,8.0,1.5,0.001,1
+5,6,16,Successive Augmentation (DFS),True,10,8.0,1.25,0.0,1
+5,6,16,Successive Augmentation (BFS),True,10,8.0,1.25,0.0,1
+5,7,17,Spectral Sequencing,True,16,10.0,1.6,0.001,1
+5,7,17,Successive Augmentation (DFS),True,14,10.0,1.4,0.0,1
+5,7,17,Successive Augmentation (BFS),True,14,10.0,1.4,0.0,1
+5,9,18,Spectral Sequencing,True,18,16.0,1.125,0.0,1
+5,9,18,Successive Augmentation (DFS),True,18,16.0,1.125,0.001,1
+5,9,18,Successive Augmentation (BFS),True,18,16.0,1.125,0.0,1
+5,10,19,Spectral Sequencing,True,20,20.0,1.0,0.0,1
+5,10,19,Successive Augmentation (DFS),True,20,20.0,1.0,0.0,1
+5,10,19,Successive Augmentation (BFS),True,20,20.0,1.0,0.001,1
+5,4,20,Spectral Sequencing,True,10,5.0,2.0,0.001,1
+5,4,20,Successive Augmentation (DFS),True,7,5.0,1.4,0.0,1
+5,4,20,Successive Augmentation (BFS),True,7,5.0,1.4,0.0,1
+10,26,0,Spectral Sequencing,True,99,54.0,1.8333333333333333,0.003,1
+10,26,0,Successive Augmentation (DFS),True,86,54.0,1.5925925925925926,0.0,1
+10,26,0,Successive Augmentation (BFS),True,85,54.0,1.5740740740740742,0.0,1
+10,27,1,Spectral Sequencing,True,101,58.0,1.7413793103448276,0.0041,1
+10,27,1,Successive Augmentation (DFS),True,88,58.0,1.5172413793103448,0.0,1
+10,27,1,Successive Augmentation (BFS),True,99,58.0,1.706896551724138,0.0,1
+10,14,2,Spectral Sequencing,True,53,21.0,2.5238095238095237,0.002,1
+10,14,2,Successive Augmentation (DFS),True,30,21.0,1.4285714285714286,0.0,1
+10,14,2,Successive Augmentation (BFS),True,45,21.0,2.142857142857143,0.0,1
+10,20,3,Spectral Sequencing,True,71,35.0,2.0285714285714285,0.001,1
+10,20,3,Successive Augmentation (DFS),True,54,35.0,1.542857142857143,0.0,1
+10,20,3,Successive Augmentation (BFS),True,52,35.0,1.4857142857142858,0.0,1
+10,19,4,Spectral Sequencing,True,78,33.0,2.3636363636363638,0.002,1
+10,19,4,Successive Augmentation (DFS),True,60,33.0,1.8181818181818181,0.0,1
+10,19,4,Successive Augmentation (BFS),True,54,33.0,1.6363636363636365,0.0,1
+10,23,5,Spectral Sequencing,True,98,43.0,2.2790697674418605,0.003,1
+10,23,5,Successive Augmentation (DFS),True,81,43.0,1.8837209302325582,0.0,1
+10,23,5,Successive Augmentation (BFS),True,75,43.0,1.744186046511628,0.0,1
+10,23,6,Spectral Sequencing,True,78,43.0,1.813953488372093,0.002,1
+10,23,6,Successive Augmentation (DFS),True,67,43.0,1.558139534883721,0.0,1
+10,23,6,Successive Augmentation (BFS),True,71,43.0,1.6511627906976745,0.0,1
+10,21,7,Spectral Sequencing,True,77,37.5,2.0533333333333332,0.001,1
+10,21,7,Successive Augmentation (DFS),True,68,37.5,1.8133333333333332,0.001,1
+10,21,7,Successive Augmentation (BFS),True,67,37.5,1.7866666666666666,0.0,1
+10,22,8,Spectral Sequencing,True,84,40.0,2.1,0.002,1
+10,22,8,Successive Augmentation (DFS),True,68,40.0,1.7,0.0,1
+10,22,8,Successive Augmentation (BFS),True,68,40.0,1.7,0.0,1
+10,25,9,Spectral Sequencing,True,86,50.0,1.72,0.003,1
+10,25,9,Successive Augmentation (DFS),True,87,50.0,1.74,0.0,1
+10,25,9,Successive Augmentation (BFS),True,70,50.0,1.4,0.0,1
+10,21,10,Spectral Sequencing,True,75,37.0,2.027027027027027,0.002,1
+10,21,10,Successive Augmentation (DFS),True,63,37.0,1.7027027027027026,0.0,1
+10,21,10,Successive Augmentation (BFS),True,69,37.0,1.864864864864865,0.0,1
+10,21,11,Spectral Sequencing,True,75,37.0,2.027027027027027,0.002,1
+10,21,11,Successive Augmentation (DFS),True,66,37.0,1.7837837837837838,0.0,1
+10,21,11,Successive Augmentation (BFS),True,58,37.0,1.5675675675675675,0.0,1
+10,19,12,Spectral Sequencing,True,63,31.0,2.032258064516129,0.002,1
+10,19,12,Successive Augmentation (DFS),True,50,31.0,1.6129032258064515,0.0,1
+10,19,12,Successive Augmentation (BFS),True,55,31.0,1.7741935483870968,0.0,1
+10,28,13,Spectral Sequencing,True,99,62.0,1.596774193548387,0.003,1
+10,28,13,Successive Augmentation (DFS),True,98,62.0,1.5806451612903225,0.0,1
+10,28,13,Successive Augmentation (BFS),True,96,62.0,1.5483870967741935,0.0,1
+10,22,14,Spectral Sequencing,True,82,40.0,2.05,0.002,1
+10,22,14,Successive Augmentation (DFS),True,62,40.0,1.55,0.0,1
+10,22,14,Successive Augmentation (BFS),True,63,40.0,1.575,0.0,1
+10,25,15,Spectral Sequencing,True,94,50.0,1.88,0.003,1
+10,25,15,Successive Augmentation (DFS),True,88,50.0,1.76,0.0,1
+10,25,15,Successive Augmentation (BFS),True,92,50.0,1.84,0.001,1
+10,23,16,Spectral Sequencing,True,106,43.0,2.4651162790697674,0.003,1
+10,23,16,Successive Augmentation (DFS),True,76,43.0,1.7674418604651163,0.0,1
+10,23,16,Successive Augmentation (BFS),True,73,43.0,1.697674418604651,0.0,1
+10,25,17,Spectral Sequencing,True,103,50.0,2.06,0.003,1
+10,25,17,Successive Augmentation (DFS),True,82,50.0,1.64,0.0,1
+10,25,17,Successive Augmentation (BFS),True,76,50.0,1.52,0.0,1
+10,20,18,Spectral Sequencing,True,83,34.0,2.4411764705882355,0.002,1
+10,20,18,Successive Augmentation (DFS),True,61,34.0,1.7941176470588236,0.0,1
+10,20,18,Successive Augmentation (BFS),True,71,34.0,2.088235294117647,0.0,1
+10,23,19,Spectral Sequencing,True,90,43.0,2.0930232558139537,0.002,1
+10,23,19,Successive Augmentation (DFS),True,69,43.0,1.6046511627906976,0.0,1
+10,23,19,Successive Augmentation (BFS),True,64,43.0,1.4883720930232558,0.0,1
+10,17,20,Spectral Sequencing,True,60,28.0,2.142857142857143,0.002,1
+10,17,20,Successive Augmentation (DFS),True,49,28.0,1.75,0.0,1
+10,17,20,Successive Augmentation (BFS),True,43,28.0,1.5357142857142858,0.0,1
+10,24,21,Spectral Sequencing,True,106,46.0,2.3043478260869565,0.002,1
+10,24,21,Successive Augmentation (DFS),True,78,46.0,1.6956521739130435,0.0,1
+10,24,21,Successive Augmentation (BFS),True,70,46.0,1.5217391304347827,0.0,1
+10,23,22,Spectral Sequencing,True,84,43.0,1.9534883720930232,0.002,1
+10,23,22,Successive Augmentation (DFS),True,74,43.0,1.7209302325581395,0.001,1
+10,23,22,Successive Augmentation (BFS),True,63,43.0,1.4651162790697674,0.0,1
+10,25,23,Spectral Sequencing,True,82,50.0,1.64,0.003,1
+10,25,23,Successive Augmentation (DFS),True,87,50.0,1.74,0.0,1
+10,25,23,Successive Augmentation (BFS),True,81,50.0,1.62,0.0,1
+10,24,24,Spectral Sequencing,True,76,46.0,1.6521739130434783,0.0042,1
+10,24,24,Successive Augmentation (DFS),True,64,46.0,1.391304347826087,0.0,1
+10,24,24,Successive Augmentation (BFS),True,84,46.0,1.826086956521739,0.0,1
+10,18,25,Spectral Sequencing,True,68,29.0,2.3448275862068964,0.002,1
+10,18,25,Successive Augmentation (DFS),True,53,29.0,1.8275862068965518,0.0,1
+10,18,25,Successive Augmentation (BFS),True,52,29.0,1.793103448275862,0.0,1
+10,21,26,Spectral Sequencing,True,76,37.0,2.054054054054054,0.002,1
+10,21,26,Successive Augmentation (DFS),True,68,37.0,1.837837837837838,0.0,1
+10,21,26,Successive Augmentation (BFS),True,51,37.0,1.3783783783783783,0.0,1
+10,22,27,Spectral Sequencing,True,84,40.0,2.1,0.002,1
+10,22,27,Successive Augmentation (DFS),True,64,40.0,1.6,0.001,1
+10,22,27,Successive Augmentation (BFS),True,66,40.0,1.65,0.0,1
+10,21,28,Spectral Sequencing,True,87,37.0,2.3513513513513513,0.003,1
+10,21,28,Successive Augmentation (DFS),True,70,37.0,1.8918918918918919,0.0,1
+10,21,28,Successive Augmentation (BFS),True,60,37.0,1.6216216216216217,0.0,1
+10,19,29,Spectral Sequencing,True,53,33.0,1.606060606060606,0.0032,1
+10,19,29,Successive Augmentation (DFS),True,47,33.0,1.4242424242424243,0.0,1
+10,19,29,Successive Augmentation (BFS),True,63,33.0,1.9090909090909092,0.0,1
+10,27,30,Spectral Sequencing,True,103,58.0,1.7758620689655173,0.002,1
+10,27,30,Successive Augmentation (DFS),True,92,58.0,1.5862068965517242,0.001,1
+10,27,30,Successive Augmentation (BFS),True,91,58.0,1.5689655172413792,0.0,1
+10,18,31,Spectral Sequencing,True,43,29.0,1.4827586206896552,0.002,1
+10,18,31,Successive Augmentation (DFS),True,46,29.0,1.5862068965517242,0.0,1
+10,18,31,Successive Augmentation (BFS),True,35,29.0,1.206896551724138,0.0,1
+10,20,32,Spectral Sequencing,True,76,35.0,2.1714285714285713,0.002,1
+10,20,32,Successive Augmentation (DFS),True,62,35.0,1.7714285714285714,0.0,1
+10,20,32,Successive Augmentation (BFS),True,63,35.0,1.8,0.0,1
+10,25,33,Spectral Sequencing,True,88,50.0,1.76,0.002,1
+10,25,33,Successive Augmentation (DFS),True,75,50.0,1.5,0.0,1
+10,25,33,Successive Augmentation (BFS),True,80,50.0,1.6,0.0,1
+10,21,34,Spectral Sequencing,True,80,37.0,2.1621621621621623,0.002,1
+10,21,34,Successive Augmentation (DFS),True,67,37.0,1.8108108108108107,0.0,1
+10,21,34,Successive Augmentation (BFS),True,64,37.0,1.7297297297297298,0.0,1
+10,22,35,Spectral Sequencing,True,92,40.0,2.3,0.001,1
+10,22,35,Successive Augmentation (DFS),True,65,40.0,1.625,0.001,1
+10,22,35,Successive Augmentation (BFS),True,53,40.0,1.325,0.0,1
+10,21,36,Spectral Sequencing,True,59,37.0,1.5945945945945945,0.002,1
+10,21,36,Successive Augmentation (DFS),True,71,37.0,1.9189189189189189,0.0,1
+10,21,36,Successive Augmentation (BFS),True,70,37.0,1.8918918918918919,0.0,1
+10,26,37,Spectral Sequencing,True,90,54.0,1.6666666666666667,0.0032,1
+10,26,37,Successive Augmentation (DFS),True,89,54.0,1.6481481481481481,0.0,1
+10,26,37,Successive Augmentation (BFS),True,83,54.0,1.537037037037037,0.0,1
+10,21,38,Spectral Sequencing,True,69,37.0,1.864864864864865,0.002,1
+10,21,38,Successive Augmentation (DFS),True,62,37.0,1.6756756756756757,0.0,1
+10,21,38,Successive Augmentation (BFS),True,66,37.0,1.7837837837837838,0.0,1
+10,18,39,Spectral Sequencing,True,70,30.0,2.3333333333333335,0.002,1
+10,18,39,Successive Augmentation (DFS),True,47,30.0,1.5666666666666667,0.0,1
+10,18,39,Successive Augmentation (BFS),True,50,30.0,1.6666666666666667,0.0,1
+10,24,40,Spectral Sequencing,True,96,46.0,2.0869565217391304,0.003,1
+10,24,40,Successive Augmentation (DFS),True,69,46.0,1.5,0.0,1
+10,24,40,Successive Augmentation (BFS),True,74,46.0,1.608695652173913,0.0,1
+10,25,41,Spectral Sequencing,True,95,50.0,1.9,0.003,1
+10,25,41,Successive Augmentation (DFS),True,83,50.0,1.66,0.0,1
+10,25,41,Successive Augmentation (BFS),True,89,50.0,1.78,0.0,1
+10,21,42,Spectral Sequencing,True,73,37.0,1.972972972972973,0.003,1
+10,21,42,Successive Augmentation (DFS),True,68,37.0,1.837837837837838,0.0,1
+10,21,42,Successive Augmentation (BFS),True,75,37.0,2.027027027027027,0.0,1
+10,24,43,Spectral Sequencing,True,75,46.0,1.6304347826086956,0.002,1
+10,24,43,Successive Augmentation (DFS),True,84,46.0,1.826086956521739,0.0,1
+10,24,43,Successive Augmentation (BFS),True,74,46.0,1.608695652173913,0.0,1
+10,25,44,Spectral Sequencing,True,98,50.0,1.96,0.002,1
+10,25,44,Successive Augmentation (DFS),True,79,50.0,1.58,0.0,1
+10,25,44,Successive Augmentation (BFS),True,75,50.0,1.5,0.0,1
+10,21,45,Spectral Sequencing,True,76,37.0,2.054054054054054,0.003,1
+10,21,45,Successive Augmentation (DFS),True,69,37.0,1.864864864864865,0.0,1
+10,21,45,Successive Augmentation (BFS),True,76,37.0,2.054054054054054,0.0,1
+10,27,46,Spectral Sequencing,True,96,58.0,1.6551724137931034,0.003,1
+10,27,46,Successive Augmentation (DFS),True,83,58.0,1.4310344827586208,0.0,1
+10,27,46,Successive Augmentation (BFS),True,101,58.0,1.7413793103448276,0.0,1
+10,24,47,Spectral Sequencing,True,95,46.0,2.0652173913043477,0.002,1
+10,24,47,Successive Augmentation (DFS),True,85,46.0,1.8478260869565217,0.0,1
+10,24,47,Successive Augmentation (BFS),True,81,46.0,1.7608695652173914,0.001,1
+10,19,48,Spectral Sequencing,True,58,31.0,1.8709677419354838,0.002,1
+10,19,48,Successive Augmentation (DFS),True,46,31.0,1.4838709677419355,0.0,1
+10,19,48,Successive Augmentation (BFS),True,51,31.0,1.6451612903225807,0.0,1
+10,23,49,Spectral Sequencing,True,85,43.0,1.9767441860465116,0.001,1
+10,23,49,Successive Augmentation (DFS),True,72,43.0,1.6744186046511629,0.0,1
+10,23,49,Successive Augmentation (BFS),True,67,43.0,1.558139534883721,0.0,1
+10,23,50,Spectral Sequencing,True,86,43.0,2.0,0.002,1
+10,23,50,Successive Augmentation (DFS),True,80,43.0,1.8604651162790697,0.0,1
+10,23,50,Successive Augmentation (BFS),True,76,43.0,1.7674418604651163,0.0,1
+10,22,51,Spectral Sequencing,True,84,40.0,2.1,0.0031,1
+10,22,51,Successive Augmentation (DFS),True,76,40.0,1.9,0.0,1
+10,22,51,Successive Augmentation (BFS),True,72,40.0,1.8,0.0,1
+10,19,52,Spectral Sequencing,True,63,33.0,1.9090909090909092,0.002,1
+10,19,52,Successive Augmentation (DFS),True,57,33.0,1.7272727272727273,0.0,1
+10,19,52,Successive Augmentation (BFS),True,65,33.0,1.9696969696969697,0.0,1
+10,25,53,Spectral Sequencing,True,97,50.0,1.94,0.002,1
+10,25,53,Successive Augmentation (DFS),True,75,50.0,1.5,0.0,1
+10,25,53,Successive Augmentation (BFS),True,79,50.0,1.58,0.001,1
+10,21,54,Spectral Sequencing,True,70,37.0,1.8918918918918919,0.003,1
+10,21,54,Successive Augmentation (DFS),True,59,37.0,1.5945945945945945,0.0,1
+10,21,54,Successive Augmentation (BFS),True,63,37.0,1.7027027027027026,0.0,1
+10,21,55,Spectral Sequencing,True,81,37.0,2.189189189189189,0.002,1
+10,21,55,Successive Augmentation (DFS),True,62,37.0,1.6756756756756757,0.0,1
+10,21,55,Successive Augmentation (BFS),True,64,37.0,1.7297297297297298,0.0,1
+10,26,56,Spectral Sequencing,True,100,54.0,1.8518518518518519,0.004,1
+10,26,56,Successive Augmentation (DFS),True,96,54.0,1.7777777777777777,0.0,1
+10,26,56,Successive Augmentation (BFS),True,81,54.0,1.5,0.0,1
+10,25,57,Spectral Sequencing,True,93,50.0,1.86,0.002,1
+10,25,57,Successive Augmentation (DFS),True,71,50.0,1.42,0.0,1
+10,25,57,Successive Augmentation (BFS),True,67,50.0,1.34,0.0,1
+10,21,58,Spectral Sequencing,True,85,37.0,2.2972972972972974,0.002,1
+10,21,58,Successive Augmentation (DFS),True,58,37.0,1.5675675675675675,0.0,1
+10,21,58,Successive Augmentation (BFS),True,60,37.0,1.6216216216216217,0.0,1
+10,26,59,Spectral Sequencing,True,89,54.0,1.6481481481481481,0.002,1
+10,26,59,Successive Augmentation (DFS),True,85,54.0,1.5740740740740742,0.0,1
+10,26,59,Successive Augmentation (BFS),True,93,54.0,1.7222222222222223,0.0,1
+10,22,60,Spectral Sequencing,True,74,40.0,1.85,0.002,1
+10,22,60,Successive Augmentation (DFS),True,76,40.0,1.9,0.0,1
+10,22,60,Successive Augmentation (BFS),True,58,40.0,1.45,0.0,1
+10,21,61,Spectral Sequencing,True,69,37.0,1.864864864864865,0.002,1
+10,21,61,Successive Augmentation (DFS),True,71,37.0,1.9189189189189189,0.0,1
+10,21,61,Successive Augmentation (BFS),True,58,37.0,1.5675675675675675,0.0,1
+10,27,62,Spectral Sequencing,True,96,58.0,1.6551724137931034,0.003,1
+10,27,62,Successive Augmentation (DFS),True,89,58.0,1.5344827586206897,0.0,1
+10,27,62,Successive Augmentation (BFS),True,81,58.0,1.396551724137931,0.0,1
+10,16,63,Spectral Sequencing,True,55,25.0,2.2,0.002,1
+10,16,63,Successive Augmentation (DFS),True,41,25.0,1.64,0.0,1
+10,16,63,Successive Augmentation (BFS),True,42,25.0,1.68,0.0,1
+10,19,64,Spectral Sequencing,True,59,32.0,1.84375,0.002,1
+10,19,64,Successive Augmentation (DFS),True,64,32.0,2.0,0.0,1
+10,19,64,Successive Augmentation (BFS),True,60,32.0,1.875,0.0,1
+10,25,65,Spectral Sequencing,True,95,50.0,1.9,0.0031,1
+10,25,65,Successive Augmentation (DFS),True,82,50.0,1.64,0.0,1
+10,25,65,Successive Augmentation (BFS),True,90,50.0,1.8,0.0,1
+10,20,66,Spectral Sequencing,True,63,34.0,1.8529411764705883,0.002,1
+10,20,66,Successive Augmentation (DFS),True,61,34.0,1.7941176470588236,0.0,1
+10,20,66,Successive Augmentation (BFS),True,57,34.0,1.6764705882352942,0.0,1
+10,24,67,Spectral Sequencing,True,86,46.0,1.8695652173913044,0.002,1
+10,24,67,Successive Augmentation (DFS),True,73,46.0,1.5869565217391304,0.0,1
+10,24,67,Successive Augmentation (BFS),True,77,46.0,1.673913043478261,0.0,1
+10,24,68,Spectral Sequencing,True,73,46.0,1.5869565217391304,0.003,1
+10,24,68,Successive Augmentation (DFS),True,84,46.0,1.826086956521739,0.0,1
+10,24,68,Successive Augmentation (BFS),True,79,46.0,1.7173913043478262,0.0,1
+10,20,69,Spectral Sequencing,True,70,35.0,2.0,0.002,1
+10,20,69,Successive Augmentation (DFS),True,59,35.0,1.6857142857142857,0.0,1
+10,20,69,Successive Augmentation (BFS),True,64,35.0,1.8285714285714285,0.0,1
+10,24,70,Spectral Sequencing,True,87,46.0,1.891304347826087,0.003,1
+10,24,70,Successive Augmentation (DFS),True,73,46.0,1.5869565217391304,0.0,1
+10,24,70,Successive Augmentation (BFS),True,77,46.0,1.673913043478261,0.0,1
+10,25,71,Spectral Sequencing,True,97,50.0,1.94,0.003,1
+10,25,71,Successive Augmentation (DFS),True,83,50.0,1.66,0.0,1
+10,25,71,Successive Augmentation (BFS),True,89,50.0,1.78,0.0,1
+10,19,72,Spectral Sequencing,True,72,32.0,2.25,0.002,1
+10,19,72,Successive Augmentation (DFS),True,50,32.0,1.5625,0.0,1
+10,19,72,Successive Augmentation (BFS),True,56,32.0,1.75,0.0,1
+10,23,73,Spectral Sequencing,True,72,43.0,1.6744186046511629,0.005,1
+10,23,73,Successive Augmentation (DFS),True,69,43.0,1.6046511627906976,0.0,1
+10,23,73,Successive Augmentation (BFS),True,64,43.0,1.4883720930232558,0.001,1
+10,28,74,Spectral Sequencing,True,112,62.0,1.8064516129032258,0.0132,1
+10,28,74,Successive Augmentation (DFS),True,97,62.0,1.564516129032258,0.001,1
+10,28,74,Successive Augmentation (BFS),True,93,62.0,1.5,0.0,1
+10,27,75,Spectral Sequencing,True,108,58.0,1.8620689655172413,0.001,1
+10,27,75,Successive Augmentation (DFS),True,100,58.0,1.7241379310344827,0.0,1
+10,27,75,Successive Augmentation (BFS),True,90,58.0,1.5517241379310345,0.0,1
+10,13,76,Spectral Sequencing,True,46,20.0,2.3,0.0015,1
+10,13,76,Successive Augmentation (DFS),True,25,20.0,1.25,0.0,1
+10,13,76,Successive Augmentation (BFS),True,33,20.0,1.65,0.0,1
+10,20,77,Spectral Sequencing,True,80,34.0,2.3529411764705883,0.003,1
+10,20,77,Successive Augmentation (DFS),True,60,34.0,1.7647058823529411,0.0,1
+10,20,77,Successive Augmentation (BFS),True,62,34.0,1.8235294117647058,0.0,1
+10,23,78,Spectral Sequencing,True,83,43.0,1.930232558139535,0.002,1
+10,23,78,Successive Augmentation (DFS),True,77,43.0,1.7906976744186047,0.0,1
+10,23,78,Successive Augmentation (BFS),True,79,43.0,1.8372093023255813,0.0,1
+10,26,79,Spectral Sequencing,True,95,54.0,1.7592592592592593,0.002,1
+10,26,79,Successive Augmentation (DFS),True,95,54.0,1.7592592592592593,0.001,1
+10,26,79,Successive Augmentation (BFS),True,64,54.0,1.1851851851851851,0.0,1
+10,20,80,Spectral Sequencing,True,60,34.0,1.7647058823529411,0.003,1
+10,20,80,Successive Augmentation (DFS),True,61,34.0,1.7941176470588236,0.0,1
+10,20,80,Successive Augmentation (BFS),True,56,34.0,1.6470588235294117,0.0,1
+10,20,81,Spectral Sequencing,True,70,34.0,2.0588235294117645,0.003,1
+10,20,81,Successive Augmentation (DFS),True,59,34.0,1.7352941176470589,0.0,1
+10,20,81,Successive Augmentation (BFS),True,58,34.0,1.7058823529411764,0.0,1
+10,23,82,Spectral Sequencing,True,81,43.0,1.8837209302325582,0.002,1
+10,23,82,Successive Augmentation (DFS),True,74,43.0,1.7209302325581395,0.0,1
+10,23,82,Successive Augmentation (BFS),True,68,43.0,1.5813953488372092,0.0,1
+10,26,83,Spectral Sequencing,True,100,54.0,1.8518518518518519,0.002,1
+10,26,83,Successive Augmentation (DFS),True,84,54.0,1.5555555555555556,0.001,1
+10,26,83,Successive Augmentation (BFS),True,80,54.0,1.4814814814814814,0.0,1
+10,19,84,Spectral Sequencing,True,52,32.0,1.625,0.002,1
+10,19,84,Successive Augmentation (DFS),True,55,32.0,1.71875,0.0,1
+10,19,84,Successive Augmentation (BFS),True,55,32.0,1.71875,0.0,1
+10,19,85,Spectral Sequencing,True,64,31.0,2.064516129032258,0.002,1
+10,19,85,Successive Augmentation (DFS),True,46,31.0,1.4838709677419355,0.0,1
+10,19,85,Successive Augmentation (BFS),True,45,31.0,1.4516129032258065,0.0,1
+10,22,86,Spectral Sequencing,True,86,40.0,2.15,0.002,1
+10,22,86,Successive Augmentation (DFS),True,71,40.0,1.775,0.0,1
+10,22,86,Successive Augmentation (BFS),True,69,40.0,1.725,0.0,1
+10,22,87,Spectral Sequencing,True,87,40.0,2.175,0.002,1
+10,22,87,Successive Augmentation (DFS),True,74,40.0,1.85,0.0,1
+10,22,87,Successive Augmentation (BFS),True,67,40.0,1.675,0.0,1
+10,28,88,Spectral Sequencing,True,98,62.0,1.5806451612903225,0.002,1
+10,28,88,Successive Augmentation (DFS),True,94,62.0,1.5161290322580645,0.0,1
+10,28,88,Successive Augmentation (BFS),True,95,62.0,1.532258064516129,0.0,1
+10,20,89,Spectral Sequencing,True,64,35.0,1.8285714285714285,0.002,1
+10,20,89,Successive Augmentation (DFS),True,58,35.0,1.6571428571428573,0.0,1
+10,20,89,Successive Augmentation (BFS),True,57,35.0,1.6285714285714286,0.0,1
+10,22,90,Spectral Sequencing,True,91,40.0,2.275,0.002,1
+10,22,90,Successive Augmentation (DFS),True,62,40.0,1.55,0.0,1
+10,22,90,Successive Augmentation (BFS),True,68,40.0,1.7,0.0,1
+10,19,91,Spectral Sequencing,True,59,32.0,1.84375,0.002,1
+10,19,91,Successive Augmentation (DFS),True,56,32.0,1.75,0.0,1
+10,19,91,Successive Augmentation (BFS),True,64,32.0,2.0,0.0,1
+10,25,92,Spectral Sequencing,True,91,50.0,1.82,0.002,1
+10,25,92,Successive Augmentation (DFS),True,78,50.0,1.56,0.0,1
+10,25,92,Successive Augmentation (BFS),True,77,50.0,1.54,0.001,1
+10,23,93,Spectral Sequencing,True,87,43.0,2.0232558139534884,0.003,1
+10,23,93,Successive Augmentation (DFS),True,68,43.0,1.5813953488372092,0.0,1
+10,23,93,Successive Augmentation (BFS),True,77,43.0,1.7906976744186047,0.0,1
+10,24,94,Spectral Sequencing,True,91,46.0,1.9782608695652173,0.003,1
+10,24,94,Successive Augmentation (DFS),True,80,46.0,1.7391304347826086,0.0,1
+10,24,94,Successive Augmentation (BFS),True,74,46.0,1.608695652173913,0.0,1
+10,20,95,Spectral Sequencing,True,67,34.0,1.9705882352941178,0.002,1
+10,20,95,Successive Augmentation (DFS),True,61,34.0,1.7941176470588236,0.0,1
+10,20,95,Successive Augmentation (BFS),True,62,34.0,1.8235294117647058,0.0,1
+10,17,96,Spectral Sequencing,True,51,29.0,1.7586206896551724,0.002,1
+10,17,96,Successive Augmentation (DFS),True,40,29.0,1.3793103448275863,0.0,1
+10,17,96,Successive Augmentation (BFS),True,37,29.0,1.2758620689655173,0.0,1
+10,19,97,Spectral Sequencing,True,69,33.0,2.090909090909091,0.002,1
+10,19,97,Successive Augmentation (DFS),True,62,33.0,1.878787878787879,0.0,1
+10,19,97,Successive Augmentation (BFS),True,53,33.0,1.606060606060606,0.0,1
+10,26,98,Spectral Sequencing,True,96,54.0,1.7777777777777777,0.003,1
+10,26,98,Successive Augmentation (DFS),True,85,54.0,1.5740740740740742,0.0,1
+10,26,98,Successive Augmentation (BFS),True,86,54.0,1.5925925925925926,0.0,1
+10,22,99,Spectral Sequencing,True,76,40.0,1.9,0.002,1
+10,22,99,Successive Augmentation (DFS),True,76,40.0,1.9,0.0,1
+10,22,99,Successive Augmentation (BFS),True,65,40.0,1.625,0.0,1
+15,52,0,Spectral Sequencing,True,303,130.0,2.330769230769231,0.005,1
+15,52,0,Successive Augmentation (DFS),True,263,130.0,2.023076923076923,0.001,1
+15,52,0,Successive Augmentation (BFS),True,234,130.0,1.8,0.0,1
+15,54,1,Spectral Sequencing,True,318,140.0,2.2714285714285714,0.005,1
+15,54,1,Successive Augmentation (DFS),True,280,140.0,2.0,0.0,1
+15,54,1,Successive Augmentation (BFS),True,259,140.0,1.85,0.0,1
+15,47,2,Spectral Sequencing,True,262,108.0,2.425925925925926,0.003,1
+15,47,2,Successive Augmentation (DFS),True,215,108.0,1.9907407407407407,0.001,1
+15,47,2,Successive Augmentation (BFS),True,209,108.0,1.9351851851851851,0.0,1
+15,53,3,Spectral Sequencing,True,307,135.0,2.274074074074074,0.004,1
+15,53,3,Successive Augmentation (DFS),True,248,135.0,1.837037037037037,0.0,1
+15,53,3,Successive Augmentation (BFS),True,254,135.0,1.8814814814814815,0.0,1
+15,45,4,Spectral Sequencing,True,272,100.0,2.72,0.004,1
+15,45,4,Successive Augmentation (DFS),True,197,100.0,1.97,0.0,1
+15,45,4,Successive Augmentation (BFS),True,222,100.0,2.22,0.0,1
+15,53,5,Spectral Sequencing,True,291,135.0,2.1555555555555554,0.002,1
+15,53,5,Successive Augmentation (DFS),True,256,135.0,1.8962962962962964,0.001,1
+15,53,5,Successive Augmentation (BFS),True,216,135.0,1.6,0.0,1
+15,56,6,Spectral Sequencing,True,271,150.0,1.8066666666666666,0.004,1
+15,56,6,Successive Augmentation (DFS),True,296,150.0,1.9733333333333334,0.0,1
+15,56,6,Successive Augmentation (BFS),True,251,150.0,1.6733333333333333,0.0,1
+15,50,7,Spectral Sequencing,True,231,120.0,1.925,0.002,1
+15,50,7,Successive Augmentation (DFS),True,210,120.0,1.75,0.0,1
+15,50,7,Successive Augmentation (BFS),True,255,120.0,2.125,0.0,1
+15,53,8,Spectral Sequencing,True,249,135.0,1.8444444444444446,0.003,1
+15,53,8,Successive Augmentation (DFS),True,271,135.0,2.0074074074074075,0.0,1
+15,53,8,Successive Augmentation (BFS),True,226,135.0,1.674074074074074,0.0,1
+15,51,9,Spectral Sequencing,True,287,125.0,2.296,0.003,1
+15,51,9,Successive Augmentation (DFS),True,234,125.0,1.872,0.0,1
+15,51,9,Successive Augmentation (BFS),True,260,125.0,2.08,0.0,1
+15,45,10,Spectral Sequencing,True,257,100.0,2.57,0.0283,1
+15,45,10,Successive Augmentation (DFS),True,201,100.0,2.01,0.0,1
+15,45,10,Successive Augmentation (BFS),True,195,100.0,1.95,0.0,1
+15,47,11,Spectral Sequencing,True,269,111.21276289940892,2.418787133661165,0.0037,1
+15,47,11,Successive Augmentation (DFS),True,224,111.21276289940892,2.0141573157624566,0.001,1
+15,47,11,Successive Augmentation (BFS),True,213,111.21276289940892,1.9152478047205503,0.0,1
+15,51,12,Spectral Sequencing,True,265,125.0,2.12,0.002,1
+15,51,12,Successive Augmentation (DFS),True,237,125.0,1.896,0.001,1
+15,51,12,Successive Augmentation (BFS),True,262,125.0,2.096,0.0,1
+15,53,13,Spectral Sequencing,True,294,141.52966416700073,2.077303028523327,0.005,1
+15,53,13,Successive Augmentation (DFS),True,265,141.52966416700073,1.8723989882948355,0.0,1
+15,53,13,Successive Augmentation (BFS),True,254,141.52966416700073,1.794676766139201,0.0,1
+15,54,14,Spectral Sequencing,True,302,140.0,2.157142857142857,0.004,1
+15,54,14,Successive Augmentation (DFS),True,253,140.0,1.8071428571428572,0.0,1
+15,54,14,Successive Augmentation (BFS),True,254,140.0,1.8142857142857143,0.0,1
+15,50,15,Spectral Sequencing,True,283,120.0,2.3583333333333334,0.002,1
+15,50,15,Successive Augmentation (DFS),True,216,120.0,1.8,0.0,1
+15,50,15,Successive Augmentation (BFS),True,218,120.0,1.8166666666666667,0.001,1
+15,52,16,Spectral Sequencing,True,308,130.0,2.3692307692307693,0.003,1
+15,52,16,Successive Augmentation (DFS),True,232,130.0,1.7846153846153847,0.0,1
+15,52,16,Successive Augmentation (BFS),True,247,130.0,1.9,0.0,1
+15,51,17,Spectral Sequencing,True,277,125.0,2.216,0.003,1
+15,51,17,Successive Augmentation (DFS),True,250,125.0,2.0,0.0,1
+15,51,17,Successive Augmentation (BFS),True,253,125.0,2.024,0.0,1
+15,56,18,Spectral Sequencing,True,267,151.45265484274069,1.7629271687395425,0.004,1
+15,56,18,Successive Augmentation (DFS),True,271,151.45265484274069,1.7893380626532436,0.001,1
+15,56,18,Successive Augmentation (BFS),True,261,151.45265484274069,1.723310827868991,0.0,1
+15,45,19,Spectral Sequencing,True,246,100.0,2.46,0.0031,1
+15,45,19,Successive Augmentation (DFS),True,208,100.0,2.08,0.0,1
+15,45,19,Successive Augmentation (BFS),True,203,100.0,2.03,0.0,1
+15,54,20,Spectral Sequencing,True,295,140.0,2.107142857142857,0.0035,1
+15,54,20,Successive Augmentation (DFS),True,266,140.0,1.9,0.0,1
+15,54,20,Successive Augmentation (BFS),True,280,140.0,2.0,0.0,1
+15,50,21,Spectral Sequencing,True,271,120.36798316269422,2.2514292661504967,0.004,1
+15,50,21,Successive Augmentation (DFS),True,249,120.36798316269422,2.068656410595844,0.0,1
+15,50,21,Successive Augmentation (BFS),True,235,120.36798316269422,1.9523464116065194,0.0,1
+15,54,22,Spectral Sequencing,True,275,150.1364655720123,1.831666936824868,0.0041,1
+15,54,22,Successive Augmentation (DFS),True,247,150.1364655720123,1.6451699396208814,0.0,1
+15,54,22,Successive Augmentation (BFS),True,276,150.1364655720123,1.8383275438678675,0.0,1
+15,55,23,Spectral Sequencing,True,293,160.8381005152788,1.8217076616878256,0.0051,1
+15,55,23,Successive Augmentation (DFS),True,287,160.8381005152788,1.7844030679331262,0.0,1
+15,55,23,Successive Augmentation (BFS),True,267,160.8381005152788,1.6600544220841278,0.0,1
+15,56,24,Spectral Sequencing,True,306,152.08380129707658,2.012048603402985,0.005,1
+15,56,24,Successive Augmentation (DFS),True,269,152.08380129707658,1.7687616807692907,0.0,1
+15,56,24,Successive Augmentation (BFS),True,268,152.08380129707658,1.7621863585359476,0.0,1
+15,53,25,Spectral Sequencing,True,290,135.0,2.1481481481481484,0.003,1
+15,53,25,Successive Augmentation (DFS),True,255,135.0,1.8888888888888888,0.0,1
+15,53,25,Successive Augmentation (BFS),True,209,135.0,1.548148148148148,0.0,1
+15,57,26,Spectral Sequencing,True,333,155.0,2.1483870967741936,0.0041,1
+15,57,26,Successive Augmentation (DFS),True,285,155.0,1.8387096774193548,0.0,1
+15,57,26,Successive Augmentation (BFS),True,248,155.0,1.6,0.0,1
+15,57,27,Spectral Sequencing,True,313,155.0,2.0193548387096776,0.004,1
+15,57,27,Successive Augmentation (DFS),True,286,155.0,1.8451612903225807,0.0,1
+15,57,27,Successive Augmentation (BFS),True,270,155.0,1.7419354838709677,0.0,1
+15,48,28,Spectral Sequencing,True,261,112.0,2.330357142857143,0.003,1
+15,48,28,Successive Augmentation (DFS),True,236,112.0,2.107142857142857,0.0,1
+15,48,28,Successive Augmentation (BFS),True,224,112.0,2.0,0.0,1
+15,52,29,Spectral Sequencing,True,263,131.77744192547814,1.9957892349187498,0.004,1
+15,52,29,Successive Augmentation (DFS),True,238,131.77744192547814,1.806075429318108,0.0,1
+15,52,29,Successive Augmentation (BFS),True,248,131.77744192547814,1.8819609515583648,0.0,1
+15,60,30,Spectral Sequencing,True,307,170.0,1.8058823529411765,0.004,1
+15,60,30,Successive Augmentation (DFS),True,304,170.0,1.7882352941176471,0.0,1
+15,60,30,Successive Augmentation (BFS),True,300,170.0,1.7647058823529411,0.0,1
+15,56,31,Spectral Sequencing,True,306,151.81341398144036,2.0156321630275005,0.004,1
+15,56,31,Successive Augmentation (DFS),True,257,151.81341398144036,1.6928675356146,0.0,1
+15,56,31,Successive Augmentation (BFS),True,280,151.81341398144036,1.8443692995022878,0.001,1
+15,54,32,Spectral Sequencing,True,314,140.0,2.242857142857143,0.003,1
+15,54,32,Successive Augmentation (DFS),True,266,140.0,1.9,0.0,1
+15,54,32,Successive Augmentation (BFS),True,238,140.0,1.7,0.0,1
+15,53,33,Spectral Sequencing,True,290,135.0,2.1481481481481484,0.003,1
+15,53,33,Successive Augmentation (DFS),True,272,135.0,2.0148148148148146,0.0,1
+15,53,33,Successive Augmentation (BFS),True,263,135.0,1.9481481481481482,0.0,1
+15,52,34,Spectral Sequencing,True,215,130.0,1.6538461538461537,0.004,1
+15,52,34,Successive Augmentation (DFS),True,277,130.0,2.1307692307692307,0.0,1
+15,52,34,Successive Augmentation (BFS),True,260,130.0,2.0,0.001,1
+15,53,35,Spectral Sequencing,True,277,148.2835705578369,1.868042420060004,0.0041,1
+15,53,35,Successive Augmentation (DFS),True,256,148.2835705578369,1.7264218755789207,0.0,1
+15,53,35,Successive Augmentation (BFS),True,256,148.2835705578369,1.7264218755789207,0.0,1
+15,39,36,Spectral Sequencing,True,211,76.0,2.776315789473684,0.002,1
+15,39,36,Successive Augmentation (DFS),True,157,76.0,2.0657894736842106,0.0,1
+15,39,36,Successive Augmentation (BFS),True,169,76.0,2.223684210526316,0.0,1
+15,56,37,Spectral Sequencing,True,310,150.0,2.066666666666667,0.002,1
+15,56,37,Successive Augmentation (DFS),True,286,150.0,1.9066666666666667,0.0,1
+15,56,37,Successive Augmentation (BFS),True,263,150.0,1.7533333333333334,0.001,1
+15,47,38,Spectral Sequencing,True,252,110.46340110549458,2.2812985792401537,0.003,1
+15,47,38,Successive Augmentation (DFS),True,201,110.46340110549458,1.8196072001082177,0.0,1
+15,47,38,Successive Augmentation (BFS),True,215,110.46340110549458,1.946346010066004,0.0,1
+15,54,39,Spectral Sequencing,True,275,140.0,1.9642857142857142,0.003,1
+15,54,39,Successive Augmentation (DFS),True,253,140.0,1.8071428571428572,0.0,1
+15,54,39,Successive Augmentation (BFS),True,273,140.0,1.95,0.0,1
+15,54,40,Spectral Sequencing,True,304,140.0,2.1714285714285713,0.003,1
+15,54,40,Successive Augmentation (DFS),True,247,140.0,1.7642857142857142,0.0,1
+15,54,40,Successive Augmentation (BFS),True,218,140.0,1.5571428571428572,0.0,1
+15,45,41,Spectral Sequencing,True,232,100.0,2.32,0.004,1
+15,45,41,Successive Augmentation (DFS),True,218,100.0,2.18,0.0,1
+15,45,41,Successive Augmentation (BFS),True,180,100.0,1.8,0.0,1
+15,44,42,Spectral Sequencing,True,250,96.0,2.6041666666666665,0.0021,1
+15,44,42,Successive Augmentation (DFS),True,200,96.0,2.0833333333333335,0.0,1
+15,44,42,Successive Augmentation (BFS),True,203,96.0,2.1145833333333335,0.0015,1
+15,55,43,Spectral Sequencing,True,290,145.0,2.0,0.003,1
+15,55,43,Successive Augmentation (DFS),True,242,145.0,1.6689655172413793,0.0,1
+15,55,43,Successive Augmentation (BFS),True,273,145.0,1.8827586206896552,0.0,1
+15,55,44,Spectral Sequencing,True,302,146.22948957056414,2.0652468998345754,0.003,1
+15,55,44,Successive Augmentation (DFS),True,282,146.22948957056414,1.9284755819647361,0.001,1
+15,55,44,Successive Augmentation (BFS),True,291,146.22948957056414,1.990022675006164,0.0,1
+15,55,45,Spectral Sequencing,True,288,145.0,1.986206896551724,0.003,1
+15,55,45,Successive Augmentation (DFS),True,277,145.0,1.910344827586207,0.001,1
+15,55,45,Successive Augmentation (BFS),True,272,145.0,1.8758620689655172,0.0,1
+15,41,46,Spectral Sequencing,True,220,84.0,2.619047619047619,0.002,1
+15,41,46,Successive Augmentation (DFS),True,194,84.0,2.3095238095238093,0.0,1
+15,41,46,Successive Augmentation (BFS),True,164,84.0,1.9523809523809523,0.0,1
+15,64,47,Spectral Sequencing,True,316,194.0,1.6288659793814433,0.0031,1
+15,64,47,Successive Augmentation (DFS),True,310,194.0,1.597938144329897,0.0,1
+15,64,47,Successive Augmentation (BFS),True,282,194.0,1.4536082474226804,0.0,1
+15,55,48,Spectral Sequencing,True,285,145.0,1.9655172413793103,0.004,1
+15,55,48,Successive Augmentation (DFS),True,265,145.0,1.8275862068965518,0.0,1
+15,55,48,Successive Augmentation (BFS),True,249,145.0,1.717241379310345,0.001,1
+15,53,49,Spectral Sequencing,True,294,135.0,2.1777777777777776,0.003,1
+15,53,49,Successive Augmentation (DFS),True,276,135.0,2.0444444444444443,0.0,1
+15,53,49,Successive Augmentation (BFS),True,254,135.0,1.8814814814814815,0.0,1
+15,52,50,Spectral Sequencing,True,294,130.0,2.2615384615384615,0.003,1
+15,52,50,Successive Augmentation (DFS),True,249,130.0,1.9153846153846155,0.0,1
+15,52,50,Successive Augmentation (BFS),True,255,130.0,1.9615384615384615,0.0,1
+15,58,51,Spectral Sequencing,True,327,160.0,2.04375,0.003,1
+15,58,51,Successive Augmentation (DFS),True,274,160.0,1.7125,0.0,1
+15,58,51,Successive Augmentation (BFS),True,282,160.0,1.7625,0.0,1
+15,59,52,Spectral Sequencing,True,361,176.03136745138394,2.050770866730331,0.004,1
+15,59,52,Successive Augmentation (DFS),True,288,176.03136745138394,1.6360720488042528,0.0,1
+15,59,52,Successive Augmentation (BFS),True,306,176.03136745138394,1.7383265518545186,0.0,1
+15,48,53,Spectral Sequencing,True,247,112.0,2.205357142857143,0.003,1
+15,48,53,Successive Augmentation (DFS),True,213,112.0,1.9017857142857142,0.0,1
+15,48,53,Successive Augmentation (BFS),True,234,112.0,2.0892857142857144,0.0,1
+15,63,54,Spectral Sequencing,True,340,188.0,1.8085106382978724,0.003,1
+15,63,54,Successive Augmentation (DFS),True,347,188.0,1.8457446808510638,0.0,1
+15,63,54,Successive Augmentation (BFS),True,275,188.0,1.4627659574468086,0.0,1
+15,57,55,Spectral Sequencing,True,306,155.0,1.9741935483870967,0.004,1
+15,57,55,Successive Augmentation (DFS),True,283,155.0,1.8258064516129033,0.0,1
+15,57,55,Successive Augmentation (BFS),True,261,155.0,1.6838709677419355,0.0,1
+15,49,56,Spectral Sequencing,True,248,116.0,2.1379310344827585,0.003,1
+15,49,56,Successive Augmentation (DFS),True,206,116.0,1.7758620689655173,0.0,1
+15,49,56,Successive Augmentation (BFS),True,223,116.0,1.9224137931034482,0.0,1
+15,43,57,Spectral Sequencing,True,239,92.0,2.597826086956522,0.002,1
+15,43,57,Successive Augmentation (DFS),True,222,92.0,2.4130434782608696,0.0,1
+15,43,57,Successive Augmentation (BFS),True,177,92.0,1.923913043478261,0.0,1
+15,51,58,Spectral Sequencing,True,261,125.0,2.088,0.003,1
+15,51,58,Successive Augmentation (DFS),True,231,125.0,1.848,0.0,1
+15,51,58,Successive Augmentation (BFS),True,256,125.0,2.048,0.0,1
+15,60,59,Spectral Sequencing,True,321,170.0,1.888235294117647,0.0035,1
+15,60,59,Successive Augmentation (DFS),True,309,170.0,1.8176470588235294,0.0,1
+15,60,59,Successive Augmentation (BFS),True,264,170.0,1.5529411764705883,0.0,1
+15,54,60,Spectral Sequencing,True,290,140.0,2.0714285714285716,0.002,1
+15,54,60,Successive Augmentation (DFS),True,252,140.0,1.8,0.0,1
+15,54,60,Successive Augmentation (BFS),True,264,140.0,1.8857142857142857,0.0,1
+15,62,61,Spectral Sequencing,True,310,182.0,1.7032967032967032,0.003,1
+15,62,61,Successive Augmentation (DFS),True,316,182.0,1.7362637362637363,0.0,1
+15,62,61,Successive Augmentation (BFS),True,301,182.0,1.6538461538461537,0.0,1
+15,53,62,Spectral Sequencing,True,284,135.0,2.1037037037037036,0.004,1
+15,53,62,Successive Augmentation (DFS),True,244,135.0,1.8074074074074074,0.0,1
+15,53,62,Successive Augmentation (BFS),True,225,135.0,1.6666666666666667,0.0,1
+15,51,63,Spectral Sequencing,True,277,125.0,2.216,0.003,1
+15,51,63,Successive Augmentation (DFS),True,255,125.0,2.04,0.0,1
+15,51,63,Successive Augmentation (BFS),True,245,125.0,1.96,0.0,1
+15,44,64,Spectral Sequencing,True,221,96.0,2.3020833333333335,0.004,1
+15,44,64,Successive Augmentation (DFS),True,198,96.0,2.0625,0.0,1
+15,44,64,Successive Augmentation (BFS),True,185,96.0,1.9270833333333333,0.0,1
+15,55,65,Spectral Sequencing,True,246,145.0,1.696551724137931,0.003,1
+15,55,65,Successive Augmentation (DFS),True,248,145.0,1.710344827586207,0.0,1
+15,55,65,Successive Augmentation (BFS),True,243,145.0,1.6758620689655173,0.0,1
+15,50,66,Spectral Sequencing,True,263,128.27175474147512,2.0503344678652167,0.004,1
+15,50,66,Successive Augmentation (DFS),True,238,128.27175474147512,1.855435754189816,0.0,1
+15,50,66,Successive Augmentation (BFS),True,203,128.27175474147512,1.582577555044255,0.0,1
+15,50,67,Spectral Sequencing,True,301,120.0,2.5083333333333333,0.003,1
+15,50,67,Successive Augmentation (DFS),True,256,120.0,2.1333333333333333,0.0,1
+15,50,67,Successive Augmentation (BFS),True,214,120.0,1.7833333333333334,0.0,1
+15,56,68,Spectral Sequencing,True,297,152.99225886208933,1.9412746906869485,0.004,1
+15,56,68,Successive Augmentation (DFS),True,267,152.99225886208933,1.7451863380923072,0.0,1
+15,56,68,Successive Augmentation (BFS),True,272,152.99225886208933,1.777867730191414,0.001,1
+15,49,69,Spectral Sequencing,True,244,116.76481459887636,2.089670598443686,0.003,1
+15,49,69,Successive Augmentation (DFS),True,241,116.76481459887636,2.0639779271513454,0.0,1
+15,49,69,Successive Augmentation (BFS),True,211,116.76481459887636,1.8070512142279416,0.0,1
+15,50,70,Spectral Sequencing,True,263,125.19504445849411,2.1007221263233973,0.004,1
+15,50,70,Successive Augmentation (DFS),True,232,125.19504445849411,1.853108491661704,0.0,1
+15,50,70,Successive Augmentation (BFS),True,235,125.19504445849411,1.8770711014676744,0.0,1
+15,57,71,Spectral Sequencing,True,288,161.51064645222266,1.783164183453348,0.003,1
+15,57,71,Successive Augmentation (DFS),True,268,161.51064645222266,1.6593333373801988,0.0,1
+15,57,71,Successive Augmentation (BFS),True,297,161.51064645222266,1.8388880641862653,0.0,1
+15,53,72,Spectral Sequencing,True,284,146.3674938472959,1.940321532705172,0.004,1
+15,53,72,Successive Augmentation (DFS),True,279,146.3674938472959,1.9061609423406443,0.0,1
+15,53,72,Successive Augmentation (BFS),True,254,146.3674938472959,1.7353579905180059,0.0,1
+15,57,73,Spectral Sequencing,True,320,155.0,2.064516129032258,0.003,1
+15,57,73,Successive Augmentation (DFS),True,274,155.0,1.767741935483871,0.001,1
+15,57,73,Successive Augmentation (BFS),True,270,155.0,1.7419354838709677,0.0,1
+15,51,74,Spectral Sequencing,True,259,125.0,2.072,0.003,1
+15,51,74,Successive Augmentation (DFS),True,237,125.0,1.896,0.0,1
+15,51,74,Successive Augmentation (BFS),True,236,125.0,1.888,0.0,1
+15,52,75,Spectral Sequencing,True,256,130.0,1.9692307692307693,0.004,1
+15,52,75,Successive Augmentation (DFS),True,257,130.0,1.976923076923077,0.0,1
+15,52,75,Successive Augmentation (BFS),True,225,130.0,1.7307692307692308,0.0,1
+15,53,76,Spectral Sequencing,True,323,135.0,2.3925925925925924,0.003,1
+15,53,76,Successive Augmentation (DFS),True,260,135.0,1.9259259259259258,0.0,1
+15,53,76,Successive Augmentation (BFS),True,269,135.0,1.9925925925925927,0.0,1
+15,52,77,Spectral Sequencing,True,248,130.0,1.9076923076923078,0.003,1
+15,52,77,Successive Augmentation (DFS),True,269,130.0,2.0692307692307694,0.0,1
+15,52,77,Successive Augmentation (BFS),True,253,130.0,1.9461538461538461,0.001,1
+15,52,78,Spectral Sequencing,True,302,130.0,2.3230769230769233,0.002,1
+15,52,78,Successive Augmentation (DFS),True,248,130.0,1.9076923076923078,0.0,1
+15,52,78,Successive Augmentation (BFS),True,229,130.0,1.7615384615384615,0.0,1
+15,50,79,Spectral Sequencing,True,256,120.0,2.1333333333333333,0.0034,1
+15,50,79,Successive Augmentation (DFS),True,246,120.0,2.05,0.0,1
+15,50,79,Successive Augmentation (BFS),True,220,120.0,1.8333333333333333,0.0,1
+15,57,80,Spectral Sequencing,True,290,166.51092389542777,1.7416274753368486,0.0052,1
+15,57,80,Successive Augmentation (DFS),True,280,166.51092389542777,1.681571355497647,0.0,1
+15,57,80,Successive Augmentation (BFS),True,301,166.51092389542777,1.8076892071599704,0.0,1
+15,59,81,Spectral Sequencing,True,323,178.89190393252127,1.8055596307021076,0.004,1
+15,59,81,Successive Augmentation (DFS),True,280,178.89190393252127,1.5651910111349538,0.001,1
+15,59,81,Successive Augmentation (BFS),True,283,178.89190393252127,1.5819609148256855,0.0,1
+15,44,82,Spectral Sequencing,True,243,96.0,2.53125,0.003,1
+15,44,82,Successive Augmentation (DFS),True,187,96.0,1.9479166666666667,0.0,1
+15,44,82,Successive Augmentation (BFS),True,183,96.0,1.90625,0.0,1
+15,55,83,Spectral Sequencing,True,331,145.0,2.282758620689655,0.003,1
+15,55,83,Successive Augmentation (DFS),True,249,145.0,1.717241379310345,0.0,1
+15,55,83,Successive Augmentation (BFS),True,258,145.0,1.7793103448275862,0.0,1
+15,54,84,Spectral Sequencing,True,290,140.0,2.0714285714285716,0.004,1
+15,54,84,Successive Augmentation (DFS),True,274,140.0,1.957142857142857,0.0,1
+15,54,84,Successive Augmentation (BFS),True,259,140.0,1.85,0.0,1
+15,52,85,Spectral Sequencing,True,266,130.0,2.046153846153846,0.0042,1
+15,52,85,Successive Augmentation (DFS),True,265,130.0,2.0384615384615383,0.0,1
+15,52,85,Successive Augmentation (BFS),True,233,130.0,1.7923076923076924,0.0,1
+15,61,86,Spectral Sequencing,True,307,180.35948325280629,1.7021561298758228,0.005,1
+15,61,86,Successive Augmentation (DFS),True,297,180.35948325280629,1.6467113047984343,0.0,1
+15,61,86,Successive Augmentation (BFS),True,265,180.35948325280629,1.4692878645507916,0.0,1
+15,57,87,Spectral Sequencing,True,276,155.0,1.7806451612903227,0.003,1
+15,57,87,Successive Augmentation (DFS),True,289,155.0,1.864516129032258,0.0,1
+15,57,87,Successive Augmentation (BFS),True,272,155.0,1.7548387096774194,0.0,1
+15,55,88,Spectral Sequencing,True,291,165.20619439741787,1.7614351632601268,0.006,1
+15,55,88,Successive Augmentation (DFS),True,270,165.20619439741787,1.6343212854990867,0.0,1
+15,55,88,Successive Augmentation (BFS),True,270,165.20619439741787,1.6343212854990867,0.0,1
+15,43,89,Spectral Sequencing,True,234,92.0,2.5434782608695654,0.003,1
+15,43,89,Successive Augmentation (DFS),True,207,92.0,2.25,0.0,1
+15,43,89,Successive Augmentation (BFS),True,180,92.0,1.9565217391304348,0.0,1
+15,50,90,Spectral Sequencing,True,277,120.0,2.308333333333333,0.003,1
+15,50,90,Successive Augmentation (DFS),True,230,120.0,1.9166666666666667,0.0,1
+15,50,90,Successive Augmentation (BFS),True,241,120.0,2.0083333333333333,0.0,1
+15,51,91,Spectral Sequencing,True,257,125.0,2.056,0.002,1
+15,51,91,Successive Augmentation (DFS),True,232,125.0,1.856,0.0,1
+15,51,91,Successive Augmentation (BFS),True,238,125.0,1.904,0.0,1
+15,50,92,Spectral Sequencing,True,280,133.7834564812181,2.0929344133017618,0.004,1
+15,50,92,Successive Augmentation (DFS),True,271,133.7834564812181,2.0256615214456337,0.0,1
+15,50,92,Successive Augmentation (BFS),True,244,133.7834564812181,1.8238428458772495,0.001,1
+15,55,93,Spectral Sequencing,True,311,145.0,2.1448275862068966,0.002,1
+15,55,93,Successive Augmentation (DFS),True,261,145.0,1.8,0.0,1
+15,55,93,Successive Augmentation (BFS),True,259,145.0,1.7862068965517242,0.0,1
+15,58,94,Spectral Sequencing,True,305,160.0,1.90625,0.002,1
+15,58,94,Successive Augmentation (DFS),True,279,160.0,1.74375,0.0,1
+15,58,94,Successive Augmentation (BFS),True,273,160.0,1.70625,0.0,1
+15,61,95,Spectral Sequencing,True,298,176.0,1.6931818181818181,0.004,1
+15,61,95,Successive Augmentation (DFS),True,317,176.0,1.8011363636363635,0.001,1
+15,61,95,Successive Augmentation (BFS),True,293,176.0,1.6647727272727273,0.0,1
+15,50,96,Spectral Sequencing,True,253,120.0,2.1083333333333334,0.003,1
+15,50,96,Successive Augmentation (DFS),True,231,120.0,1.925,0.0,1
+15,50,96,Successive Augmentation (BFS),True,238,120.0,1.9833333333333334,0.0,1
+15,59,97,Spectral Sequencing,True,322,165.0,1.9515151515151514,0.004,1
+15,59,97,Successive Augmentation (DFS),True,296,165.0,1.793939393939394,0.0,1
+15,59,97,Successive Augmentation (BFS),True,299,165.0,1.812121212121212,0.0,1
+15,63,98,Spectral Sequencing,True,336,188.0,1.7872340425531914,0.004,1
+15,63,98,Successive Augmentation (DFS),True,310,188.0,1.648936170212766,0.0,1
+15,63,98,Successive Augmentation (BFS),True,296,188.0,1.574468085106383,0.0,1
+15,55,99,Spectral Sequencing,True,265,150.60896984241174,1.7595233555961522,0.004,1
+15,55,99,Successive Augmentation (DFS),True,280,150.60896984241174,1.8591190172336702,0.0,1
+15,55,99,Successive Augmentation (BFS),True,269,150.60896984241174,1.7860821986994904,0.0,1
+20,96,0,Spectral Sequencing,True,639,311.0,2.054662379421222,0.004,1
+20,96,0,Successive Augmentation (DFS),True,557,311.0,1.7909967845659165,0.0,1
+20,96,0,Successive Augmentation (BFS),True,601,311.0,1.932475884244373,0.0,1
+20,113,1,Spectral Sequencing,True,801,428.0,1.8714953271028036,0.005,1
+20,113,1,Successive Augmentation (DFS),True,795,428.0,1.8574766355140186,0.0,1
+20,113,1,Successive Augmentation (BFS),True,723,428.0,1.689252336448598,0.001,1
+20,84,2,Spectral Sequencing,True,578,260.73466447087065,2.216813023972017,0.004,1
+20,84,2,Successive Augmentation (DFS),True,493,260.73466447087065,1.8908111086820145,0.0,1
+20,84,2,Successive Augmentation (BFS),True,508,260.73466447087065,1.9483408584390738,0.001,1
+20,99,3,Spectral Sequencing,True,657,329.0,1.9969604863221884,0.003,1
+20,99,3,Successive Augmentation (DFS),True,631,329.0,1.917933130699088,0.001,1
+20,99,3,Successive Augmentation (BFS),True,619,329.0,1.8814589665653496,0.0,1
+20,75,4,Spectral Sequencing,True,543,211.39783316022843,2.568616678243975,0.004,1
+20,75,4,Successive Augmentation (DFS),True,450,211.39783316022843,2.128687854898322,0.0,1
+20,75,4,Successive Augmentation (BFS),True,452,211.39783316022843,2.138148689808981,0.001,1
+20,95,5,Spectral Sequencing,True,676,392.14354312029786,1.7238585509302227,0.0096,1
+20,95,5,Successive Augmentation (DFS),True,603,392.14354312029786,1.537702228122669,0.0,1
+20,95,5,Successive Augmentation (BFS),True,610,392.14354312029786,1.555552834419284,0.001,1
+20,92,6,Spectral Sequencing,True,622,319.7127930065273,1.945496125290492,0.005,1
+20,92,6,Successive Augmentation (DFS),True,586,319.7127930065273,1.8328950633765728,0.0,1
+20,92,6,Successive Augmentation (BFS),True,590,319.7127930065273,1.8454062924781194,0.0,1
+20,94,7,Spectral Sequencing,True,652,305.9896086573726,2.130791313015036,0.004,1
+20,94,7,Successive Augmentation (DFS),True,609,305.9896086573726,1.9902636650707928,0.0,1
+20,94,7,Successive Augmentation (BFS),True,595,305.9896086573726,1.9445104773680157,0.0,1
+20,95,8,Spectral Sequencing,True,640,305.0,2.098360655737705,0.005,1
+20,95,8,Successive Augmentation (DFS),True,624,305.0,2.045901639344262,0.0,1
+20,95,8,Successive Augmentation (BFS),True,561,305.0,1.839344262295082,0.0,1
+20,96,9,Spectral Sequencing,True,655,311.0,2.1061093247588425,0.005,1
+20,96,9,Successive Augmentation (DFS),True,623,311.0,2.0032154340836015,0.001,1
+20,96,9,Successive Augmentation (BFS),True,610,311.0,1.9614147909967845,0.0,1
+20,98,10,Spectral Sequencing,True,732,359.3035638336348,2.037274532403279,0.006,1
+20,98,10,Successive Augmentation (DFS),True,679,359.3035638336348,1.889766950139107,0.0,1
+20,98,10,Successive Augmentation (BFS),True,632,359.3035638336348,1.7589583394520112,0.0,1
+20,96,11,Spectral Sequencing,True,643,333.88726690820545,1.925799704655338,0.005,1
+20,96,11,Successive Augmentation (DFS),True,649,333.88726690820545,1.9437698418682958,0.0,1
+20,96,11,Successive Augmentation (BFS),True,627,333.88726690820545,1.8778793387541164,0.0,1
+20,89,12,Spectral Sequencing,True,587,269.0,2.1821561338289963,0.004,1
+20,89,12,Successive Augmentation (DFS),True,517,269.0,1.9219330855018588,0.0,1
+20,89,12,Successive Augmentation (BFS),True,531,269.0,1.9739776951672863,0.001,1
+20,93,13,Spectral Sequencing,True,639,293.0,2.1808873720136517,0.003,1
+20,93,13,Successive Augmentation (DFS),True,632,293.0,2.156996587030717,0.001,1
+20,93,13,Successive Augmentation (BFS),True,609,293.0,2.0784982935153584,0.0,1
+20,101,14,Spectral Sequencing,True,751,355.0794547889695,2.1150195818745234,0.006,1
+20,101,14,Successive Augmentation (DFS),True,618,355.0794547889695,1.7404555280938157,0.0,1
+20,101,14,Successive Augmentation (BFS),True,607,355.0794547889695,1.7094765462021781,0.0,1
+20,91,15,Spectral Sequencing,True,646,290.34091875201386,2.2249705717565833,0.004,1
+20,91,15,Successive Augmentation (DFS),True,554,290.34091875201386,1.9081016977602898,0.0015,1
+20,91,15,Successive Augmentation (BFS),True,520,290.34091875201386,1.7909979834573118,0.0,1
+20,85,16,Spectral Sequencing,True,510,246.56450172208795,2.0684242720991524,0.0041,1
+20,85,16,Successive Augmentation (DFS),True,541,246.56450172208795,2.194152021971846,0.0,1
+20,85,16,Successive Augmentation (BFS),True,549,246.56450172208795,2.2265978929067347,0.0,1
+20,99,17,Spectral Sequencing,True,714,361.23304162519395,1.9765633752319587,0.0051,1
+20,99,17,Successive Augmentation (DFS),True,619,361.23304162519395,1.713575251076446,0.0,1
+20,99,17,Successive Augmentation (BFS),True,612,361.23304162519395,1.6941971787702503,0.0,1
+20,99,18,Spectral Sequencing,True,695,356.45585324924576,1.9497505614363777,0.005,1
+20,99,18,Successive Augmentation (DFS),True,642,356.45585324924576,1.8010645473987834,0.0,1
+20,99,18,Successive Augmentation (BFS),True,623,356.45585324924576,1.7477620140645516,0.0011,1
+20,93,19,Spectral Sequencing,True,663,316.157940723958,2.0970531326267547,0.004,1
+20,93,19,Successive Augmentation (DFS),True,606,316.157940723958,1.9167634967900655,0.0,1
+20,93,19,Successive Augmentation (BFS),True,579,316.157940723958,1.8313631429726864,0.0,1
+20,104,20,Spectral Sequencing,True,738,364.0,2.0274725274725274,0.003,1
+20,104,20,Successive Augmentation (DFS),True,655,364.0,1.7994505494505495,0.0,1
+20,104,20,Successive Augmentation (BFS),True,636,364.0,1.7472527472527473,0.0,1
+20,100,21,Spectral Sequencing,True,686,336.0,2.0416666666666665,0.003,1
+20,100,21,Successive Augmentation (DFS),True,683,336.0,2.0327380952380953,0.0,1
+20,100,21,Successive Augmentation (BFS),True,628,336.0,1.869047619047619,0.0,1
+20,87,22,Spectral Sequencing,True,596,264.2114050902291,2.2557693896539552,0.003,1
+20,87,22,Successive Augmentation (DFS),True,567,264.2114050902291,2.1460087985466316,0.0,1
+20,87,22,Successive Augmentation (BFS),True,560,264.2114050902291,2.1195148627621054,0.0,1
+20,97,23,Spectral Sequencing,True,705,317.0,2.22397476340694,0.003,1
+20,97,23,Successive Augmentation (DFS),True,587,317.0,1.8517350157728707,0.001,1
+20,97,23,Successive Augmentation (BFS),True,594,317.0,1.8738170347003154,0.0,1
+20,95,24,Spectral Sequencing,True,669,305.0,2.1934426229508195,0.003,1
+20,95,24,Successive Augmentation (DFS),True,609,305.0,1.9967213114754099,0.0,1
+20,95,24,Successive Augmentation (BFS),True,595,305.0,1.9508196721311475,0.001,1
+20,99,25,Spectral Sequencing,True,672,329.0,2.0425531914893615,0.004,1
+20,99,25,Successive Augmentation (DFS),True,632,329.0,1.9209726443768997,0.0,1
+20,99,25,Successive Augmentation (BFS),True,568,329.0,1.7264437689969605,0.0,1
+20,103,26,Spectral Sequencing,True,741,370.9886838295353,1.9973655054677633,0.004,1
+20,103,26,Successive Augmentation (DFS),True,685,370.9886838295353,1.8464175050545448,0.0,1
+20,103,26,Successive Augmentation (BFS),True,631,370.9886838295353,1.7008605046560845,0.0,1
+20,102,27,Spectral Sequencing,True,676,404.32183886854176,1.6719354113834788,0.0045,1
+20,102,27,Successive Augmentation (DFS),True,612,404.32183886854176,1.5136456682939188,0.0,1
+20,102,27,Successive Augmentation (BFS),True,628,404.32183886854176,1.5532181040663087,0.001,1
+20,92,28,Spectral Sequencing,True,648,320.26594386519326,2.023318471453702,0.0056,1
+20,92,28,Successive Augmentation (DFS),True,602,320.26594386519326,1.8796878392208776,0.0,1
+20,92,28,Successive Augmentation (BFS),True,536,320.26594386519326,1.6736091060172598,0.0,1
+20,84,29,Spectral Sequencing,True,623,292.6761633703553,2.1286325228052467,0.0041,1
+20,84,29,Successive Augmentation (DFS),True,526,292.6761633703553,1.7972081974246545,0.0,1
+20,84,29,Successive Augmentation (BFS),True,500,292.6761633703553,1.708372811240166,0.0,1
+20,80,30,Spectral Sequencing,True,561,237.58403320421326,2.361269789194114,0.003,1
+20,80,30,Successive Augmentation (DFS),True,519,237.58403320421326,2.1844902327838596,0.0,1
+20,80,30,Successive Augmentation (BFS),True,474,237.58403320421326,1.9950835652014438,0.0,1
+20,91,31,Spectral Sequencing,True,599,344.02242138960247,1.7411655832793456,0.006,1
+20,91,31,Successive Augmentation (DFS),True,600,344.02242138960247,1.7440723705636183,0.0,1
+20,91,31,Successive Augmentation (BFS),True,551,344.02242138960247,1.6016397936342561,0.0,1
+20,96,32,Spectral Sequencing,True,609,311.0,1.9581993569131833,0.004,1
+20,96,32,Successive Augmentation (DFS),True,635,311.0,2.0418006430868165,0.0,1
+20,96,32,Successive Augmentation (BFS),True,604,311.0,1.9421221864951768,0.0,1
+20,94,33,Spectral Sequencing,True,610,358.6985303447084,1.7005924150673033,0.0051,1
+20,94,33,Successive Augmentation (DFS),True,579,358.6985303447084,1.6141688661048665,0.0,1
+20,94,33,Successive Augmentation (BFS),True,553,358.6985303447084,1.5416845992331454,0.0,1
+20,96,34,Spectral Sequencing,True,627,340.18803277713164,1.8430983444110989,0.005,1
+20,96,34,Successive Augmentation (DFS),True,633,340.18803277713164,1.8607356491423057,0.001,1
+20,96,34,Successive Augmentation (BFS),True,613,340.18803277713164,1.8019446333716167,0.0,1
+20,89,35,Spectral Sequencing,True,631,294.55393741548636,2.142222254900419,0.004,1
+20,89,35,Successive Augmentation (DFS),True,554,294.55393741548636,1.8808100304513977,0.001,1
+20,89,35,Successive Augmentation (BFS),True,557,294.55393741548636,1.890994922313048,0.0,1
+20,84,36,Spectral Sequencing,True,578,246.03611872096508,2.3492485697009484,0.003,1
+20,84,36,Successive Augmentation (DFS),True,471,246.03611872096508,1.914353073233818,0.0,1
+20,84,36,Successive Augmentation (BFS),True,479,246.03611872096508,1.9468686243715474,0.0,1
+20,88,37,Spectral Sequencing,True,653,263.0,2.482889733840304,0.004,1
+20,88,37,Successive Augmentation (DFS),True,565,263.0,2.1482889733840302,0.0,1
+20,88,37,Successive Augmentation (BFS),True,549,263.0,2.08745247148289,0.0,1
+20,91,38,Spectral Sequencing,True,582,319.02290792390085,1.8243204031568456,0.004,1
+20,91,38,Successive Augmentation (DFS),True,597,319.02290792390085,1.8713389702485168,0.0,1
+20,91,38,Successive Augmentation (BFS),True,568,319.02290792390085,1.780436407204619,0.0,1
+20,91,39,Spectral Sequencing,True,615,313.9744207607338,1.9587582915509691,0.0055,1
+20,91,39,Successive Augmentation (DFS),True,586,313.9744207607338,1.8663940794290534,0.0,1
+20,91,39,Successive Augmentation (BFS),True,588,313.9744207607338,1.8727640250926338,0.0,1
+20,83,40,Spectral Sequencing,True,580,290.98277041770206,1.9932451641979263,0.004,1
+20,83,40,Successive Augmentation (DFS),True,522,290.98277041770206,1.7939206477781335,0.0,1
+20,83,40,Successive Augmentation (BFS),True,497,290.98277041770206,1.708004907942016,0.001,1
+20,92,41,Spectral Sequencing,True,640,287.00956563829925,2.2298908350899818,0.004,1
+20,92,41,Successive Augmentation (DFS),True,586,287.00956563829925,2.0417437958792646,0.001,1
+20,92,41,Successive Augmentation (BFS),True,567,287.00956563829925,1.9755439117125306,0.0,1
+20,97,42,Spectral Sequencing,True,642,317.0,2.0252365930599368,0.003,1
+20,97,42,Successive Augmentation (DFS),True,635,317.0,2.003154574132492,0.0,1
+20,97,42,Successive Augmentation (BFS),True,606,317.0,1.911671924290221,0.0,1
+20,88,43,Spectral Sequencing,True,601,263.56041514697,2.280312085807205,0.004,1
+20,88,43,Successive Augmentation (DFS),True,536,263.56041514697,2.0336893144636634,0.0,1
+20,88,43,Successive Augmentation (BFS),True,550,263.56041514697,2.0868080652145804,0.0,1
+20,105,44,Spectral Sequencing,True,721,371.0,1.9433962264150944,0.004,1
+20,105,44,Successive Augmentation (DFS),True,661,371.0,1.7816711590296497,0.0,1
+20,105,44,Successive Augmentation (BFS),True,608,371.0,1.6388140161725067,0.0,1
+20,90,45,Spectral Sequencing,True,642,275.0,2.3345454545454545,0.0031,1
+20,90,45,Successive Augmentation (DFS),True,564,275.0,2.050909090909091,0.0,1
+20,90,45,Successive Augmentation (BFS),True,557,275.0,2.0254545454545454,0.0,1
+20,89,46,Spectral Sequencing,True,570,298.2855169590201,1.9109208043725079,0.005,1
+20,89,46,Successive Augmentation (DFS),True,579,298.2855169590201,1.9410932381257582,0.0,1
+20,89,46,Successive Augmentation (BFS),True,545,298.2855169590201,1.8271084883912576,0.001,1
+20,101,47,Spectral Sequencing,True,696,378.0045051604752,1.8412478965152157,0.0063,1
+20,101,47,Successive Augmentation (DFS),True,631,378.0045051604752,1.669292273995835,0.0,1
+20,101,47,Successive Augmentation (BFS),True,684,378.0045051604752,1.8095022431270222,0.0,1
+20,86,48,Spectral Sequencing,True,613,269.20889515087987,2.2770421447494895,0.004,1
+20,86,48,Successive Augmentation (DFS),True,508,269.20889515087987,1.8870104560077336,0.0,1
+20,86,48,Successive Augmentation (BFS),True,498,269.20889515087987,1.8498645808894714,0.0,1
+20,98,49,Spectral Sequencing,True,645,323.0,1.9969040247678018,0.003,1
+20,98,49,Successive Augmentation (DFS),True,655,323.0,2.027863777089783,0.0,1
+20,98,49,Successive Augmentation (BFS),True,653,323.0,2.021671826625387,0.0,1
+20,93,50,Spectral Sequencing,True,641,315.7754076531779,2.0299237510731754,0.004,1
+20,93,50,Successive Augmentation (DFS),True,626,315.7754076531779,1.9824216352134287,0.0,1
+20,93,50,Successive Augmentation (BFS),True,606,315.7754076531779,1.9190854807337663,0.0,1
+20,85,51,Spectral Sequencing,True,561,245.0,2.289795918367347,0.0042,1
+20,85,51,Successive Augmentation (DFS),True,541,245.0,2.2081632653061223,0.0,1
+20,85,51,Successive Augmentation (BFS),True,468,245.0,1.910204081632653,0.0,1
+20,91,52,Spectral Sequencing,True,587,306.45387752535277,1.9154595293102068,0.004,1
+20,91,52,Successive Augmentation (DFS),True,576,306.45387752535277,1.8795650577217704,0.0,1
+20,91,52,Successive Augmentation (BFS),True,580,306.45387752535277,1.892617592844838,0.0,1
+20,103,53,Spectral Sequencing,True,733,357.0,2.053221288515406,0.003,1
+20,103,53,Successive Augmentation (DFS),True,691,357.0,1.9355742296918768,0.0,1
+20,103,53,Successive Augmentation (BFS),True,621,357.0,1.7394957983193278,0.0,1
+20,90,54,Spectral Sequencing,True,614,275.0,2.232727272727273,0.002,1
+20,90,54,Successive Augmentation (DFS),True,588,275.0,2.138181818181818,0.0,1
+20,90,54,Successive Augmentation (BFS),True,585,275.0,2.1272727272727274,0.0,1
+20,89,55,Spectral Sequencing,True,640,317.7963795647336,2.0138681280024935,0.004,1
+20,89,55,Successive Augmentation (DFS),True,583,317.7963795647336,1.8345079978522714,0.001,1
+20,89,55,Successive Augmentation (BFS),True,537,317.7963795647336,1.6897612261520922,0.0,1
+20,99,56,Spectral Sequencing,True,721,329.0,2.1914893617021276,0.003,1
+20,99,56,Successive Augmentation (DFS),True,655,329.0,1.9908814589665653,0.001,1
+20,99,56,Successive Augmentation (BFS),True,630,329.0,1.9148936170212767,0.0,1
+20,95,57,Spectral Sequencing,True,714,318.36811816781585,2.2426868748950595,0.003,1
+20,95,57,Successive Augmentation (DFS),True,581,318.36811816781585,1.8249314766302938,0.0,1
+20,95,57,Successive Augmentation (BFS),True,622,318.36811816781585,1.953713215944996,0.0,1
+20,102,58,Spectral Sequencing,True,654,350.0,1.8685714285714285,0.0025,1
+20,102,58,Successive Augmentation (DFS),True,655,350.0,1.8714285714285714,0.0,1
+20,102,58,Successive Augmentation (BFS),True,659,350.0,1.8828571428571428,0.0,1
+20,93,59,Spectral Sequencing,True,637,293.0,2.174061433447099,0.004,1
+20,93,59,Successive Augmentation (DFS),True,603,293.0,2.0580204778157,0.0,1
+20,93,59,Successive Augmentation (BFS),True,550,293.0,1.8771331058020477,0.001,1
+20,94,60,Spectral Sequencing,True,643,323.55340609687534,1.9873071582113988,0.0041,1
+20,94,60,Successive Augmentation (DFS),True,601,323.55340609687534,1.8574986035537335,0.0,1
+20,94,60,Successive Augmentation (BFS),True,601,323.55340609687534,1.8574986035537335,0.0,1
+20,86,61,Spectral Sequencing,True,615,251.0,2.450199203187251,0.003,1
+20,86,61,Successive Augmentation (DFS),True,550,251.0,2.191235059760956,0.0,1
+20,86,61,Successive Augmentation (BFS),True,528,251.0,2.103585657370518,0.0,1
+20,90,62,Spectral Sequencing,True,558,300.9662192197898,1.8540286728740922,0.004,1
+20,90,62,Successive Augmentation (DFS),True,581,300.9662192197898,1.9304492095696193,0.0,1
+20,90,62,Successive Augmentation (BFS),True,605,300.9662192197898,2.0101923782953866,0.0,1
+20,88,63,Spectral Sequencing,True,608,264.68469129171,2.2970727813265213,0.003,1
+20,88,63,Successive Augmentation (DFS),True,575,264.68469129171,2.1723961336558384,0.0,1
+20,88,63,Successive Augmentation (BFS),True,520,264.68469129171,1.9646017208713669,0.0,1
+20,98,64,Spectral Sequencing,True,707,386.2892569314542,1.8302346941153864,0.0055,1
+20,98,64,Successive Augmentation (DFS),True,623,386.2892569314542,1.6127810670917762,0.0,1
+20,98,64,Successive Augmentation (BFS),True,638,386.2892569314542,1.651612071917421,0.0,1
+20,92,65,Spectral Sequencing,True,644,287.0,2.2439024390243905,0.003,1
+20,92,65,Successive Augmentation (DFS),True,540,287.0,1.8815331010452963,0.0,1
+20,92,65,Successive Augmentation (BFS),True,562,287.0,1.9581881533101044,0.0,1
+20,99,66,Spectral Sequencing,True,673,396.16689062026563,1.6987790144358246,0.0051,1
+20,99,66,Successive Augmentation (DFS),True,660,396.16689062026563,1.6659645609623244,0.0,1
+20,99,66,Successive Augmentation (BFS),True,664,396.16689062026563,1.6760613158772475,0.0,1
+20,97,67,Spectral Sequencing,True,665,321.50734710810076,2.068381970059323,0.004,1
+20,97,67,Successive Augmentation (DFS),True,611,321.50734710810076,1.9004231333928516,0.0,1
+20,97,67,Successive Augmentation (BFS),True,638,321.50734710810076,1.9844025517260873,0.0,1
+20,102,68,Spectral Sequencing,True,661,377.0107475238481,1.75326566773322,0.0051,1
+20,102,68,Successive Augmentation (DFS),True,693,377.0107475238481,1.8381438846280203,0.001,1
+20,102,68,Successive Augmentation (BFS),True,650,377.0107475238481,1.7240887806756324,0.0,1
+20,93,69,Spectral Sequencing,True,659,309.6434309096481,2.1282544185227423,0.0051,1
+20,93,69,Successive Augmentation (DFS),True,592,309.6434309096481,1.911876503437729,0.0,1
+20,93,69,Successive Augmentation (BFS),True,559,309.6434309096481,1.8053023064555582,0.0,1
+20,92,70,Spectral Sequencing,True,657,287.0,2.289198606271777,0.004,1
+20,92,70,Successive Augmentation (DFS),True,570,287.0,1.9860627177700347,0.0,1
+20,92,70,Successive Augmentation (BFS),True,544,287.0,1.8954703832752613,0.001,1
+20,100,71,Spectral Sequencing,True,680,336.0,2.0238095238095237,0.003,1
+20,100,71,Successive Augmentation (DFS),True,688,336.0,2.0476190476190474,0.0,1
+20,100,71,Successive Augmentation (BFS),True,626,336.0,1.8630952380952381,0.001,1
+20,101,72,Spectral Sequencing,True,691,390.71674413844903,1.7685446307751447,0.005,1
+20,101,72,Successive Augmentation (DFS),True,638,390.71674413844903,1.632896489775025,0.0,1
+20,101,72,Successive Augmentation (BFS),True,626,390.71674413844903,1.6021837031334885,0.0,1
+20,92,73,Spectral Sequencing,True,620,287.0,2.1602787456445993,0.004,1
+20,92,73,Successive Augmentation (DFS),True,586,287.0,2.0418118466898956,0.0,1
+20,92,73,Successive Augmentation (BFS),True,568,287.0,1.9790940766550522,0.0,1
+20,78,74,Spectral Sequencing,True,579,224.5986844720194,2.577931395106333,0.004,1
+20,78,74,Successive Augmentation (DFS),True,480,224.5986844720194,2.1371451980156126,0.0,1
+20,78,74,Successive Augmentation (BFS),True,483,224.5986844720194,2.1505023555032103,0.001,1
+20,94,75,Spectral Sequencing,True,646,299.0,2.160535117056856,0.003,1
+20,94,75,Successive Augmentation (DFS),True,593,299.0,1.9832775919732442,0.001,1
+20,94,75,Successive Augmentation (BFS),True,562,299.0,1.879598662207358,0.0,1
+20,93,76,Spectral Sequencing,True,691,329.30101288623126,2.0983840709859294,0.0174,1
+20,93,76,Successive Augmentation (DFS),True,549,329.30101288623126,1.6671676627659555,0.001,1
+20,93,76,Successive Augmentation (BFS),True,561,329.30101288623126,1.7036084859958125,0.0,1
+20,103,77,Spectral Sequencing,True,679,357.0,1.9019607843137254,0.0043,1
+20,103,77,Successive Augmentation (DFS),True,665,357.0,1.8627450980392157,0.0,1
+20,103,77,Successive Augmentation (BFS),True,670,357.0,1.876750700280112,0.0,1
+20,100,78,Spectral Sequencing,True,651,344.71110613775863,1.8885379333842456,0.004,1
+20,100,78,Successive Augmentation (DFS),True,674,344.71110613775863,1.9552604717372988,0.0,1
+20,100,78,Successive Augmentation (BFS),True,598,344.71110613775863,1.7347859971793838,0.0,1
+20,87,79,Spectral Sequencing,True,638,275.44432233012043,2.316257581941936,0.004,1
+20,87,79,Successive Augmentation (DFS),True,567,275.44432233012043,2.0584922397509056,0.001,1
+20,87,79,Successive Augmentation (BFS),True,534,275.44432233012043,1.9386858130987366,0.0,1
+20,103,80,Spectral Sequencing,True,710,432.209945520897,1.6427201811478724,0.0063,1
+20,103,80,Successive Augmentation (DFS),True,659,432.209945520897,1.5247219709527435,0.0,1
+20,103,80,Successive Augmentation (BFS),True,659,432.209945520897,1.5247219709527435,0.0,1
+20,97,81,Spectral Sequencing,True,689,317.0,2.173501577287066,0.0043,1
+20,97,81,Successive Augmentation (DFS),True,597,317.0,1.8832807570977919,0.0,1
+20,97,81,Successive Augmentation (BFS),True,613,317.0,1.9337539432176656,0.0,1
+20,92,82,Spectral Sequencing,True,598,287.0,2.083623693379791,0.0043,1
+20,92,82,Successive Augmentation (DFS),True,607,287.0,2.1149825783972127,0.0,1
+20,92,82,Successive Augmentation (BFS),True,582,287.0,2.0278745644599305,0.0,1
+20,95,83,Spectral Sequencing,True,660,333.3317279629258,1.980009535946147,0.005,1
+20,95,83,Successive Augmentation (DFS),True,616,333.3317279629258,1.8480089002164037,0.0,1
+20,95,83,Successive Augmentation (BFS),True,634,333.3317279629258,1.9020091602876623,0.0,1
+20,98,84,Spectral Sequencing,True,713,323.0,2.2074303405572757,0.004,1
+20,98,84,Successive Augmentation (DFS),True,658,323.0,2.0371517027863777,0.0,1
+20,98,84,Successive Augmentation (BFS),True,672,323.0,2.0804953560371517,0.0,1
+20,103,85,Spectral Sequencing,True,721,394.43594899039334,1.8279266934098857,0.0055,1
+20,103,85,Successive Augmentation (DFS),True,686,394.43594899039334,1.7391923879045514,0.0,1
+20,103,85,Successive Augmentation (BFS),True,658,394.43594899039334,1.668204943500284,0.0,1
+20,101,86,Spectral Sequencing,True,718,362.2299050257396,1.9821665468205334,0.0053,1
+20,101,86,Successive Augmentation (DFS),True,641,362.2299050257396,1.769594368401061,0.0,1
+20,101,86,Successive Augmentation (BFS),True,666,362.2299050257396,1.8386113094463443,0.0,1
+20,85,87,Spectral Sequencing,True,620,245.0,2.5306122448979593,0.004,1
+20,85,87,Successive Augmentation (DFS),True,566,245.0,2.3102040816326532,0.0,1
+20,85,87,Successive Augmentation (BFS),True,546,245.0,2.2285714285714286,0.0,1
+20,100,88,Spectral Sequencing,True,644,336.0,1.9166666666666667,0.004,1
+20,100,88,Successive Augmentation (DFS),True,689,336.0,2.050595238095238,0.0,1
+20,100,88,Successive Augmentation (BFS),True,638,336.0,1.8988095238095237,0.0,1
+20,95,89,Spectral Sequencing,True,642,305.0,2.1049180327868853,0.004,1
+20,95,89,Successive Augmentation (DFS),True,610,305.0,2.0,0.0,1
+20,95,89,Successive Augmentation (BFS),True,592,305.0,1.9409836065573771,0.0,1
+20,97,90,Spectral Sequencing,True,676,317.0,2.132492113564669,0.005,1
+20,97,90,Successive Augmentation (DFS),True,616,317.0,1.9432176656151419,0.0,1
+20,97,90,Successive Augmentation (BFS),True,633,317.0,1.996845425867508,0.0,1
+20,75,91,Spectral Sequencing,True,540,225.3684540105604,2.3960762493170247,0.004,1
+20,75,91,Successive Augmentation (DFS),True,455,225.3684540105604,2.0189160989615673,0.0,1
+20,75,91,Successive Augmentation (BFS),True,441,225.3684540105604,1.9567956036089036,0.0,1
+20,86,92,Spectral Sequencing,True,586,251.0,2.3346613545816735,0.0031,1
+20,86,92,Successive Augmentation (DFS),True,552,251.0,2.199203187250996,0.0,1
+20,86,92,Successive Augmentation (BFS),True,527,251.0,2.099601593625498,0.0,1
+20,92,93,Spectral Sequencing,True,625,292.5781780261069,2.136181188277927,0.004,1
+20,92,93,Successive Augmentation (DFS),True,559,292.5781780261069,1.9106004547957782,0.0,1
+20,92,93,Successive Augmentation (BFS),True,536,292.5781780261069,1.8319889870671504,0.0,1
+20,93,94,Spectral Sequencing,True,673,293.0,2.2969283276450514,0.002,1
+20,93,94,Successive Augmentation (DFS),True,592,293.0,2.0204778156996586,0.001,1
+20,93,94,Successive Augmentation (BFS),True,571,293.0,1.9488054607508531,0.0,1
+20,107,95,Spectral Sequencing,True,722,385.0,1.8753246753246753,0.005,1
+20,107,95,Successive Augmentation (DFS),True,662,385.0,1.7194805194805194,0.0,1
+20,107,95,Successive Augmentation (BFS),True,640,385.0,1.6623376623376624,0.0,1
+20,97,96,Spectral Sequencing,True,646,368.3582747322614,1.7537274015889572,0.0045,1
+20,97,96,Successive Augmentation (DFS),True,610,368.3582747322614,1.655996462800718,0.0,1
+20,97,96,Successive Augmentation (BFS),True,670,368.3582747322614,1.8188813607811165,0.0,1
+20,89,97,Spectral Sequencing,True,581,321.91173092438277,1.804842583187741,0.004,1
+20,89,97,Successive Augmentation (DFS),True,562,321.91173092438277,1.7458201923433914,0.001,1
+20,89,97,Successive Augmentation (BFS),True,592,321.91173092438277,1.839013441044996,0.0,1
+20,99,98,Spectral Sequencing,True,707,329.0,2.148936170212766,0.005,1
+20,99,98,Successive Augmentation (DFS),True,675,329.0,2.0516717325227964,0.0,1
+20,99,98,Successive Augmentation (BFS),True,609,329.0,1.851063829787234,0.0,1
+20,87,99,Spectral Sequencing,True,567,257.0,2.2062256809338523,0.003,1
+20,87,99,Successive Augmentation (DFS),True,524,257.0,2.0389105058365757,0.0,1
+20,87,99,Successive Augmentation (BFS),True,521,257.0,2.027237354085603,0.0,1
+25,146,0,Spectral Sequencing,True,1294,634.7497230122041,2.0385987627679842,0.006,1
+25,146,0,Successive Augmentation (DFS),True,1164,634.7497230122041,1.8337936320416799,0.0,1
+25,146,0,Successive Augmentation (BFS),True,1142,634.7497230122041,1.7991343022264592,0.0,1
+25,144,1,Spectral Sequencing,True,1247,616.8476438891238,2.0215688790474555,0.005,1
+25,144,1,Successive Augmentation (DFS),True,1096,616.8476438891238,1.776775855201292,0.001,1
+25,144,1,Successive Augmentation (BFS),True,1218,616.8476438891238,1.9745556493021659,0.0,1
+25,151,2,Spectral Sequencing,True,1395,646.020598356761,2.1593738706604206,0.005,1
+25,151,2,Successive Augmentation (DFS),True,1306,646.020598356761,2.0216073656505444,0.0,1
+25,151,2,Successive Augmentation (BFS),True,1176,646.020598356761,1.8203753920406127,0.0,1
+25,138,3,Spectral Sequencing,True,1135,497.0,2.2837022132796783,0.0052,1
+25,138,3,Successive Augmentation (DFS),True,1154,497.0,2.3219315895372232,0.0,1
+25,138,3,Successive Augmentation (BFS),True,1115,497.0,2.243460764587525,0.001,1
+25,133,4,Spectral Sequencing,True,1101,532.6623299894009,2.066975526544008,0.004,1
+25,133,4,Successive Augmentation (DFS),True,1079,532.6623299894009,2.0256735632524836,0.0,1
+25,133,4,Successive Augmentation (BFS),True,1021,532.6623299894009,1.9167865691202837,0.001,1
+25,139,5,Spectral Sequencing,True,1193,658.9825691943884,1.8103665495408359,0.006,1
+25,139,5,Successive Augmentation (DFS),True,1124,658.9825691943884,1.7056596828867556,0.0,1
+25,139,5,Successive Augmentation (BFS),True,1119,658.9825691943884,1.6980722287813876,0.0,1
+25,139,6,Spectral Sequencing,True,1239,563.4866101110617,2.198810012106226,0.004,1
+25,139,6,Successive Augmentation (DFS),True,1053,563.4866101110617,1.8687223105309574,0.0,1
+25,139,6,Successive Augmentation (BFS),True,1046,563.4866101110617,1.856299655095329,0.0,1
+25,145,7,Spectral Sequencing,True,1308,730.0869401526024,1.791567453222218,0.0081,1
+25,145,7,Successive Augmentation (DFS),True,1199,730.0869401526024,1.6422701654537,0.0,1
+25,145,7,Successive Augmentation (BFS),True,1186,730.0869401526024,1.6244640669125006,0.0,1
+25,163,8,Spectral Sequencing,True,1344,688.0,1.9534883720930232,0.0032,1
+25,163,8,Successive Augmentation (DFS),True,1341,688.0,1.9491279069767442,0.0,1
+25,163,8,Successive Augmentation (BFS),True,1264,688.0,1.8372093023255813,0.0,1
+25,145,9,Spectral Sequencing,True,1334,636.6387126990875,2.095379959450449,0.005,1
+25,145,9,Successive Augmentation (DFS),True,1173,636.6387126990875,1.8424892746891879,0.001,1
+25,145,9,Successive Augmentation (BFS),True,1133,636.6387126990875,1.7796592908975704,0.0,1
+25,145,10,Spectral Sequencing,True,1256,628.4802862176592,1.9984715949626688,0.005,1
+25,145,10,Successive Augmentation (DFS),True,1230,628.4802862176592,1.9571019600350976,0.0,1
+25,145,10,Successive Augmentation (BFS),True,1167,628.4802862176592,1.856860152325983,0.0,1
+25,152,11,Spectral Sequencing,True,1347,600.0,2.245,0.003,1
+25,152,11,Successive Augmentation (DFS),True,1250,600.0,2.0833333333333335,0.001,1
+25,152,11,Successive Augmentation (BFS),True,1251,600.0,2.085,0.0,1
+25,150,12,Spectral Sequencing,True,1232,714.6644162885709,1.7238860252733454,0.006,1
+25,150,12,Successive Augmentation (DFS),True,1228,714.6644162885709,1.7182889927237566,0.0,1
+25,150,12,Successive Augmentation (BFS),True,1164,714.6644162885709,1.628736471930336,0.001,1
+25,142,13,Spectral Sequencing,True,1268,614.4104382475647,2.063767021303574,0.005,1
+25,142,13,Successive Augmentation (DFS),True,1070,614.4104382475647,1.7415068712892934,0.001,1
+25,142,13,Successive Augmentation (BFS),True,1084,614.4104382475647,1.7642929425024243,0.0,1
+25,137,14,Spectral Sequencing,True,1218,590.3230607445126,2.0632770104963614,0.007,1
+25,137,14,Successive Augmentation (DFS),True,1069,590.3230607445126,1.8108728441876931,0.0,1
+25,137,14,Successive Augmentation (BFS),True,1071,590.3230607445126,1.8142608195743868,0.0,1
+25,153,15,Spectral Sequencing,True,1278,628.5286142279859,2.0333203152091204,0.005,1
+25,153,15,Successive Augmentation (DFS),True,1181,628.5286142279859,1.8789916214882403,0.0,1
+25,153,15,Successive Augmentation (BFS),True,1157,628.5286142279859,1.8408072024232804,0.001,1
+25,139,16,Spectral Sequencing,True,1248,633.303994131989,1.9706176047579136,0.006,1
+25,139,16,Successive Augmentation (DFS),True,1062,633.303994131989,1.676919788664186,0.0,1
+25,139,16,Successive Augmentation (BFS),True,1109,633.303994131989,1.7511337529459343,0.0,1
+25,152,17,Spectral Sequencing,True,1295,639.7362753118065,2.024271641261579,0.005,1
+25,152,17,Successive Augmentation (DFS),True,1225,639.7362753118065,1.9148515525447372,0.0,1
+25,152,17,Successive Augmentation (BFS),True,1171,639.7362753118065,1.830441769820316,0.0,1
+25,157,18,Spectral Sequencing,True,1403,735.1361089535793,1.9084901189210846,0.005,1
+25,157,18,Successive Augmentation (DFS),True,1288,735.1361089535793,1.7520565026160777,0.0,1
+25,157,18,Successive Augmentation (BFS),True,1229,735.1361089535793,1.6717992559900305,0.0,1
+25,142,19,Spectral Sequencing,True,1233,625.1573816780925,1.9723033529417704,0.006,1
+25,142,19,Successive Augmentation (DFS),True,1158,625.1573816780925,1.8523335626168451,0.001,1
+25,142,19,Successive Augmentation (BFS),True,1105,625.1573816780925,1.7675549107872315,0.0,1
+25,147,20,Spectral Sequencing,True,1211,560.0,2.1625,0.004,1
+25,147,20,Successive Augmentation (DFS),True,1169,560.0,2.0875,0.0,1
+25,147,20,Successive Augmentation (BFS),True,1070,560.0,1.9107142857142858,0.0,1
+25,136,21,Spectral Sequencing,True,1226,483.0,2.538302277432712,0.003,1
+25,136,21,Successive Augmentation (DFS),True,1046,483.0,2.1656314699792962,0.0,1
+25,136,21,Successive Augmentation (BFS),True,1002,483.0,2.0745341614906834,0.0,1
+25,148,22,Spectral Sequencing,True,1362,655.2232615442715,2.0786807794185336,0.006,1
+25,148,22,Successive Augmentation (DFS),True,1172,655.2232615442715,1.7887032844923065,0.0,1
+25,148,22,Successive Augmentation (BFS),True,1177,655.2232615442715,1.7963342712008914,0.0,1
+25,132,23,Spectral Sequencing,True,1257,520.6740124675746,2.41417848769297,0.004,1
+25,132,23,Successive Augmentation (DFS),True,1035,520.6740124675746,1.9878080626588897,0.0,1
+25,132,23,Successive Augmentation (BFS),True,1004,520.6740124675746,1.9282698501541307,0.0,1
+25,144,24,Spectral Sequencing,True,1276,617.9358668713629,2.0649392087571243,0.005,1
+25,144,24,Successive Augmentation (DFS),True,1101,617.9358668713629,1.7817382984651993,0.0,1
+25,144,24,Successive Augmentation (BFS),True,1218,617.9358668713629,1.9710783356318007,0.0,1
+25,143,25,Spectral Sequencing,True,1244,551.9834990020951,2.253690558230398,0.004,1
+25,143,25,Successive Augmentation (DFS),True,1113,551.9834990020951,2.0163646232398977,0.0,1
+25,143,25,Successive Augmentation (BFS),True,1066,551.9834990020951,1.931217150380711,0.0,1
+25,139,26,Spectral Sequencing,True,1236,531.3616510962578,2.3260993665048946,0.004,1
+25,139,26,Successive Augmentation (DFS),True,1088,531.3616510962578,2.0475696688975122,0.0,1
+25,139,26,Successive Augmentation (BFS),True,1088,531.3616510962578,2.0475696688975122,0.0,1
+25,152,27,Spectral Sequencing,True,1190,666.0090579285485,1.7867624859355395,0.005,1
+25,152,27,Successive Augmentation (DFS),True,1234,666.0090579285485,1.852827653482736,0.0,1
+25,152,27,Successive Augmentation (BFS),True,1149,666.0090579285485,1.7252017616301973,0.001,1
+25,163,28,Spectral Sequencing,True,1422,808.775422350472,1.7582136656271874,0.006,1
+25,163,28,Successive Augmentation (DFS),True,1343,808.775422350472,1.660535128647899,0.0,1
+25,163,28,Successive Augmentation (BFS),True,1304,808.775422350472,1.6123140787467316,0.0,1
+25,143,29,Spectral Sequencing,True,1271,556.60339824092,2.2834930652900196,0.005,1
+25,143,29,Successive Augmentation (DFS),True,1166,556.60339824092,2.0948488702817962,0.0,1
+25,143,29,Successive Augmentation (BFS),True,1073,556.60339824092,1.9277640118459412,0.0,1
+25,147,30,Spectral Sequencing,True,1342,560.0,2.3964285714285714,0.004,1
+25,147,30,Successive Augmentation (DFS),True,1154,560.0,2.0607142857142855,0.0,1
+25,147,30,Successive Augmentation (BFS),True,1171,560.0,2.0910714285714285,0.0,1
+25,151,31,Spectral Sequencing,True,1268,741.4451620910418,1.7101736781503238,0.0061,1
+25,151,31,Successive Augmentation (DFS),True,1193,741.4451620910418,1.6090198722660383,0.0,1
+25,151,31,Successive Augmentation (BFS),True,1165,741.4451620910418,1.5712557847359048,0.0,1
+25,156,32,Spectral Sequencing,True,1279,646.6796384388399,1.9777953780756963,0.0065,1
+25,156,32,Successive Augmentation (DFS),True,1251,646.6796384388399,1.9344972775392464,0.0,1
+25,156,32,Successive Augmentation (BFS),True,1228,646.6796384388399,1.8989309806700196,0.0,1
+25,144,33,Spectral Sequencing,True,1300,661.1241061631675,1.9663479033377673,0.006,1
+25,144,33,Successive Augmentation (DFS),True,1137,661.1241061631675,1.7197981277654164,0.0,1
+25,144,33,Successive Augmentation (BFS),True,1100,661.1241061631675,1.6638328412858032,0.0,1
+25,148,34,Spectral Sequencing,True,1335,720.5044987267626,1.852868375366346,0.0073,1
+25,148,34,Successive Augmentation (DFS),True,1182,720.5044987267626,1.6405171683018882,0.0,1
+25,148,34,Successive Augmentation (BFS),True,1186,720.5044987267626,1.6460688338460572,0.001,1
+25,154,35,Spectral Sequencing,True,1297,770.743678437855,1.6827903183439175,0.006,1
+25,154,35,Successive Augmentation (DFS),True,1252,770.743678437855,1.624405149241777,0.001,1
+25,154,35,Successive Augmentation (BFS),True,1219,770.743678437855,1.5815893585668739,0.0,1
+25,151,36,Spectral Sequencing,True,1329,630.1719781064863,2.108948106504707,0.005,1
+25,151,36,Successive Augmentation (DFS),True,1210,630.1719781064863,1.9201107666446167,0.0,1
+25,151,36,Successive Augmentation (BFS),True,1114,630.1719781064863,1.7677714000347957,0.0,1
+25,167,37,Spectral Sequencing,True,1540,846.7289083258183,1.8187639336005914,0.006,1
+25,167,37,Successive Augmentation (DFS),True,1365,846.7289083258183,1.6120862138732515,0.0,1
+25,167,37,Successive Augmentation (BFS),True,1308,846.7289083258183,1.5447683280192037,0.0,1
+25,146,38,Spectral Sequencing,True,1181,634.4625286045725,1.861418045597545,0.006,1
+25,146,38,Successive Augmentation (DFS),True,1178,634.4625286045725,1.8566896339660528,0.0,1
+25,146,38,Successive Augmentation (BFS),True,1148,634.4625286045725,1.8094055176511277,0.0,1
+25,156,39,Spectral Sequencing,True,1313,632.0,2.0775316455696204,0.0041,1
+25,156,39,Successive Augmentation (DFS),True,1286,632.0,2.0348101265822787,0.001,1
+25,156,39,Successive Augmentation (BFS),True,1238,632.0,1.9588607594936709,0.0,1
+25,137,40,Spectral Sequencing,True,1111,606.7993644572947,1.8309181997803328,0.0055,1
+25,137,40,Successive Augmentation (DFS),True,1049,606.7993644572947,1.728742746687281,0.0,1
+25,137,40,Successive Augmentation (BFS),True,994,606.7993644572947,1.6381032318466704,0.0,1
+25,158,41,Spectral Sequencing,True,1293,748.8063535308739,1.726748169140219,0.006,1
+25,158,41,Successive Augmentation (DFS),True,1304,748.8063535308739,1.7414382154360752,0.0,1
+25,158,41,Successive Augmentation (BFS),True,1207,748.8063535308739,1.6118987162817047,0.001,1
+25,147,42,Spectral Sequencing,True,1258,560.0,2.2464285714285714,0.003,1
+25,147,42,Successive Augmentation (DFS),True,1195,560.0,2.1339285714285716,0.001,1
+25,147,42,Successive Augmentation (BFS),True,1130,560.0,2.017857142857143,0.0,1
+25,155,43,Spectral Sequencing,True,1324,805.1521734118783,1.6444096454332036,0.006,1
+25,155,43,Successive Augmentation (DFS),True,1286,805.1521734118783,1.5972135982077793,0.0,1
+25,155,43,Successive Augmentation (BFS),True,1181,805.1521734118783,1.4668034677164754,0.0,1
+25,131,44,Spectral Sequencing,True,1120,600.3805671473706,1.8654834304873207,0.005,1
+25,131,44,Successive Augmentation (DFS),True,1064,600.3805671473706,1.7722092589629546,0.0,1
+25,131,44,Successive Augmentation (BFS),True,985,600.3805671473706,1.6406260527053667,0.0,1
+25,152,45,Spectral Sequencing,True,1295,783.1131866738446,1.6536562300787165,0.007,1
+25,152,45,Successive Augmentation (DFS),True,1216,783.1131866738446,1.5527768152708257,0.0,1
+25,152,45,Successive Augmentation (BFS),True,1162,783.1131866738446,1.48382126590847,0.0,1
+25,146,46,Spectral Sequencing,True,1289,653.5533790041311,1.972294905680309,0.006,1
+25,146,46,Successive Augmentation (DFS),True,1082,653.5533790041311,1.6555648471265278,0.001,1
+25,146,46,Successive Augmentation (BFS),True,1140,653.5533790041311,1.7443104673976355,0.0,1
+25,158,47,Spectral Sequencing,True,1395,828.6695348383646,1.6834213656377515,0.008,1
+25,158,47,Successive Augmentation (DFS),True,1301,828.6695348383646,1.569986520928111,0.0,1
+25,158,47,Successive Augmentation (BFS),True,1254,828.6695348383646,1.5132690985732906,0.001,1
+25,140,48,Spectral Sequencing,True,1225,630.153715799601,1.9439701286940754,0.006,1
+25,140,48,Successive Augmentation (DFS),True,1152,630.153715799601,1.8281253781678162,0.0,1
+25,140,48,Successive Augmentation (BFS),True,1054,630.153715799601,1.6726077678722902,0.0,1
+25,131,49,Spectral Sequencing,True,1155,551.7713846010943,2.093258244689533,0.005,1
+25,131,49,Successive Augmentation (DFS),True,1022,551.7713846010943,1.8522163862101326,0.0,1
+25,131,49,Successive Augmentation (BFS),True,987,551.7713846010943,1.7887843181892376,0.0,1
+25,151,50,Spectral Sequencing,True,1257,741.5644400981968,1.6950650975571997,0.006,1
+25,151,50,Successive Augmentation (DFS),True,1224,741.5644400981968,1.6505645818695405,0.001,1
+25,151,50,Successive Augmentation (BFS),True,1162,741.5644400981968,1.5669575523957564,0.0,1
+25,160,51,Spectral Sequencing,True,1331,811.1622198900048,1.6408555124528434,0.008,1
+25,160,51,Successive Augmentation (DFS),True,1289,811.1622198900048,1.5890779530816794,0.0,1
+25,160,51,Successive Augmentation (BFS),True,1256,811.1622198900048,1.548395585004336,0.0,1
+25,154,52,Spectral Sequencing,True,1332,718.1883539171591,1.8546666661119964,0.007,1
+25,154,52,Successive Augmentation (DFS),True,1254,718.1883539171591,1.7460600595378704,0.0,1
+25,154,52,Successive Augmentation (BFS),True,1147,718.1883539171591,1.5970740735964413,0.0,1
+25,157,53,Spectral Sequencing,True,1387,831.5379046508523,1.6679937165129908,0.0071,1
+25,157,53,Successive Augmentation (DFS),True,1244,831.5379046508523,1.4960232035632015,0.001,1
+25,157,53,Successive Augmentation (BFS),True,1257,831.5379046508523,1.5116568865586368,0.0,1
+25,128,54,Spectral Sequencing,True,1123,469.5273172800291,2.391767121251937,0.004,1
+25,128,54,Successive Augmentation (DFS),True,937,469.5273172800291,1.9956240361647952,0.001,1
+25,128,54,Successive Augmentation (BFS),True,948,469.5273172800291,2.0190518530247874,0.0,1
+25,156,55,Spectral Sequencing,True,1416,632.0,2.240506329113924,0.003,1
+25,156,55,Successive Augmentation (DFS),True,1297,632.0,2.0522151898734178,0.0,1
+25,156,55,Successive Augmentation (BFS),True,1253,632.0,1.9825949367088607,0.0,1
+25,149,56,Spectral Sequencing,True,1260,576.0,2.1875,0.005,1
+25,149,56,Successive Augmentation (DFS),True,1156,576.0,2.0069444444444446,0.0,1
+25,149,56,Successive Augmentation (BFS),True,1107,576.0,1.921875,0.0,1
+25,154,57,Spectral Sequencing,True,1358,724.1986480023052,1.8751761049900184,0.005,1
+25,154,57,Successive Augmentation (DFS),True,1277,724.1986480023052,1.7633283402593913,0.0,1
+25,154,57,Successive Augmentation (BFS),True,1213,724.1986480023052,1.67495479775618,0.0,1
+25,145,58,Spectral Sequencing,True,1275,719.6705032724581,1.7716440985178203,0.005,1
+25,145,58,Successive Augmentation (DFS),True,1146,719.6705032724581,1.5923954014913113,0.0,1
+25,145,58,Successive Augmentation (BFS),True,1105,719.6705032724581,1.5354248853821109,0.0,1
+25,152,59,Spectral Sequencing,True,1219,705.0145955922048,1.7290422178792666,0.006,1
+25,152,59,Successive Augmentation (DFS),True,1221,705.0145955922048,1.7318790385812834,0.0,1
+25,152,59,Successive Augmentation (BFS),True,1169,705.0145955922048,1.6581217003288453,0.001,1
+25,163,60,Spectral Sequencing,True,1449,688.0,2.1061046511627906,0.004,1
+25,163,60,Successive Augmentation (DFS),True,1297,688.0,1.885174418604651,0.0,1
+25,163,60,Successive Augmentation (BFS),True,1265,688.0,1.8386627906976745,0.0,1
+25,149,61,Spectral Sequencing,True,1270,699.9464394060342,1.8144245452233547,0.0061,1
+25,149,61,Successive Augmentation (DFS),True,1161,699.9464394060342,1.6586983440978857,0.0,1
+25,149,61,Successive Augmentation (BFS),True,1116,699.9464394060342,1.5944077106057195,0.001,1
+25,151,62,Spectral Sequencing,True,1238,650.1250185527351,1.904249128507549,0.005,1
+25,151,62,Successive Augmentation (DFS),True,1181,650.1250185527351,1.8165736839801416,0.0,1
+25,151,62,Successive Augmentation (BFS),True,1124,650.1250185527351,1.7288982394527344,0.001,1
+25,149,63,Spectral Sequencing,True,1288,576.0,2.236111111111111,0.004,1
+25,149,63,Successive Augmentation (DFS),True,1207,576.0,2.095486111111111,0.0,1
+25,149,63,Successive Augmentation (BFS),True,1144,576.0,1.9861111111111112,0.0,1
+25,157,64,Spectral Sequencing,True,1375,649.9327363197225,2.115603543508222,0.005,1
+25,157,64,Successive Augmentation (DFS),True,1261,649.9327363197225,1.9402007769919043,0.0,1
+25,157,64,Successive Augmentation (BFS),True,1232,649.9327363197225,1.895580774983367,0.0,1
+25,170,65,Spectral Sequencing,True,1463,885.6636794010284,1.6518685749757993,0.007,1
+25,170,65,Successive Augmentation (DFS),True,1367,885.6636794010284,1.5434752850252342,0.0,1
+25,170,65,Successive Augmentation (BFS),True,1382,885.6636794010284,1.56041173658001,0.0011,1
+25,152,66,Spectral Sequencing,True,1271,643.3198830477353,1.9756889744781756,0.004,1
+25,152,66,Successive Augmentation (DFS),True,1230,643.3198830477353,1.9119570720756538,0.0,1
+25,152,66,Successive Augmentation (BFS),True,1201,643.3198830477353,1.8668784094006994,0.0,1
+25,145,67,Spectral Sequencing,True,1347,734.2913612920652,1.8344216900901675,0.007,1
+25,145,67,Successive Augmentation (DFS),True,1140,734.2913612920652,1.552517243283438,0.001,1
+25,145,67,Successive Augmentation (BFS),True,1155,734.2913612920652,1.5729451017476936,0.0,1
+25,157,68,Spectral Sequencing,True,1312,782.7074590039284,1.676232907847394,0.006,1
+25,157,68,Successive Augmentation (DFS),True,1290,782.7074590039284,1.6481253438438555,0.001,1
+25,157,68,Successive Augmentation (BFS),True,1199,782.7074590039284,1.5318622381928548,0.0,1
+25,157,69,Spectral Sequencing,True,1374,674.2123906159417,2.037933474857607,0.006,1
+25,157,69,Successive Augmentation (DFS),True,1321,674.2123906159417,1.9593232316498532,0.0,1
+25,157,69,Successive Augmentation (BFS),True,1246,674.2123906159417,1.8480823214502022,0.0,1
+25,161,70,Spectral Sequencing,True,1362,827.5724129200975,1.6457774313599574,0.007,1
+25,161,70,Successive Augmentation (DFS),True,1349,827.5724129200975,1.630068836200134,0.0,1
+25,161,70,Successive Augmentation (BFS),True,1316,827.5724129200975,1.5901931715636592,0.0,1
+25,170,71,Spectral Sequencing,True,1523,861.7290475424838,1.7673768852789136,0.006,1
+25,170,71,Successive Augmentation (DFS),True,1454,861.7290475424838,1.687305312669429,0.001,1
+25,170,71,Successive Augmentation (BFS),True,1417,861.7290475424838,1.6443683824295605,0.0,1
+25,156,72,Spectral Sequencing,True,1318,776.7015661918616,1.6969194570600703,0.008,1
+25,156,72,Successive Augmentation (DFS),True,1268,776.7015661918616,1.6325446673385198,0.0,1
+25,156,72,Successive Augmentation (BFS),True,1223,776.7015661918616,1.5746073565891243,0.0,1
+25,158,73,Spectral Sequencing,True,1419,734.844509471784,1.9310207556970058,0.0056,1
+25,158,73,Successive Augmentation (DFS),True,1282,734.844509471784,1.7445867574373233,0.0,1
+25,158,73,Successive Augmentation (BFS),True,1237,734.844509471784,1.6833493127534858,0.001,1
+25,150,74,Spectral Sequencing,True,1247,704.1242907887687,1.770994150199101,0.006,1
+25,150,74,Successive Augmentation (DFS),True,1202,704.1242907887687,1.7070849787805287,0.0,1
+25,150,74,Successive Augmentation (BFS),True,1162,704.1242907887687,1.6502768264084644,0.0,1
+25,150,75,Spectral Sequencing,True,1340,600.2617668721492,2.2323594037689376,0.004,1
+25,150,75,Successive Augmentation (DFS),True,1206,600.2617668721492,2.0091234633920436,0.0,1
+25,150,75,Successive Augmentation (BFS),True,1142,600.2617668721492,1.9025033127642736,0.0,1
+25,144,76,Spectral Sequencing,True,1203,670.2095250101094,1.7949610608441504,0.006,1
+25,144,76,Successive Augmentation (DFS),True,1180,670.2095250101094,1.7606434345769721,0.0,1
+25,144,76,Successive Augmentation (BFS),True,1128,670.2095250101094,1.6830557577990037,0.0,1
+25,155,77,Spectral Sequencing,True,1310,624.0,2.0993589743589745,0.004,1
+25,155,77,Successive Augmentation (DFS),True,1201,624.0,1.9246794871794872,0.0,1
+25,155,77,Successive Augmentation (BFS),True,1274,624.0,2.0416666666666665,0.0,1
+25,149,78,Spectral Sequencing,True,1199,576.0,2.0815972222222223,0.004,1
+25,149,78,Successive Augmentation (DFS),True,1229,576.0,2.1336805555555554,0.0,1
+25,149,78,Successive Augmentation (BFS),True,1198,576.0,2.079861111111111,0.0,1
+25,149,79,Spectral Sequencing,True,1283,659.4240236114258,1.9456373350996148,0.005,1
+25,149,79,Successive Augmentation (DFS),True,1198,659.4240236114258,1.816736966055603,0.001,1
+25,149,79,Successive Augmentation (BFS),True,1110,659.4240236114258,1.6832871722218024,0.0,1
+25,154,80,Spectral Sequencing,True,1258,696.187079667115,1.8069855599755147,0.005,1
+25,154,80,Successive Augmentation (DFS),True,1233,696.187079667115,1.7710756720586722,0.0,1
+25,154,80,Successive Augmentation (BFS),True,1213,696.187079667115,1.7423477617251981,0.001,1
+25,147,81,Spectral Sequencing,True,1256,702.9270781445089,1.7868140793713876,0.005,1
+25,147,81,Successive Augmentation (DFS),True,1154,702.9270781445089,1.6417065665561952,0.0,1
+25,147,81,Successive Augmentation (BFS),True,1138,702.9270781445089,1.6189446037616553,0.0,1
+25,145,82,Spectral Sequencing,True,1259,556.0557819980639,2.264161331936988,0.003,1
+25,145,82,Successive Augmentation (DFS),True,1142,556.0557819980639,2.0537507871898653,0.0,1
+25,145,82,Successive Augmentation (BFS),True,1150,556.0557819980639,2.0681378329845406,0.001,1
+25,146,83,Spectral Sequencing,True,1229,705.1421488411374,1.7429109889683865,0.007,1
+25,146,83,Successive Augmentation (DFS),True,1192,705.1421488411374,1.6904392993086383,0.0,1
+25,146,83,Successive Augmentation (BFS),True,1196,705.1421488411374,1.6961119144069896,0.0,1
+25,158,84,Spectral Sequencing,True,1368,660.5994996327601,2.070846255197737,0.004,1
+25,158,84,Successive Augmentation (DFS),True,1262,660.5994996327601,1.910385945949959,0.0,1
+25,158,84,Successive Augmentation (BFS),True,1254,660.5994996327601,1.8982757339312588,0.0,1
+25,174,85,Spectral Sequencing,True,1536,786.0,1.9541984732824427,0.003,1
+25,174,85,Successive Augmentation (DFS),True,1516,786.0,1.9287531806615776,0.0,1
+25,174,85,Successive Augmentation (BFS),True,1424,786.0,1.811704834605598,0.0,1
+25,165,86,Spectral Sequencing,True,1461,817.3862595256687,1.7874046486269808,0.006,1
+25,165,86,Successive Augmentation (DFS),True,1365,817.3862595256687,1.6699571152469739,0.0,1
+25,165,86,Successive Augmentation (BFS),True,1353,817.3862595256687,1.655276173574473,0.0,1
+25,163,87,Spectral Sequencing,True,1342,747.2978896804537,1.7958032780928128,0.006,1
+25,163,87,Successive Augmentation (DFS),True,1324,747.2978896804537,1.7717164979097497,0.0,1
+25,163,87,Successive Augmentation (BFS),True,1239,747.2978896804537,1.6579733692675074,0.0,1
+25,165,88,Spectral Sequencing,True,1452,913.0244431238399,1.5903188692649877,0.0091,1
+25,165,88,Successive Augmentation (DFS),True,1329,913.0244431238399,1.4556017749677468,0.0,1
+25,165,88,Successive Augmentation (BFS),True,1366,913.0244431238399,1.4961264293498437,0.0,1
+25,144,89,Spectral Sequencing,True,1226,625.1439864822648,1.9611481938725828,0.005,1
+25,144,89,Successive Augmentation (DFS),True,1167,625.1439864822648,1.8667699365818142,0.0,1
+25,144,89,Successive Augmentation (BFS),True,1112,625.1439864822648,1.7787902052090636,0.0,1
+25,157,90,Spectral Sequencing,True,1339,710.4722279150533,1.884661985915227,0.005,1
+25,157,90,Successive Augmentation (DFS),True,1253,710.4722279150533,1.7636157343926657,0.0,1
+25,157,90,Successive Augmentation (BFS),True,1253,710.4722279150533,1.7636157343926657,0.0,1
+25,162,91,Spectral Sequencing,True,1374,680.0,2.0205882352941176,0.005,1
+25,162,91,Successive Augmentation (DFS),True,1312,680.0,1.9294117647058824,0.0,1
+25,162,91,Successive Augmentation (BFS),True,1355,680.0,1.9926470588235294,0.0,1
+25,152,92,Spectral Sequencing,True,1331,639.582286658249,2.0810457508983506,0.006,1
+25,152,92,Successive Augmentation (DFS),True,1218,639.582286658249,1.9043679373359814,0.0,1
+25,152,92,Successive Augmentation (BFS),True,1179,639.582286658249,1.8433906388498538,0.001,1
+25,156,93,Spectral Sequencing,True,1323,732.4745533907272,1.8062060912227569,0.006,1
+25,156,93,Successive Augmentation (DFS),True,1281,732.4745533907272,1.7488662153109233,0.0,1
+25,156,93,Successive Augmentation (BFS),True,1251,732.4745533907272,1.7079091610881851,0.001,1
+25,151,94,Spectral Sequencing,True,1361,592.0,2.2989864864864864,0.005,1
+25,151,94,Successive Augmentation (DFS),True,1232,592.0,2.081081081081081,0.0,1
+25,151,94,Successive Augmentation (BFS),True,1195,592.0,2.018581081081081,0.0,1
+25,142,95,Spectral Sequencing,True,1264,525.0,2.4076190476190478,0.004,1
+25,142,95,Successive Augmentation (DFS),True,1178,525.0,2.243809523809524,0.0,1
+25,142,95,Successive Augmentation (BFS),True,1097,525.0,2.0895238095238096,0.0,1
+25,146,96,Spectral Sequencing,True,1242,753.9334535665016,1.6473602466168427,0.008,1
+25,146,96,Successive Augmentation (DFS),True,1180,753.9334535665016,1.5651248719870163,0.0,1
+25,146,96,Successive Augmentation (BFS),True,1174,753.9334535665016,1.5571666099260655,0.0,1
+25,135,97,Spectral Sequencing,True,1213,512.9482691088264,2.364760879508206,0.0052,1
+25,135,97,Successive Augmentation (DFS),True,1049,512.9482691088264,2.04504052976431,0.001,1
+25,135,97,Successive Augmentation (BFS),True,1010,512.9482691088264,1.9690094709837491,0.0,1
+25,144,98,Spectral Sequencing,True,1105,624.726559935196,1.7687738458160378,0.005,1
+25,144,98,Successive Augmentation (DFS),True,1123,624.726559935196,1.7975864514492403,0.001,1
+25,144,98,Successive Augmentation (BFS),True,1132,624.726559935196,1.8119927542658414,0.0,1
+25,132,99,Spectral Sequencing,True,1090,466.4279728340334,2.336909584082447,0.0041,1
+25,132,99,Successive Augmentation (DFS),True,1019,466.4279728340334,2.1846888680550585,0.0,1
+25,132,99,Successive Augmentation (BFS),True,970,466.4279728340334,2.0796351344586914,0.0,1
