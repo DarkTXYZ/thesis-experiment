@@ -1,7 +1,0 @@
-n,m,beta_min,beta_max,space_type,beta_schedule_type,energy,feasible,minla_cost,optimal_cost,relative_gap,time_s
-30,227,1e-09,1,linear,custom,1918.0,False,,1848,,6.865
-30,227,1e-09,1,geometric,custom,2247.0,False,,1848,,6.199
-30,227,-9.0,0,logspace,custom,2247.0,False,,1848,,6.204
-30,227,1e-09,1,linear,custom,2642.0,False,,1848,,6.512
-30,227,1e-09,1,geometric,custom,2830.0,False,,1848,,6.212
-30,227,-9.0,0,logspace,custom,2830.0,False,,1848,,6.23

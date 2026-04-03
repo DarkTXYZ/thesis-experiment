@@ -4,10 +4,11 @@ import numpy as np
 import logging
 import time
 import sys
+import cvxpy as cp
+import math
 
-# Configure logging
 logging.basicConfig(
-    level=logging.CRITICAL,  # Disabled - set to CRITICAL to suppress debug/info logs
+    level=logging.CRITICAL,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(sys.stdout),
@@ -18,7 +19,6 @@ logger = logging.getLogger(__name__)
 
 class MinLALowerBounds:
     def __init__(self, G):
-        """Initialize with a NetworkX graph."""
         self.G = G
         self.n = G.number_of_nodes()
         self.m = G.number_of_edges()
@@ -78,7 +78,7 @@ class MinLALowerBounds:
         
         L = nx.laplacian_matrix(self.G).astype(float)
         e = np.linalg.eigvals(L.toarray())
-        lambda_2 = sorted(e)[1] 
+        lambda_2 = sorted(e)[1]
 
         return lambda_2 * (self.n ** 2 - 1) / 6
 
@@ -86,15 +86,12 @@ class MinLALowerBounds:
         logger.debug("Starting gomory_hu_method...")
         start_time = time.time()
         try:
-            logger.debug(f"Creating graph copy...")
             G_copy = self.G.copy()
             nx.set_edge_attributes(G_copy, 1, "capacity")
             
-            logger.debug(f"Computing Gomory-Hu tree...")
             T = nx.gomory_hu_tree(G_copy)
             logger.debug(f"Gomory-Hu tree computed successfully")
             
-            # sum all edges weight
             sum_weights = 0
             for _, _, data in T.edges(data=True):
                 sum_weights += data['weight']
@@ -108,47 +105,26 @@ class MinLALowerBounds:
             raise
 
     def path_method(self):
-        """
-        5. Path Method (LB_path) - Approximation
-        Petit's path method uses path embeddings. A simplified valid lower bound 
-        utilizes the graph diameter: the longest shortest-path in the graph.
-        """
-        logger.debug("Starting path_method...")
-        start_time = time.time()
-        try:
-            if not nx.is_connected(self.G):
-                logger.debug(f"Graph is disconnected, processing connected components...")
-                result = sum(MinLALowerBounds(self.G.subgraph(c)).path_method() 
-                           for c in nx.connected_components(self.G))
-                elapsed = time.time() - start_time
-                logger.debug(f"path_method (disconnected) completed in {elapsed:.4f}s, result={result}")
-                return result
-            try:
-                logger.debug(f"Computing graph diameter...")
-                # The true MinLA must be at least the diameter of the graph
-                diameter = nx.diameter(self.G)
-                elapsed = time.time() - start_time
-                logger.debug(f"path_method completed in {elapsed:.4f}s, diameter={diameter}")
-                return diameter
-            except nx.NetworkXError as e:
-                logger.warning(f"Failed to compute diameter: {e}")
-                return 0
-        except Exception as e:
-            elapsed = time.time() - start_time
-            logger.error(f"path_method failed after {elapsed:.4f}s: {e}", exc_info=True)
-            raise
+        n = self.n
+        m = self.m
+
+        k = math.floor(n - ((2*n - 1) ** 2 - 8 * m) ** 0.5 / 2 - 1 / 2)
+        minla_p_k_n = k * (k + 1) * (3*n - 2*k - 1)/6
+
+        return minla_p_k_n
+
+    
 
     def evaluate_all(self):
-        """Returns a dictionary of all 6 bounds."""
         logger.info(f"evaluate_all: Starting evaluation for graph with n={self.n}, m={self.m}")
         start_time = time.time()
         try:
             results = {
                 "Edges Method": self.edges_method(),
                 "Degree Method": self.degree_method(),
-                # "Juvan-Mohar Method": self.juvan_mohar_method(),
+                "Juvan-Mohar Method": self.juvan_mohar_method(),
                 "Gomory-Hu Method": self.gomory_hu_method(),
-                "Path Method (Approx)": self.path_method()
+                "Path Method (Approx)": self.path_method(),
             }
             elapsed = time.time() - start_time
             logger.info(f"evaluate_all: Completed in {elapsed:.4f}s. Results: {results}")
@@ -160,7 +136,9 @@ class MinLALowerBounds:
     
     def return_max(self):
         logger.debug("return_max: Computing max value...")
-        result = max(self.evaluate_all().values())
+        evaluations = self.evaluate_all()
+        # print(f"Evaluations: {evaluations}")
+        result = max(evaluations.values())
         logger.debug(f"return_max: result={result}")
         return result
     
@@ -185,7 +163,9 @@ def calculate_lower_obj_bound(G: nx.Graph):
         raise
 
 if __name__ == "__main__":
-    # create erdos_renyi graph until connected
+    t0 = time.time()
     G = nx.erdos_renyi_graph(25, 0.5, seed = 42)
     j = calculate_lower_obj_bound(G)
+    elapsed = time.time() - t0
     print("Lower Bound:", j)
+    print("Elapsed Time:", elapsed)

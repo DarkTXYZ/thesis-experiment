@@ -1,6 +1,0 @@
-n,m,beta_min,beta_max,bqm_is_normalized,space_type,annealing_type,seed,energy,feasible,minla_cost,optimal_cost,relative_gap,time_s
-30,227,0.0001,1,True,linear,default,42,29.805532953633698,False,,,,10.882
-30,227,0.0001,1,True,linear,default,123,25.112286411729965,False,,,,11.167
-30,227,0.0001,1,True,linear,default,456,28.165988608637775,False,,,,11.952
-30,227,0.0001,1,True,linear,default,789,30.37103336046847,False,,,,11.835
-30,227,0.0001,1,True,linear,default,999,27.69080553296683,False,,,,12.001

@@ -9,15 +9,31 @@ This script allows you to:
 """
 
 import os
+import sys
 import pickle
 import pandas as pd
 import networkx as nx
 from typing import Dict, List
+
+# Add parent directories to path to import Utils and Baseline
+# Script location: Results/quantum_experiment/recalculate_approx_ratio.py
+# Need to go up to: thesis-experiment/ (the project root)
+script_dir = os.path.dirname(os.path.abspath(__file__))  # Results/quantum_experiment
+parent1 = os.path.dirname(script_dir)  # Results
+parent2 = os.path.dirname(parent1)  # thesis-experiment (project root)
+project_root = parent2
+
+sys.path.insert(0, project_root)
+
+# Verify path is correct
+if not os.path.exists(os.path.join(project_root, 'Utils')):
+    raise RuntimeError(f"Could not find Utils directory. Project root: {project_root}")
+
 import Utils.MinLA as minla
 from Baseline.lower_bound import calculate_lower_obj_bound
 
-DATASET_PATH = "Dataset/quantum_dataset"
-RESULTS_DIR = "Results"
+DATASET_PATH = os.path.join(project_root, "Dataset", "quantum_dataset")
+RESULTS_DIR = os.path.join(project_root, "Results", "quantum_experiment")
 
 
 def read_dataset():
@@ -85,6 +101,13 @@ def recalculate_with_new_lower_bounds(
         graph_id = row['graph_id']
         avg_minla_cost = row['avg_minla_cost']
         feasible = row['feasible']
+        sampler = row.get('sampler', '').lower()
+        
+        # Skip rows with randomsampler - keep original values
+        if 'randomsampler' in sampler:
+            new_lower_bounds.append(row['lower_bound'])
+            new_approx_ratios.append(row['approx_ratio'])
+            continue
         
         # Retrieve the graph
         graph = get_graphs_by_instance(datasets, n, graph_id)
@@ -184,7 +207,7 @@ def main():
     import sys
     
     # Configuration
-    results_csv = "Results/quantum_experiment_20260330_101115.csv"
+    results_csv = "Results/quantum_experiment/quantum_experiment_linear_20260401_085012.csv"
     
     # Check if custom CSV path provided as argument
     if len(sys.argv) > 1:
