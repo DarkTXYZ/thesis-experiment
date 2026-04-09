@@ -157,6 +157,17 @@ def find_one_minimum_solution(graph: nx.Graph):
     
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = 10
+
+    solver.parameters.exploit_all_lp_solution = True
+    solver.parameters.exploit_relaxation_solution = True
+    solver.parameters.exploit_all_precedences = True
+    solver.parameters.exploit_best_solution = True
+    solver.parameters.exploit_integer_lp_solution = True
+    solver.parameters.exploit_objective = True
+
+
+    solver.parameters.log_search_progress = True
+
     status = solver.solve(model)
     
     obtained_label = [solver.value(node_labels[u]) for u in range(n)]
@@ -280,7 +291,7 @@ def solve_minla_gurobi(G: nx.Graph):
     # Use aggressive Gomory fractional cuts
     m.Params.GomoryPasses = 5 
     # Set a reasonable time limit (e.g., 1 hour)
-    m.Params.TimeLimit = 600 
+    m.Params.TimeLimit = 30
     
     # Solve
     m.optimize()
@@ -297,6 +308,13 @@ def solve_minla_gurobi(G: nx.Graph):
     
     return None, None, "INFEASIBLE"
 
+
+
+
+
+
+
+
 if __name__ == "__main__":
     # Generate a random general graph with N=25
     G = nx.erdos_renyi_graph(25, 0.5, seed=42)
@@ -307,7 +325,7 @@ if __name__ == "__main__":
         G = G.subgraph(largest_cc).copy()
         
     print(f"Solving MinLA for N={G.number_of_nodes()}...")
-    layout, cost, status = solve_minla_gurobi(G)
+    layout, cost, status = find_one_minimum_solution(G)
     
     if layout is not None:
         print(f"\nSolution Status: {status}")
