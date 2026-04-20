@@ -1,0 +1,3 @@
+n,m,bqm_is_normalized,space_type,energy,feasible,minla_cost,optimal_cost,relative_gap,time_s,seed
+25,146,False,linear,964.0,True,999.0,,,6.176,42
+25,146,False,geometric,1009.0,False,,,,5.721,789

@@ -5,8 +5,10 @@ import time
 import numpy as np
 import pandas as pd
 import networkx as nx
-from dwave.samplers import PathIntegralAnnealingSampler, SimulatedAnnealingSampler
+from dwave.samplers import PathIntegralAnnealingSampler
 from typing import Dict, Tuple, List
+from collections import defaultdict
+import warnings
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import Utils.MinLA as minla
@@ -16,8 +18,59 @@ DATASET_PATH = os.path.join(PARENT_DIR, "Dataset/quantum_dataset")
 RESULTS_DIR = os.path.join(PARENT_DIR, "Results/tuning_experiment")
 SEEDS = [42, 123, 456, 789, 999]  # 5 different seeds
 TIMESTAMP = time.strftime('%Y%m%d_%H%M%S')
-RESULTS_CSV = os.path.join(RESULTS_DIR, f"PIM_tuning_fixed_temperature_{TIMESTAMP}.csv")
+RESULTS_CSV = os.path.join(RESULTS_DIR, f"PIM_test_default_beta_range_{TIMESTAMP}.csv")
 
+def default_ising_beta_range(h, J,
+                              max_single_qubit_excitation_rate = 0.01,
+                              scale_T_with_N = True):
+    if not 0 < max_single_qubit_excitation_rate < 1:
+        raise ValueError('Targeted single qubit excitations rates must be in range (0,1)')
+
+    sum_abs_bias_dict = defaultdict(int, {k: abs(v) for k, v in h.items()})
+    if sum_abs_bias_dict:
+        min_abs_bias_dict = {k: v for k, v in sum_abs_bias_dict.items() if v != 0}
+    else:
+        min_abs_bias_dict = {}
+    for (k1, k2), v in J.items():
+        for k in [k1,k2]:
+            sum_abs_bias_dict[k] += abs(v)
+            if v != 0: 
+                if k in min_abs_bias_dict:
+                    min_abs_bias_dict[k] = min(abs(v),min_abs_bias_dict[k])
+                else:
+                    min_abs_bias_dict[k] = abs(v)
+
+    if not min_abs_bias_dict:
+        warn_msg = ('All bqm biases are zero (all energies are zero), this is '
+                    'likely a value error. Temperature range is set arbitrarily '
+                    'to [0.1,1]. Metropolis-Hastings update is non-ergodic.')
+        warnings.warn(warn_msg)
+        return([0.1,1])
+
+
+    max_effective_field = max(sum_abs_bias_dict.values(), default=0)
+
+    if max_effective_field == 0:
+        hot_beta = 1
+    else:
+        hot_beta = np.log(2) / (2*max_effective_field)
+
+    if len(min_abs_bias_dict)==0:
+        cold_beta = hot_beta
+    else:
+        values_array = np.array(list(min_abs_bias_dict.values()),dtype=float)
+        min_effective_field = np.min(values_array)
+        if scale_T_with_N:
+            number_min_gaps = np.sum(min_effective_field == values_array)
+        else:
+            number_min_gaps = 1
+        cold_beta = np.log(number_min_gaps/max_single_qubit_excitation_rate) / (2*min_effective_field)
+
+    return [hot_beta, cold_beta]
+
+def default_beta_range(bqm):
+    ising = bqm.spin
+    return default_ising_beta_range(ising.linear, ising.quadratic)
 
 def read_dataset():
     datasets = {}
@@ -62,21 +115,21 @@ def generate_field(space_type: str, beta_min: float, beta_max: float, num_sweeps
     return Hp_field, Hd_field
 
 
-def print_result(config_count: int, total_configs: int, normalized: bool, space_type: str, beta: float,
+def print_result(config_count: int, total_configs: int, normalized: bool, space_type: str,
                  feasible: bool, energy: float, minla_cost, optimal_cost, elapsed: float, seed: int):
     status = "✓" if feasible else "✗"
-    print(f"[{config_count}/{total_configs}] ({seed}) normalized={normalized} | {space_type:9} | beta={beta:.2e} | {status} "
+    print(f"[{config_count}/{total_configs}] ({seed}) normalized={normalized} | {space_type:9} | {status} "
           f"E={energy:12.2f} | cost={minla_cost} | optimal_cost={optimal_cost} | {elapsed:.2f}s")
 
 
 def run_experiment():
     datasets = read_dataset()
     
-    betas = np.array([1e-9, 5e-9, 1e-8, 5e-8, 1e-7, 5e-7, 1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 5, 10, 50, 100, 500, 1000, 5e3, 1e4, 5e4, 1e5, 5e5, 1e6, 5e6, 1e7, 5e7, 1e8, 5e8, 1e9])
+    # betas = np.array([1e-9, 5e-9, 1e-8, 5e-8, 1e-7, 5e-7, 1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1])
     # betas = np.array([5, 10, 50, 100, 500, 1000, 5e3, 1e4, 5e4, 1e5, 5e5, 1e6, 5e6, 1e7, 5e7, 1e8, 5e8, 1e9])
     # space_types = ['linear', 'geometric']
     space_types = ['linear', 'geometric']
-    normalized = [True]
+    normalized = [False]
    
     graph_data = datasets[25]['graphs'][0]
     G = nx.Graph()
@@ -85,15 +138,14 @@ def run_experiment():
     n = G.number_of_nodes()
     m = G.number_of_edges()
     
-    solver = SimulatedAnnealingSampler()
+    solver = PathIntegralAnnealingSampler()
     num_sweeps = 1000
     num_reads = 10
 
     configs = []
     for norm in normalized:
         for space_type in space_types:
-            for beta in betas:
-                configs.append((norm, space_type, beta))
+            configs.append((norm, space_type))
     
     total_configs = len(configs)
     num_seeds = len(SEEDS)
@@ -101,7 +153,7 @@ def run_experiment():
     processed = 0
 
     try:
-        for config_count, (norm, space_type, beta) in enumerate(configs, 1):
+        for config_count, (norm, space_type) in enumerate(configs, 1):
             # Run each configuration with all 5 seeds and collect results
             seed_results = []
             
@@ -113,25 +165,18 @@ def run_experiment():
 
                 t0 = time.time()
 
-                Hp_field, Hd_field = generate_field(space_type, beta, beta, num_sweeps)
+                temp = default_beta_range(bqm)
 
-                # sampleset = solver.sample(
-                #     bqm,
-                #     num_reads=num_reads,
-                #     num_sweeps=num_sweeps,
-                #     beta_schedule_type='custom',
-                #     seed=seed,
-                #     Hp_field=Hp_field,
-                #     Hd_field=Hd_field
-                # )
+                Hp_field, Hd_field = generate_field(space_type, temp[0], temp[1], num_sweeps)
 
                 sampleset = solver.sample(
                     bqm,
                     num_reads=num_reads,
                     num_sweeps=num_sweeps,
                     beta_schedule_type='custom',
-                    beta_schedule=Hp_field,
                     seed=seed,
+                    Hp_field=Hp_field,
+                    Hd_field=Hd_field
                 )
 
                 elapsed = time.time() - t0
@@ -172,7 +217,6 @@ def run_experiment():
                 seed_result = {
                     'n': n,
                     'm': m,
-                    'beta': beta,
                     'bqm_is_normalized': norm,
                     'space_type': space_type,
                     'energy': energy,
@@ -185,7 +229,7 @@ def run_experiment():
                 }
                 seed_results.append(seed_result)
                 
-                print_result(config_count, total_configs, norm, space_type, beta, feasible, energy, minla_cost, optimal_cost, elapsed, seed)
+                print_result(config_count, total_configs, norm, space_type, feasible, energy, minla_cost, optimal_cost, elapsed, seed)
             
             # Select best result from all seeds (prefer feasible, then lower energy)
             best_result = max(seed_results, key=lambda x: (x['feasible'], -x['energy']))
@@ -218,7 +262,6 @@ def run_experiment():
         best = df[df['feasible'] == 1].nsmallest(1, 'energy').iloc[0]
         print(f"\nLowest energy feasible solution:")
         print(f"  Space type: {best['space_type']}")
-        print(f"  Beta: {best['beta']:.2e}")
         print(f"  Energy: {best['energy']:.2f}")
         print(f"  MinLA cost: {best['minla_cost']}")
     print(f"{'='*70}")

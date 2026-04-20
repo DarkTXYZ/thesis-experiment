@@ -1,0 +1,2 @@
+n,m,beta,bqm_is_normalized,space_type,energy,feasible,minla_cost,optimal_cost,relative_gap,time_s,seed
+25,146,1e-09,True,linear,1.389830508472997,False,,,,0.059,42

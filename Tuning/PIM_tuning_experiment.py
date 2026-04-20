@@ -5,7 +5,7 @@ import time
 import numpy as np
 import pandas as pd
 import networkx as nx
-from dwave.samplers import PathIntegralAnnealingSampler
+from dwave.samplers import PathIntegralAnnealingSampler, SimulatedAnnealingSampler
 from typing import Dict, Tuple, List
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -14,7 +14,8 @@ import Utils.MinLA as minla
 PARENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATASET_PATH = os.path.join(PARENT_DIR, "Dataset/quantum_dataset")
 RESULTS_DIR = os.path.join(PARENT_DIR, "Results/tuning_experiment")
-SEEDS = [42, 123, 456, 789, 999]
+# SEEDS = [42, 123, 456, 789, 999]
+SEEDS = [42]
 TIMESTAMP = time.strftime('%Y%m%d_%H%M%S')
 
 
@@ -59,26 +60,29 @@ def generate_field_beta(
 
 
 def print_result(config_count: int, total_configs: int, normalized: bool, space_type: str, annealing_type: str, beta_min: float, beta_max: float,
-                 feasible: bool, energy: float, minla_cost, optimal_cost, elapsed: float):
+                 feasible: bool, energy: float, minla_cost, optimal_cost, elapsed: float, seed: int):
     status = "✓" if feasible else "✗"
     energy_str = f"{energy:12.2f}" if energy is not None else "         N/A"
-    print(f"[{config_count}/{total_configs}] normalized={normalized} | {space_type:9} | annealing={annealing_type} | beta=({beta_min:.2e}, {beta_max:.2e}) | {status} "
+    print(f"[{config_count}/{total_configs}] ({seed}) normalized={normalized} | {space_type:9} | annealing={annealing_type} | beta=({beta_min:.2e}, {beta_max:.2e}) | {status} "
           f"E={energy_str} | cost={minla_cost} | optimal_cost={optimal_cost} | {elapsed:.2f}s")
 
 
 def run_experiment():
     datasets = read_dataset()
     
-    # beta_range_min = np.array([1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1])
-    beta_range_min = np.array([1e-9])
-    # beta_range_max = np.array([1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1])
-    beta_range_max = np.array([1])
+    beta_range_min = np.array([1e-9, 5e-9, 1e-8, 5e-8, 1e-7, 5e-7, 1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 5, 10, 50, 100, 500, 1000, 5e3, 1e4, 5e4, 1e5, 5e5, 1e6, 5e6, 1e7, 5e7, 1e8, 5e8, 1e9])
+    # beta_range_min = np.array([1e-9])
+    beta_range_max = np.array([1e-9, 5e-9, 1e-8, 5e-8, 1e-7, 5e-7, 1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 5, 10, 50, 100, 500, 1000, 5e3, 1e4, 5e4, 1e5, 5e5, 1e6, 5e6, 1e7, 5e7, 1e8, 5e8, 1e9])
+
+    # beta_range_max = np.array([1])
     
-    space_types = ['linear', 'power (1/2)', 'power (2)']
-    annealing_types = ['default', 'fixed_Hp', 'fixed_Hd']
-    normalized = [True, False]
+    # space_types = ['linear', 'power (1/2)', 'power (2)', 'geometric']
+    space_types = ['linear']
+    # annealing_types = ['default', 'fixed_Hp', 'fixed_Hd']
+    annealing_types = ['default']
+    normalized = [False]
     
-    N = 10
+    N = 25
     num_graphs = 1
     
     graph_data = datasets[N]['graphs'][0]
@@ -88,7 +92,8 @@ def run_experiment():
     n = G.number_of_nodes()
     m = G.number_of_edges()
     
-    solver = PathIntegralAnnealingSampler()
+    # solver = PathIntegralAnnealingSampler()
+    solver = SimulatedAnnealingSampler()
     num_sweeps = 1000
     
     RESULTS_CSV = os.path.join(RESULTS_DIR, f"PIM_tuning_experiment_{N}v_{num_graphs}graphs_{TIMESTAMP}.csv")
@@ -122,14 +127,23 @@ def run_experiment():
 
                 Hp_field, Hd_field = generate_field_beta(space_type, annealing_type, num_sweeps, beta_min, beta_max)
 
+                # sampleset = solver.sample(
+                #     bqm,
+                #     num_reads=10,
+                #     num_sweeps=num_sweeps,
+                #     beta_schedule_type='custom',
+                #     seed=seed,
+                #     Hp_field=Hp_field,
+                #     Hd_field=Hd_field
+                # )
+
                 sampleset = solver.sample(
                     bqm,
                     num_reads=10,
                     num_sweeps=num_sweeps,
                     beta_schedule_type='custom',
+                    beta_schedule=Hp_field,
                     seed=seed,
-                    Hp_field=Hp_field,
-                    Hd_field=Hd_field
                 )
 
                 elapsed = time.time() - t0
@@ -189,8 +203,7 @@ def run_experiment():
                 all_results.append(row)
                 processed = config_count
 
-                print_result(config_count * num_seeds, total_configs * num_seeds, norm, space_type, annealing_type, beta_min, beta_max, best_feasible, best_energy, minla_cost, optimal_cost, elapsed)
-                print(f"    └─ Seed {seed} ({seed_idx}/{num_seeds})")
+                print_result(config_count * num_seeds, total_configs * num_seeds, norm, space_type, annealing_type, beta_min, beta_max, best_feasible, best_energy, minla_cost, optimal_cost, elapsed, seed)
                 
     except KeyboardInterrupt:
         print(f"\nInterrupted at config {processed}/{total_configs}. Partial results saved.")
