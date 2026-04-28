@@ -32,7 +32,7 @@ def convert_graph_data_to_nx(graph_data):
     G.add_edges_from(graph_data['edges'])
     return G
 
-def run_random_sampler_baseline(G, bqm, seeds, num_reads=10, verbose=True):
+def run_random_sampler_baseline(G, bqm, seeds, num_reads=10, display_mode="detailed"):
     """Run RandomSampler as a baseline for comparison."""
     n = G.number_of_nodes()
     best_feasible_costs = []
@@ -66,7 +66,7 @@ def run_random_sampler_baseline(G, bqm, seeds, num_reads=10, verbose=True):
             best_feasible_costs.append(best_feasible_cost)
             feasible_seed_count += 1
 
-        if verbose:
+        if display_mode == "detailed":
             print_seed_progress(
                 solver_name="RandomSampler",
                 seed=seed,
@@ -212,6 +212,47 @@ def print_size_summary(vertex_count, solver_name, feasibility_rate, mean_ratio, 
     print(f"    - Mean rho_UB        : {format_optional(mean_ratio, 4)}")
     print(f"    - Std dev rho_UB     : {format_optional(std_ratio, 4)}")
     print(f"    - Total runtime      : {total_time:.2f}s")
+    
+def print_graph_minimal_progress(
+    vertex_count,
+    graph_id,
+    total_graphs,
+    feasible_pim,
+    feasible_seed_count_pim,
+    approx_ratio_pim,
+    total_elapsed_pim,
+    feasible_random=None,
+    feasible_seed_count_random=None,
+    approx_ratio_random=None,
+    total_elapsed_random=None,
+    skip_random=False,
+):
+    """Print one compact progress line per graph."""
+
+    pim_status = "True" if feasible_pim else "False"
+    pim_ratio = f"{approx_ratio_pim:.4f}" if approx_ratio_pim is not None else "--"
+
+    msg = (
+        f"[N={vertex_count}] "
+        f"Graph {graph_id + 1}/{total_graphs} | "
+        f"PIA: feasible={pim_status}, "
+        f"seeds={feasible_seed_count_pim}/5, "
+        f"rho_UB={pim_ratio}, "
+        f"time={total_elapsed_pim:.2f}s"
+    )
+
+    if not skip_random:
+        random_status = "True" if feasible_random else "False"
+        random_ratio = f"{approx_ratio_random:.4f}" if approx_ratio_random is not None else "--"
+
+        msg += (
+            f" | RS: feasible={random_status}, "
+            f"seeds={feasible_seed_count_random}/5, "
+            f"rho_UB={random_ratio}, "
+            f"time={total_elapsed_random:.2f}s"
+        )
+
+    print(msg)
 
 def save_aggregate_summary(all_rows):
     """Generate aggregate summary statistics by vertex count and solver."""
@@ -250,7 +291,10 @@ def save_aggregate_summary(all_rows):
     
     return pd.DataFrame(summary_rows)
 
-def run_experiment(skip_random=False):
+def run_experiment(skip_random=False, display_mode="detailed"):
+    if display_mode not in {"detailed", "minimal"}:
+        raise ValueError("display_mode must be either 'detailed' or 'minimal'")
+    
     datasets = read_dataset()
 
     vertices_count = [5, 10, 15, 20, 25]
@@ -298,13 +342,14 @@ def run_experiment(skip_random=False):
             bqm = minla.generate_bqm_instance(G)
             lower_bound = graph["lower_bound"]
 
-            print_graph_start(
-                vertex_count=vertex_count,
-                graph_id=graph_id,
-                total_graphs=total_graphs,
-                G=G,
-                lower_bound=lower_bound,
-            )
+            if display_mode == "detailed":
+                print_graph_start(
+                    vertex_count=vertex_count,
+                    graph_id=graph_id,
+                    total_graphs=total_graphs,
+                    G=G,
+                    lower_bound=lower_bound,
+                )
 
             # =====================================================
             # PathIntegralAnnealingSampler
@@ -351,14 +396,15 @@ def run_experiment(skip_random=False):
                     best_feasible_costs_pim.append(best_feasible_cost)
                     feasible_seed_count_pim += 1
 
-                print_seed_progress(
-                    solver_name="PathIntegralAnnealingSampler",
-                    seed=seed,
-                    feasible_count=feasible_count,
-                    num_reads=num_reads,
-                    best_cost=best_feasible_cost,
-                    elapsed=elapsed,
-                )
+                if display_mode == "detailed":
+                    print_seed_progress(
+                        solver_name="PathIntegralAnnealingSampler",
+                        seed=seed,
+                        feasible_count=feasible_count,
+                        num_reads=num_reads,
+                        best_cost=best_feasible_cost,
+                        elapsed=elapsed,
+                    )
 
             total_time_pim_size += total_elapsed_pim
 
@@ -373,15 +419,16 @@ def run_experiment(skip_random=False):
                 approx_ratio_pim = None
                 feasible_pim = False
 
-            print_graph_solver_summary(
-                solver_name="PathIntegralAnnealingSampler",
-                feasible=feasible_pim,
-                avg_cost=avg_minla_cost_pim,
-                ratio=approx_ratio_pim,
-                total_time=total_elapsed_pim,
-                feasible_seed_count=feasible_seed_count_pim,
-                num_seeds=num_seeds,
-            )
+            if display_mode == "detailed":
+                print_graph_solver_summary(
+                    solver_name="PathIntegralAnnealingSampler",
+                    feasible=feasible_pim,
+                    avg_cost=avg_minla_cost_pim,
+                    ratio=approx_ratio_pim,
+                    total_time=total_elapsed_pim,
+                    feasible_seed_count=feasible_seed_count_pim,
+                    num_seeds=num_seeds,
+                )
 
             # =====================================================
             # RandomSampler Baseline
@@ -393,7 +440,7 @@ def run_experiment(skip_random=False):
                         bqm=bqm,
                         seeds=seeds,
                         num_reads=num_reads,
-                        verbose=True,
+                        display_mode=display_mode,
                     )
                 )
 
@@ -406,15 +453,16 @@ def run_experiment(skip_random=False):
                 else:
                     approx_ratio_random = None
 
-                print_graph_solver_summary(
-                    solver_name="RandomSampler",
-                    feasible=feasible_random,
-                    avg_cost=avg_minla_cost_random,
-                    ratio=approx_ratio_random,
-                    total_time=total_elapsed_random,
-                    feasible_seed_count=feasible_seed_count_random,
-                    num_seeds=num_seeds,
-                )
+                if display_mode == "detailed":
+                    print_graph_solver_summary(
+                        solver_name="RandomSampler",
+                        feasible=feasible_random,
+                        avg_cost=avg_minla_cost_random,
+                        ratio=approx_ratio_random,
+                        total_time=total_elapsed_random,
+                        feasible_seed_count=feasible_seed_count_random,
+                        num_seeds=num_seeds,
+                    )
 
             else:
                 feasible_random = False
@@ -477,6 +525,22 @@ def run_experiment(skip_random=False):
 
         avg_approx_ratio_random = np.mean(approx_ratios_random) if approx_ratios_random else None
         std_approx_ratio_random = np.std(approx_ratios_random, ddof=1) if len(approx_ratios_random) >= 2 else None
+        
+        if display_mode == "minimal":
+            print_graph_minimal_progress(
+                vertex_count=vertex_count,
+                graph_id=graph_id,
+                total_graphs=total_graphs,
+                feasible_pim=feasible_pim,
+                feasible_seed_count_pim=feasible_seed_count_pim,
+                approx_ratio_pim=approx_ratio_pim,
+                total_elapsed_pim=total_elapsed_pim,
+                feasible_random=feasible_random,
+                feasible_seed_count_random=feasible_seed_count_random,
+                approx_ratio_random=approx_ratio_random,
+                total_elapsed_random=total_elapsed_random,
+                skip_random=skip_random,
+            )
 
         print_section(f"SUMMARY FOR N={vertex_count}", char="-")
 
@@ -531,6 +595,15 @@ def run_experiment(skip_random=False):
     
 if __name__ == "__main__":
     skip_random = False
-    run_experiment(skip_random=skip_random)
+
+    # Options:
+    # display_mode = "detailed"  # seed-level progress
+    # display_mode = "minimal"   # one line per graph
+    display_mode = "minimal"
+
+    run_experiment(
+        skip_random=skip_random,
+        display_mode=display_mode,
+    )
             
             
