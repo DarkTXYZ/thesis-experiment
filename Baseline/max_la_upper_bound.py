@@ -2,11 +2,6 @@ import networkx as nx
 import numpy as np
 import math
 
-try:
-    import cvxpy as cp
-except ImportError:
-    cp = None
-
 class MaxLAUpperBounds:
     def __init__(self, G: nx.Graph):
         self.G = nx.Graph(G)
@@ -46,31 +41,6 @@ class MaxLAUpperBounds:
     def maxla_upper_bound_via_spectral_maxcut(self):
         return (self.n - 1) * self.maxcut_spectral_upper_bound()
 
-    def maxcut_sdp_upper_bound(self, solver=None):
-        if cp is None:
-            raise ImportError(
-                "cvxpy is required for the SDP bound. Install with: pip install cvxpy"
-            )
-
-        n = self.n
-        if n == 0:
-            return 0.0
-
-        L = nx.laplacian_matrix(self.G).astype(float).toarray()
-        X = cp.Variable((n, n), symmetric=True)
-        constraints = [cp.diag(X) == 1, X >> 0]
-        objective = cp.Maximize(0.25 * cp.trace(L @ X))
-        problem = cp.Problem(objective, constraints)
-        problem.solve(solver=solver, verbose=False)
-
-        if problem.status not in ("optimal", "optimal_inaccurate"):
-            raise RuntimeError(f"SDP did not solve successfully. Status: {problem.status}")
-
-        return float(problem.value)
-
-    def maxla_upper_bound_via_sdp_maxcut(self, solver=None):
-        return (self.n - 1) * self.maxcut_sdp_upper_bound(solver=solver)
-
     def evaluate_all(self, include_exact_cut_methods=False, include_sdp=False, solver=None):
         results = {
             "Naive Method": self.naive_method(),
@@ -83,9 +53,6 @@ class MaxLAUpperBounds:
         if include_exact_cut_methods:
             results["Exact MaxCut Bound"] = self.maxla_upper_bound_via_exact_maxcut()
             results["Exact Cut-Profile Bound"] = self.cut_profile_bound_exact()
-
-        if include_sdp:
-            results["SDP MaxCut Bound"] = self.maxla_upper_bound_via_sdp_maxcut(solver=solver)
 
         return results
 
