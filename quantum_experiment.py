@@ -162,20 +162,20 @@ def run_experiment(skip_random=False):
                 
                 solver = PathIntegralAnnealingSampler()
 
-                temp = default_beta_range(bqm)
+                # temp = default_beta_range(bqm)
 
-                beta_schedule_type = 'custom'
-                Hp_field = np.linspace(temp[0], temp[1], num=num_sweeps)
-                Hd_field = np.linspace(temp[1], temp[0], num=num_sweeps)
+                # beta_schedule_type = 'custom'
+                # Hp_field = np.linspace(temp[0], temp[1], num=num_sweeps)
+                # Hd_field = np.linspace(temp[1], temp[0], num=num_sweeps)
 
                 sampleset = solver.sample(
                     bqm,
                     num_reads=10,
                     num_sweeps=num_sweeps,
                     # beta_schedule_type='custom',
-                    beta_schedule_type=beta_schedule_type,
-                    Hp_field=Hp_field,
-                    Hd_field=Hd_field,
+                    # beta_schedule_type=beta_schedule_type,
+                    # Hp_field=Hp_field,
+                    # Hd_field=Hd_field,
                     seed=seed
                 )
                 

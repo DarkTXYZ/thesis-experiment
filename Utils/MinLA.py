@@ -131,10 +131,19 @@ def decode_solution(raw_sample: Dict, n: int) -> Tuple[np.ndarray, bool]:
 
 def check_feasibility(sol: np.ndarray, n: int) -> bool:
     for u in range(n):
-        if np.any((sol[u, :-1] == 0) & (sol[u, 1:] == 1)):
+        for k in range(n-1):
+            if sol[u, k] == 0 and sol[u, k+1] == 1:
+                return False
+    
+    for k in range(n):
+        cnt = 0
+        for u in range(n):
+            cnt += sol[u, k]
+        
+        if cnt != n - k:
             return False
-    labels = np.sum(sol, axis=1)
-    return len(np.unique(labels)) == n and np.all(labels > 0) and np.all(labels <= n)
+        
+    return True
 
 
 def find_one_minimum_solution(graph: nx.Graph):
