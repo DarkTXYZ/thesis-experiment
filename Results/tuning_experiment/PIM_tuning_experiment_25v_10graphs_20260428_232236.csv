@@ -1,0 +1,201 @@
+graph_idx,n,m,beta_min,beta_max,bqm_is_normalized,space_type,annealing_type,seed,energy,feasible,minla_cost,feasibility_count,time_s
+0,25,151,1e-09,1,False,linear,default,42,,False,,0,7.906
+0,25,151,1e-09,1,False,linear,default,123,,False,,0,7.876
+0,25,151,1e-09,1,False,linear,default,456,,False,,0,8.028
+0,25,151,1e-09,1,False,linear,default,789,,False,,0,8.121
+0,25,151,1e-09,1,False,linear,default,999,,False,,0,8.197
+0,25,151,1e-09,1,False,power (1/2),default,42,,False,,0,8.052
+0,25,151,1e-09,1,False,power (1/2),default,123,,False,,0,7.562
+0,25,151,1e-09,1,False,power (1/2),default,456,,False,,0,7.7
+0,25,151,1e-09,1,False,power (1/2),default,789,,False,,0,7.643
+0,25,151,1e-09,1,False,power (1/2),default,999,,False,,0,12.363
+0,25,151,1e-09,1,False,power (2),default,42,,False,,0,19.483
+0,25,151,1e-09,1,False,power (2),default,123,,False,,0,11.285
+0,25,151,1e-09,1,False,power (2),default,456,,False,,0,8.932
+0,25,151,1e-09,1,False,power (2),default,789,,False,,0,8.886
+0,25,151,1e-09,1,False,power (2),default,999,,False,,0,8.84
+0,25,151,1e-09,1,False,geometric,default,42,,False,,0,10.794
+0,25,151,1e-09,1,False,geometric,default,123,,False,,0,10.727
+0,25,151,1e-09,1,False,geometric,default,456,,False,,0,10.592
+0,25,151,1e-09,1,False,geometric,default,789,,False,,0,10.522
+0,25,151,1e-09,1,False,geometric,default,999,,False,,0,10.828
+1,25,145,1e-09,1,False,linear,default,42,,False,,0,8.715
+1,25,145,1e-09,1,False,linear,default,123,963.0,True,976.0,1,10.385
+1,25,145,1e-09,1,False,linear,default,456,,False,,0,8.917
+1,25,145,1e-09,1,False,linear,default,789,,False,,0,8.08
+1,25,145,1e-09,1,False,linear,default,999,,False,,0,8.068
+1,25,145,1e-09,1,False,power (1/2),default,42,,False,,0,7.383
+1,25,145,1e-09,1,False,power (1/2),default,123,,False,,0,7.453
+1,25,145,1e-09,1,False,power (1/2),default,456,,False,,0,7.682
+1,25,145,1e-09,1,False,power (1/2),default,789,,False,,0,7.46
+1,25,145,1e-09,1,False,power (1/2),default,999,,False,,0,7.672
+1,25,145,1e-09,1,False,power (2),default,42,,False,,0,9.076
+1,25,145,1e-09,1,False,power (2),default,123,,False,,0,8.827
+1,25,145,1e-09,1,False,power (2),default,456,,False,,0,8.868
+1,25,145,1e-09,1,False,power (2),default,789,,False,,0,8.887
+1,25,145,1e-09,1,False,power (2),default,999,,False,,0,8.95
+1,25,145,1e-09,1,False,geometric,default,42,,False,,0,10.514
+1,25,145,1e-09,1,False,geometric,default,123,,False,,0,11.224
+1,25,145,1e-09,1,False,geometric,default,456,,False,,0,10.697
+1,25,145,1e-09,1,False,geometric,default,789,,False,,0,10.743
+1,25,145,1e-09,1,False,geometric,default,999,,False,,0,10.611
+2,25,142,1e-09,1,False,linear,default,42,984.0,True,951.0,3,10.74
+2,25,142,1e-09,1,False,linear,default,123,1022.0,True,962.0,1,8.548
+2,25,142,1e-09,1,False,linear,default,456,1001.0,True,983.0,2,8.265
+2,25,142,1e-09,1,False,linear,default,789,,False,,0,8.382
+2,25,142,1e-09,1,False,linear,default,999,1010.0,True,933.0,2,8.367
+2,25,142,1e-09,1,False,power (1/2),default,42,,False,,0,7.729
+2,25,142,1e-09,1,False,power (1/2),default,123,,False,,0,7.862
+2,25,142,1e-09,1,False,power (1/2),default,456,,False,,0,7.718
+2,25,142,1e-09,1,False,power (1/2),default,789,,False,,0,7.7
+2,25,142,1e-09,1,False,power (1/2),default,999,,False,,0,7.673
+2,25,142,1e-09,1,False,power (2),default,42,1062.0,True,983.0,1,8.993
+2,25,142,1e-09,1,False,power (2),default,123,1007.0,True,958.0,2,8.829
+2,25,142,1e-09,1,False,power (2),default,456,1016.0,True,938.0,2,8.808
+2,25,142,1e-09,1,False,power (2),default,789,,False,,0,9.882
+2,25,142,1e-09,1,False,power (2),default,999,1011.0,True,951.0,3,10.151
+2,25,142,1e-09,1,False,geometric,default,42,,False,,0,12.021
+2,25,142,1e-09,1,False,geometric,default,123,,False,,0,12.217
+2,25,142,1e-09,1,False,geometric,default,456,,False,,0,10.619
+2,25,142,1e-09,1,False,geometric,default,789,,False,,0,10.835
+2,25,142,1e-09,1,False,geometric,default,999,,False,,0,10.988
+3,25,146,1e-09,1,False,linear,default,42,,False,,0,8.24
+3,25,146,1e-09,1,False,linear,default,123,,False,,0,8.073
+3,25,146,1e-09,1,False,linear,default,456,,False,,0,8.116
+3,25,146,1e-09,1,False,linear,default,789,,False,,0,8.314
+3,25,146,1e-09,1,False,linear,default,999,1092.0,True,1012.0,1,8.428
+3,25,146,1e-09,1,False,power (1/2),default,42,,False,,0,8.062
+3,25,146,1e-09,1,False,power (1/2),default,123,,False,,0,8.984
+3,25,146,1e-09,1,False,power (1/2),default,456,,False,,0,8.357
+3,25,146,1e-09,1,False,power (1/2),default,789,,False,,0,7.875
+3,25,146,1e-09,1,False,power (1/2),default,999,,False,,0,8.332
+3,25,146,1e-09,1,False,power (2),default,42,,False,,0,9.648
+3,25,146,1e-09,1,False,power (2),default,123,,False,,0,11.51
+3,25,146,1e-09,1,False,power (2),default,456,,False,,0,10.013
+3,25,146,1e-09,1,False,power (2),default,789,,False,,0,8.827
+3,25,146,1e-09,1,False,power (2),default,999,,False,,0,13.817
+3,25,146,1e-09,1,False,geometric,default,42,,False,,0,15.305
+3,25,146,1e-09,1,False,geometric,default,123,,False,,0,13.202
+3,25,146,1e-09,1,False,geometric,default,456,,False,,0,10.644
+3,25,146,1e-09,1,False,geometric,default,789,,False,,0,11.876
+3,25,146,1e-09,1,False,geometric,default,999,,False,,0,11.202
+4,25,150,1e-09,1,False,linear,default,42,,False,,0,8.845
+4,25,150,1e-09,1,False,linear,default,123,,False,,0,8.185
+4,25,150,1e-09,1,False,linear,default,456,1083.0,True,1074.0,1,8.297
+4,25,150,1e-09,1,False,linear,default,789,,False,,0,9.723
+4,25,150,1e-09,1,False,linear,default,999,,False,,0,9.481
+4,25,150,1e-09,1,False,power (1/2),default,42,,False,,0,9.485
+4,25,150,1e-09,1,False,power (1/2),default,123,,False,,0,9.451
+4,25,150,1e-09,1,False,power (1/2),default,456,,False,,0,8.648
+4,25,150,1e-09,1,False,power (1/2),default,789,,False,,0,10.243
+4,25,150,1e-09,1,False,power (1/2),default,999,,False,,0,7.809
+4,25,150,1e-09,1,False,power (2),default,42,,False,,0,8.731
+4,25,150,1e-09,1,False,power (2),default,123,1066.0,True,1016.0,1,8.844
+4,25,150,1e-09,1,False,power (2),default,456,,False,,0,8.78
+4,25,150,1e-09,1,False,power (2),default,789,,False,,0,8.847
+4,25,150,1e-09,1,False,power (2),default,999,,False,,0,8.862
+4,25,150,1e-09,1,False,geometric,default,42,,False,,0,10.836
+4,25,150,1e-09,1,False,geometric,default,123,,False,,0,10.823
+4,25,150,1e-09,1,False,geometric,default,456,,False,,0,12.782
+4,25,150,1e-09,1,False,geometric,default,789,,False,,0,11.834
+4,25,150,1e-09,1,False,geometric,default,999,,False,,0,13.468
+5,25,140,1e-09,1,False,linear,default,42,927.0,True,927.0,2,8.622
+5,25,140,1e-09,1,False,linear,default,123,1053.0,True,916.0,1,8.231
+5,25,140,1e-09,1,False,linear,default,456,,False,,0,8.194
+5,25,140,1e-09,1,False,linear,default,789,,False,,0,8.07
+5,25,140,1e-09,1,False,linear,default,999,,False,,0,8.164
+5,25,140,1e-09,1,False,power (1/2),default,42,,False,,0,7.735
+5,25,140,1e-09,1,False,power (1/2),default,123,,False,,0,7.776
+5,25,140,1e-09,1,False,power (1/2),default,456,,False,,0,8.029
+5,25,140,1e-09,1,False,power (1/2),default,789,,False,,0,8.281
+5,25,140,1e-09,1,False,power (1/2),default,999,,False,,0,8.279
+5,25,140,1e-09,1,False,power (2),default,42,,False,,0,9.674
+5,25,140,1e-09,1,False,power (2),default,123,915.0,True,915.0,1,10.308
+5,25,140,1e-09,1,False,power (2),default,456,940.0,True,929.0,1,10.642
+5,25,140,1e-09,1,False,power (2),default,789,,False,,0,10.632
+5,25,140,1e-09,1,False,power (2),default,999,973.0,True,951.0,1,10.186
+5,25,140,1e-09,1,False,geometric,default,42,,False,,0,12.362
+5,25,140,1e-09,1,False,geometric,default,123,,False,,0,12.82
+5,25,140,1e-09,1,False,geometric,default,456,,False,,0,11.007
+5,25,140,1e-09,1,False,geometric,default,789,,False,,0,10.687
+5,25,140,1e-09,1,False,geometric,default,999,,False,,0,11.078
+6,25,142,1e-09,1,False,linear,default,42,951.0,True,951.0,2,9.422
+6,25,142,1e-09,1,False,linear,default,123,1009.0,True,933.0,1,9.305
+6,25,142,1e-09,1,False,linear,default,456,980.0,True,956.0,1,8.392
+6,25,142,1e-09,1,False,linear,default,789,1026.0,True,918.0,2,8.38
+6,25,142,1e-09,1,False,linear,default,999,,False,,0,8.186
+6,25,142,1e-09,1,False,power (1/2),default,42,1071.0,True,967.0,1,9.267
+6,25,142,1e-09,1,False,power (1/2),default,123,950.0,True,966.0,1,8.593
+6,25,142,1e-09,1,False,power (1/2),default,456,,False,,0,7.841
+6,25,142,1e-09,1,False,power (1/2),default,789,,False,,0,7.656
+6,25,142,1e-09,1,False,power (1/2),default,999,946.0,True,971.0,1,7.706
+6,25,142,1e-09,1,False,power (2),default,42,987.0,True,940.0,1,9.021
+6,25,142,1e-09,1,False,power (2),default,123,1031.0,True,960.0,1,9.075
+6,25,142,1e-09,1,False,power (2),default,456,1002.0,True,947.0,1,8.927
+6,25,142,1e-09,1,False,power (2),default,789,,False,,0,10.313
+6,25,142,1e-09,1,False,power (2),default,999,1010.0,True,979.0,1,9.02
+6,25,142,1e-09,1,False,geometric,default,42,,False,,0,10.683
+6,25,142,1e-09,1,False,geometric,default,123,,False,,0,10.644
+6,25,142,1e-09,1,False,geometric,default,456,,False,,0,10.785
+6,25,142,1e-09,1,False,geometric,default,789,,False,,0,10.944
+6,25,142,1e-09,1,False,geometric,default,999,,False,,0,10.802
+7,25,154,1e-09,1,False,linear,default,42,,False,,0,8.264
+7,25,154,1e-09,1,False,linear,default,123,,False,,0,8.262
+7,25,154,1e-09,1,False,linear,default,456,,False,,0,8.117
+7,25,154,1e-09,1,False,linear,default,789,,False,,0,8.163
+7,25,154,1e-09,1,False,linear,default,999,1147.0,True,1080.0,1,8.299
+7,25,154,1e-09,1,False,power (1/2),default,42,,False,,0,7.819
+7,25,154,1e-09,1,False,power (1/2),default,123,,False,,0,7.725
+7,25,154,1e-09,1,False,power (1/2),default,456,,False,,0,7.718
+7,25,154,1e-09,1,False,power (1/2),default,789,,False,,0,8.358
+7,25,154,1e-09,1,False,power (1/2),default,999,,False,,0,9.157
+7,25,154,1e-09,1,False,power (2),default,42,1105.0,True,1131.0,1,9.059
+7,25,154,1e-09,1,False,power (2),default,123,,False,,0,9.027
+7,25,154,1e-09,1,False,power (2),default,456,,False,,0,8.907
+7,25,154,1e-09,1,False,power (2),default,789,,False,,0,9.158
+7,25,154,1e-09,1,False,power (2),default,999,,False,,0,10.524
+7,25,154,1e-09,1,False,geometric,default,42,,False,,0,12.905
+7,25,154,1e-09,1,False,geometric,default,123,,False,,0,11.366
+7,25,154,1e-09,1,False,geometric,default,456,,False,,0,10.913
+7,25,154,1e-09,1,False,geometric,default,789,,False,,0,10.782
+7,25,154,1e-09,1,False,geometric,default,999,,False,,0,11.213
+8,25,150,1e-09,1,False,linear,default,42,,False,,0,8.161
+8,25,150,1e-09,1,False,linear,default,123,1091.0,True,1015.0,1,8.392
+8,25,150,1e-09,1,False,linear,default,456,,False,,0,8.314
+8,25,150,1e-09,1,False,linear,default,789,1079.0,True,1018.0,2,8.973
+8,25,150,1e-09,1,False,linear,default,999,1164.0,True,1025.0,4,8.976
+8,25,150,1e-09,1,False,power (1/2),default,42,,False,,0,8.458
+8,25,150,1e-09,1,False,power (1/2),default,123,,False,,0,7.824
+8,25,150,1e-09,1,False,power (1/2),default,456,,False,,0,7.888
+8,25,150,1e-09,1,False,power (1/2),default,789,,False,,0,7.817
+8,25,150,1e-09,1,False,power (1/2),default,999,,False,,0,8.017
+8,25,150,1e-09,1,False,power (2),default,42,1074.0,True,1056.0,1,8.974
+8,25,150,1e-09,1,False,power (2),default,123,,False,,0,9.138
+8,25,150,1e-09,1,False,power (2),default,456,1111.0,True,1038.0,1,9.078
+8,25,150,1e-09,1,False,power (2),default,789,1094.0,True,1041.0,1,9.234
+8,25,150,1e-09,1,False,power (2),default,999,1103.0,True,1017.0,2,8.931
+8,25,150,1e-09,1,False,geometric,default,42,,False,,0,12.814
+8,25,150,1e-09,1,False,geometric,default,123,,False,,0,14.53
+8,25,150,1e-09,1,False,geometric,default,456,,False,,0,13.539
+8,25,150,1e-09,1,False,geometric,default,789,,False,,0,13.216
+8,25,150,1e-09,1,False,geometric,default,999,,False,,0,12.762
+9,25,151,1e-09,1,False,linear,default,42,1024.0,True,1004.0,3,10.16
+9,25,151,1e-09,1,False,linear,default,123,1036.0,True,1035.0,1,9.387
+9,25,151,1e-09,1,False,linear,default,456,991.0,True,991.0,3,8.91
+9,25,151,1e-09,1,False,linear,default,789,,False,,0,8.227
+9,25,151,1e-09,1,False,linear,default,999,1082.0,True,1030.0,1,8.393
+9,25,151,1e-09,1,False,power (1/2),default,42,1168.0,True,991.0,2,7.632
+9,25,151,1e-09,1,False,power (1/2),default,123,,False,,0,7.749
+9,25,151,1e-09,1,False,power (1/2),default,456,,False,,0,7.779
+9,25,151,1e-09,1,False,power (1/2),default,789,,False,,0,7.793
+9,25,151,1e-09,1,False,power (1/2),default,999,,False,,0,7.877
+9,25,151,1e-09,1,False,power (2),default,42,,False,,0,11.917
+9,25,151,1e-09,1,False,power (2),default,123,,False,,0,10.645
+9,25,151,1e-09,1,False,power (2),default,456,1119.0,True,1016.0,1,9.241
+9,25,151,1e-09,1,False,power (2),default,789,1034.0,True,985.0,1,9.0
+9,25,151,1e-09,1,False,power (2),default,999,,False,,0,9.278
+9,25,151,1e-09,1,False,geometric,default,42,,False,,0,10.786
+9,25,151,1e-09,1,False,geometric,default,123,,False,,0,11.086
+9,25,151,1e-09,1,False,geometric,default,456,,False,,0,11.102
+9,25,151,1e-09,1,False,geometric,default,789,,False,,0,10.873
+9,25,151,1e-09,1,False,geometric,default,999,,False,,0,12.889
