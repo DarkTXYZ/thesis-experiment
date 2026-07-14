@@ -10,6 +10,7 @@ class SolverResult:
     ordering: np.ndarray
     is_feasible: bool
     raw_sample: dict = None
+    time_used: float = None
 
 
 class BaseSolver(ABC):

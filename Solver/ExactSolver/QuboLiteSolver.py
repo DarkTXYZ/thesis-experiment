@@ -7,6 +7,7 @@ from qubolite import qubo, solving
 from pyqubo import Array
 import networkx as nx
 import numpy as np
+import time
 from penalty_coefficients import calculate_lucas_bound, calculate_exact_bound
 
 
@@ -79,16 +80,62 @@ class QuboLiteSolver(BaseSolver):
         return u * n + k
 
     def solve(self, graph: nx.Graph) -> SolverResult:
+        start_time = time.time()
         n = graph.number_of_nodes()
         bqm = self._build_qubo(graph)
         Q_matrix, offset = self._extract_Q_matrix(bqm, n)
         
-        Q = qubo(Q_matrix)
-        solution, energy = solving.brute_force(Q, max_threads=self.max_threads)
+        # Enumerate all solutions to find all optimal ones
+        all_solutions = self._enumerate_all_solutions(Q_matrix, n, offset)
         
-        ordering, is_feasible = self._decode_solution(solution, n)
+        time_used = time.time() - start_time
         
-        return SolverResult(energy + offset, ordering, is_feasible)
+        # Return the first optimal solution as the primary result
+        if all_solutions:
+            ordering, energy, solutions = all_solutions
+            result = SolverResult(energy, ordering, True, time_used=time_used, raw_sample={"all_solutions": solutions})
+            return result
+        else:
+            # Fallback to single brute force solution if enumeration fails
+            Q = qubo(Q_matrix)
+            solution, energy = solving.brute_force(Q, max_threads=self.max_threads)
+            ordering, is_feasible = self._decode_solution(solution, n)
+            return SolverResult(energy + offset, ordering, is_feasible, time_used=time_used)
+    
+    def _enumerate_all_solutions(self, Q_matrix: np.ndarray, n: int, offset: float):
+        """Enumerate all binary assignments and find all optimal solutions."""
+        num_vars = n * n
+        min_energy = float('inf')
+        optimal_solutions = []
+        
+        # Iterate through all possible binary assignments
+        for assignment in range(2 ** num_vars):
+            # Convert assignment to binary vector
+            x = np.array([(assignment >> i) & 1 for i in range(num_vars)], dtype=int)
+            
+            # Compute energy: E = x^T Q x
+            energy = x @ Q_matrix @ x + offset
+            
+            # Decode and check feasibility
+            ordering, is_feasible = self._decode_solution(x, n)
+            
+            # Only consider feasible solutions
+            if not is_feasible:
+                continue
+            
+            # Track minimum energy and collect solutions
+            if energy < min_energy:
+                min_energy = energy
+                optimal_solutions = [(tuple(ordering), energy, x.copy())]
+            elif energy == min_energy:
+                optimal_solutions.append((tuple(ordering), energy, x.copy()))
+        
+        if optimal_solutions:
+            # Return best ordering, its energy, and all solutions with that energy
+            best_ordering = np.array(optimal_solutions[0][0])
+            return best_ordering, min_energy, optimal_solutions
+        
+        return None
 
     def _decode_solution(self, solution: np.ndarray, num_nodes: int) -> tuple[np.ndarray, bool]:
         n = num_nodes
@@ -112,7 +159,7 @@ class QuboLiteSolver(BaseSolver):
 
 
 if __name__ == "__main__":
-    graph = nx.erdos_renyi_graph(4, 0.5, seed=42)
+    graph = nx.erdos_renyi_graph(3, 1, seed=42)
     
     solver = QuboLiteSolver()
     solver.configure(max_threads=1)
@@ -121,3 +168,4 @@ if __name__ == "__main__":
     print("Energy:", result.energy)
     print("Ordering:", result.ordering)
     print("Feasible:", result.is_feasible)
+    print("Time Used:", result.time_used)
