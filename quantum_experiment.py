@@ -85,57 +85,57 @@ def run_random_sampler_baseline(G, bqm, seeds, num_reads=10, display_mode="detai
 
     return feasible, avg_minla_cost, total_elapsed, feasible_seed_count
 
-def default_ising_beta_range(h, J,
-                              max_single_qubit_excitation_rate = 0.01,
-                              scale_T_with_N = True):
-    if not 0 < max_single_qubit_excitation_rate < 1:
-        raise ValueError('Targeted single qubit excitations rates must be in range (0,1)')
+# def default_ising_beta_range(h, J,
+#                               max_single_qubit_excitation_rate = 0.01,
+#                               scale_T_with_N = True):
+#     if not 0 < max_single_qubit_excitation_rate < 1:
+#         raise ValueError('Targeted single qubit excitations rates must be in range (0,1)')
 
-    sum_abs_bias_dict = defaultdict(int, {k: abs(v) for k, v in h.items()})
-    if sum_abs_bias_dict:
-        min_abs_bias_dict = {k: v for k, v in sum_abs_bias_dict.items() if v != 0}
-    else:
-        min_abs_bias_dict = {}
-    for (k1, k2), v in J.items():
-        for k in [k1,k2]:
-            sum_abs_bias_dict[k] += abs(v)
-            if v != 0: 
-                if k in min_abs_bias_dict:
-                    min_abs_bias_dict[k] = min(abs(v),min_abs_bias_dict[k])
-                else:
-                    min_abs_bias_dict[k] = abs(v)
+#     sum_abs_bias_dict = defaultdict(int, {k: abs(v) for k, v in h.items()})
+#     if sum_abs_bias_dict:
+#         min_abs_bias_dict = {k: v for k, v in sum_abs_bias_dict.items() if v != 0}
+#     else:
+#         min_abs_bias_dict = {}
+#     for (k1, k2), v in J.items():
+#         for k in [k1,k2]:
+#             sum_abs_bias_dict[k] += abs(v)
+#             if v != 0: 
+#                 if k in min_abs_bias_dict:
+#                     min_abs_bias_dict[k] = min(abs(v),min_abs_bias_dict[k])
+#                 else:
+#                     min_abs_bias_dict[k] = abs(v)
 
-    if not min_abs_bias_dict:
-        warn_msg = ('All bqm biases are zero (all energies are zero), this is '
-                    'likely a value error. Temperature range is set arbitrarily '
-                    'to [0.1,1]. Metropolis-Hastings update is non-ergodic.')
-        warnings.warn(warn_msg)
-        return([0.1,1])
+#     if not min_abs_bias_dict:
+#         warn_msg = ('All bqm biases are zero (all energies are zero), this is '
+#                     'likely a value error. Temperature range is set arbitrarily '
+#                     'to [0.1,1]. Metropolis-Hastings update is non-ergodic.')
+#         warnings.warn(warn_msg)
+#         return([0.1,1])
 
 
-    max_effective_field = max(sum_abs_bias_dict.values(), default=0)
+#     max_effective_field = max(sum_abs_bias_dict.values(), default=0)
 
-    if max_effective_field == 0:
-        hot_beta = 1
-    else:
-        hot_beta = np.log(2) / (2*max_effective_field)
+#     if max_effective_field == 0:
+#         hot_beta = 1
+#     else:
+#         hot_beta = np.log(2) / (2*max_effective_field)
 
-    if len(min_abs_bias_dict)==0:
-        cold_beta = hot_beta
-    else:
-        values_array = np.array(list(min_abs_bias_dict.values()),dtype=float)
-        min_effective_field = np.min(values_array)
-        if scale_T_with_N:
-            number_min_gaps = np.sum(min_effective_field == values_array)
-        else:
-            number_min_gaps = 1
-        cold_beta = np.log(number_min_gaps/max_single_qubit_excitation_rate) / (2*min_effective_field)
+#     if len(min_abs_bias_dict)==0:
+#         cold_beta = hot_beta
+#     else:
+#         values_array = np.array(list(min_abs_bias_dict.values()),dtype=float)
+#         min_effective_field = np.min(values_array)
+#         if scale_T_with_N:
+#             number_min_gaps = np.sum(min_effective_field == values_array)
+#         else:
+#             number_min_gaps = 1
+#         cold_beta = np.log(number_min_gaps/max_single_qubit_excitation_rate) / (2*min_effective_field)
 
-    return [hot_beta, cold_beta]
+#     return [hot_beta, cold_beta]
 
-def default_beta_range(bqm):
-    ising = bqm.spin
-    return default_ising_beta_range(ising.linear, ising.quadratic)
+# def default_beta_range(bqm):
+#     ising = bqm.spin
+#     return default_ising_beta_range(ising.linear, ising.quadratic)
 
 def format_optional(value, digits=4):
     """Format a numeric value or return N/A."""
