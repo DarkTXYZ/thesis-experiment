@@ -2,12 +2,12 @@ solver,num_sweeps,beta_min,beta_max,beta_schedule_type,feasibility_rate,mean_app
 PathIntegralAnnealingSampler,100,1e-09,0.1,geometric,0.0,,0.22812,25
 PathIntegralAnnealingSampler,100,1e-09,0.1,linear,0.0,,0.22872,25
 PathIntegralAnnealingSampler,100,1e-09,0.3,geometric,0.0,,0.22763999999999998,25
-PathIntegralAnnealingSampler,100,1e-09,0.3,linear,0.08,1.5712962962962962,0.22891999999999998,25
+PathIntegralAnnealingSampler,100,1e-09,0.3,linear,0.08,1.571296296296296,0.22891999999999998,25
 PathIntegralAnnealingSampler,100,1e-09,0.5,geometric,0.0,,0.22776,25
 PathIntegralAnnealingSampler,100,1e-09,0.5,linear,0.28,1.4782356532356526,0.22943999999999995,25
 PathIntegralAnnealingSampler,100,1e-09,1.0,geometric,0.2,1.6309259259259257,0.22139999999999996,25
 PathIntegralAnnealingSampler,100,1e-09,1.0,linear,0.52,1.478216085908393,0.22311999999999999,25
-PathIntegralAnnealingSampler,100,1e-09,5.0,geometric,0.36,1.711522633744856,0.22988,25
+PathIntegralAnnealingSampler,100,1e-09,5.0,geometric,0.36,1.7115226337448557,0.22988,25
 PathIntegralAnnealingSampler,100,1e-09,5.0,linear,0.28,1.5458994708994709,0.22871999999999995,25
 PathIntegralAnnealingSampler,100,1e-09,10.0,geometric,0.28,1.6513227513227513,0.22160000000000005,25
 PathIntegralAnnealingSampler,100,1e-09,10.0,linear,0.2,1.5796296296296293,0.22163999999999998,25
@@ -17,7 +17,7 @@ PathIntegralAnnealingSampler,100,0.01,0.1,geometric,0.0,,0.22835999999999998,25
 PathIntegralAnnealingSampler,100,0.01,0.1,linear,0.0,,0.22963999999999998,25
 PathIntegralAnnealingSampler,100,0.01,0.3,geometric,0.04,1.775,0.22891999999999998,25
 PathIntegralAnnealingSampler,100,0.01,0.3,linear,0.0,,0.23131999999999997,25
-PathIntegralAnnealingSampler,100,0.01,0.5,geometric,0.12,1.5509259259259256,0.22927999999999998,25
+PathIntegralAnnealingSampler,100,0.01,0.5,geometric,0.12,1.5509259259259258,0.22927999999999998,25
 PathIntegralAnnealingSampler,100,0.01,0.5,linear,0.4,1.447222222222222,0.22935999999999995,25
 PathIntegralAnnealingSampler,100,0.01,1.0,geometric,0.4,1.4257407407407408,0.22519999999999998,25
 PathIntegralAnnealingSampler,100,0.01,1.0,linear,0.44,1.4004338254338253,0.22476,25
@@ -48,7 +48,7 @@ PathIntegralAnnealingSampler,100,0.5,1.0,linear,0.4,1.3931481481481478,0.2284399
 PathIntegralAnnealingSampler,100,0.5,5.0,geometric,0.4,1.5610185185185181,0.23183999999999996,25
 PathIntegralAnnealingSampler,100,0.5,5.0,linear,0.24,1.6287037037037038,0.22776,25
 PathIntegralAnnealingSampler,100,0.5,10.0,geometric,0.4,1.6262037037037036,0.23404,25
-PathIntegralAnnealingSampler,100,0.5,10.0,linear,0.12,1.4651234567901232,0.23464,25
+PathIntegralAnnealingSampler,100,0.5,10.0,linear,0.12,1.465123456790123,0.23464,25
 PathIntegralAnnealingSampler,500,1e-09,0.1,geometric,0.0,,1.11656,25
 PathIntegralAnnealingSampler,500,1e-09,0.1,linear,0.0,,1.12308,25
 PathIntegralAnnealingSampler,500,1e-09,0.3,geometric,0.0,,1.11676,25
@@ -58,7 +58,7 @@ PathIntegralAnnealingSampler,500,1e-09,0.5,linear,0.68,1.4869883695405035,1.1236
 PathIntegralAnnealingSampler,500,1e-09,1.0,geometric,0.4,1.419259259259259,1.1006,25
 PathIntegralAnnealingSampler,500,1e-09,1.0,linear,0.6,1.41198955365622,1.10996,25
 PathIntegralAnnealingSampler,500,1e-09,5.0,geometric,0.44,1.5049210049210047,1.11824,25
-PathIntegralAnnealingSampler,500,1e-09,5.0,linear,0.52,1.5039557308788074,1.11916,25
+PathIntegralAnnealingSampler,500,1e-09,5.0,linear,0.52,1.5039557308788076,1.11916,25
 PathIntegralAnnealingSampler,500,1e-09,10.0,geometric,0.4,1.4324074074074071,1.09168,25
 PathIntegralAnnealingSampler,500,1e-09,10.0,linear,0.4,1.444722222222222,1.10152,25
 PathIntegralAnnealingSampler,500,1e-09,100.0,geometric,0.44,1.4627298627298624,1.0978800000000002,25
@@ -93,7 +93,7 @@ PathIntegralAnnealingSampler,500,0.1,100.0,geometric,0.44,1.391200466200466,1.09
 PathIntegralAnnealingSampler,500,0.1,100.0,linear,0.24,1.7027777777777777,1.08776,25
 PathIntegralAnnealingSampler,500,0.5,0.5,geometric,0.6,1.468418803418803,1.12172,25
 PathIntegralAnnealingSampler,500,0.5,0.5,linear,0.6,1.468418803418803,1.1184,25
-PathIntegralAnnealingSampler,500,0.5,1.0,geometric,0.56,1.4412647537647534,1.12036,25
+PathIntegralAnnealingSampler,500,0.5,1.0,geometric,0.56,1.4412647537647536,1.12036,25
 PathIntegralAnnealingSampler,500,0.5,1.0,linear,0.48,1.3583748812915477,1.1196399999999997,25
 PathIntegralAnnealingSampler,500,0.5,5.0,geometric,0.4,1.3402777777777777,1.11392,25
 PathIntegralAnnealingSampler,500,0.5,5.0,linear,0.4,1.4932407407407406,1.1108,25
@@ -117,7 +117,7 @@ PathIntegralAnnealingSampler,1000,0.01,0.1,geometric,0.0,,2.2332,25
 PathIntegralAnnealingSampler,1000,0.01,0.1,linear,0.0,,2.2310399999999997,25
 PathIntegralAnnealingSampler,1000,0.01,0.3,geometric,0.04,1.52878832188039,2.2257599999999997,25
 PathIntegralAnnealingSampler,1000,0.01,0.3,linear,0.08,1.4353853979280722,2.2325600000000003,25
-PathIntegralAnnealingSampler,1000,0.01,0.5,geometric,0.64,1.5100806504199373,2.23504,25
+PathIntegralAnnealingSampler,1000,0.01,0.5,geometric,0.64,1.5100806504199376,2.23504,25
 PathIntegralAnnealingSampler,1000,0.01,0.5,linear,0.84,1.4318733028944133,2.23332,25
 PathIntegralAnnealingSampler,1000,0.01,1.0,geometric,0.76,1.4138144376179616,2.23444,25
 PathIntegralAnnealingSampler,1000,0.01,1.0,linear,0.72,1.400894262631456,2.1900800000000005,25
@@ -157,7 +157,7 @@ SimulatedAnnealingSampler,100,1e-09,0.5,geometric,0.08,1.4166666666666663,0.0083
 SimulatedAnnealingSampler,100,1e-09,0.5,linear,0.52,1.5454196800350641,0.00544,25
 SimulatedAnnealingSampler,100,1e-09,1.0,geometric,0.36,1.5638888888888889,0.008,25
 SimulatedAnnealingSampler,100,1e-09,1.0,linear,0.52,1.4402805172035937,0.00452,25
-SimulatedAnnealingSampler,100,1e-09,5.0,geometric,0.36,1.5326131687242794,0.008199999999999999,25
+SimulatedAnnealingSampler,100,1e-09,5.0,geometric,0.36,1.5326131687242797,0.008199999999999999,25
 SimulatedAnnealingSampler,100,1e-09,5.0,linear,0.4,1.4827777777777778,0.00332,25
 SimulatedAnnealingSampler,100,1e-09,10.0,geometric,0.32,1.5340277777777773,0.0078000000000000005,25
 SimulatedAnnealingSampler,100,1e-09,10.0,linear,0.36,1.5488683127572014,0.00252,25
@@ -168,7 +168,7 @@ SimulatedAnnealingSampler,100,0.01,0.1,linear,0.0,,0.00736,25
 SimulatedAnnealingSampler,100,0.01,0.3,geometric,0.04,1.7037037037037033,0.006719999999999999,25
 SimulatedAnnealingSampler,100,0.01,0.3,linear,0.0,,0.0057599999999999995,25
 SimulatedAnnealingSampler,100,0.01,0.5,geometric,0.28,1.5126984126984124,0.006639999999999999,25
-SimulatedAnnealingSampler,100,0.01,0.5,linear,0.48,1.4985339506172835,0.0052,25
+SimulatedAnnealingSampler,100,0.01,0.5,linear,0.48,1.4985339506172837,0.0052,25
 SimulatedAnnealingSampler,100,0.01,1.0,geometric,0.44,1.4437904687904688,0.0060799999999999995,25
 SimulatedAnnealingSampler,100,0.01,1.0,linear,0.48,1.4242640075973405,0.00456,25
 SimulatedAnnealingSampler,100,0.01,5.0,geometric,0.48,1.459650997150997,0.00524,25
@@ -182,7 +182,7 @@ SimulatedAnnealingSampler,100,0.1,0.1,linear,0.0,,0.00604,25
 SimulatedAnnealingSampler,100,0.1,0.3,geometric,0.0,,0.005520000000000001,25
 SimulatedAnnealingSampler,100,0.1,0.3,linear,0.04,1.701923076923076,0.00504,25
 SimulatedAnnealingSampler,100,0.1,0.5,geometric,0.52,1.5432500547885157,0.00496,25
-SimulatedAnnealingSampler,100,0.1,0.5,linear,0.6,1.5334434541887005,0.00496,25
+SimulatedAnnealingSampler,100,0.1,0.5,linear,0.6,1.5334434541887008,0.00496,25
 SimulatedAnnealingSampler,100,0.1,1.0,geometric,0.56,1.5001628001628,0.004719999999999999,25
 SimulatedAnnealingSampler,100,0.1,1.0,linear,0.48,1.4187559354226018,0.00452,25
 SimulatedAnnealingSampler,100,0.1,5.0,geometric,0.44,1.3877039627039625,0.00396,25
@@ -267,7 +267,7 @@ SimulatedAnnealingSampler,1000,0.01,0.1,geometric,0.0,,0.05472,25
 SimulatedAnnealingSampler,1000,0.01,0.1,linear,0.0,,0.05132,25
 SimulatedAnnealingSampler,1000,0.01,0.3,geometric,0.04,1.462651056707528,0.04816,25
 SimulatedAnnealingSampler,1000,0.01,0.3,linear,0.04,1.467738538643902,0.03768,25
-SimulatedAnnealingSampler,1000,0.01,0.5,geometric,0.76,1.4574601339673383,0.04479999999999999,25
+SimulatedAnnealingSampler,1000,0.01,0.5,geometric,0.76,1.4574601339673385,0.04479999999999999,25
 SimulatedAnnealingSampler,1000,0.01,0.5,linear,0.96,1.4305238282255353,0.03324,25
 SimulatedAnnealingSampler,1000,0.01,1.0,geometric,0.8,1.4117443075327198,0.04136,25
 SimulatedAnnealingSampler,1000,0.01,1.0,linear,0.88,1.3941065837160196,0.028680000000000004,25
@@ -282,10 +282,10 @@ SimulatedAnnealingSampler,1000,0.1,0.1,linear,0.0,,0.04256,25
 SimulatedAnnealingSampler,1000,0.1,0.3,geometric,0.12,1.5269423350110998,0.034,25
 SimulatedAnnealingSampler,1000,0.1,0.3,linear,0.2,1.5203154716529137,0.0326,25
 SimulatedAnnealingSampler,1000,0.1,0.5,geometric,0.92,1.4374526058315629,0.031200000000000002,25
-SimulatedAnnealingSampler,1000,0.1,0.5,linear,1.0,1.412381768171023,0.029120000000000004,25
+SimulatedAnnealingSampler,1000,0.1,0.5,linear,1.0,1.4123817681710233,0.029120000000000004,25
 SimulatedAnnealingSampler,1000,0.1,1.0,geometric,0.92,1.4010061669239602,0.028840000000000005,25
 SimulatedAnnealingSampler,1000,0.1,1.0,linear,0.84,1.3947463694696711,0.02636,25
-SimulatedAnnealingSampler,1000,0.1,5.0,geometric,0.8,1.3989045598232785,0.02212,25
+SimulatedAnnealingSampler,1000,0.1,5.0,geometric,0.8,1.398904559823278,0.02212,25
 SimulatedAnnealingSampler,1000,0.1,5.0,linear,0.56,1.4008750508750507,0.01244,25
 SimulatedAnnealingSampler,1000,0.1,10.0,geometric,0.76,1.3985719473995724,0.018959999999999998,25
 SimulatedAnnealingSampler,1000,0.1,10.0,linear,0.52,1.4388012272627653,0.00824,25
@@ -295,7 +295,7 @@ SimulatedAnnealingSampler,1000,0.5,0.5,geometric,0.68,1.4436565794478,0.02636,25
 SimulatedAnnealingSampler,1000,0.5,0.5,linear,0.68,1.4436565794478,0.02624,25
 SimulatedAnnealingSampler,1000,0.5,1.0,geometric,0.6,1.3919230769230764,0.02556,25
 SimulatedAnnealingSampler,1000,0.5,1.0,linear,0.6,1.4160731244064573,0.0256,25
-SimulatedAnnealingSampler,1000,0.5,5.0,geometric,0.56,1.4359381359381354,0.01648,25
+SimulatedAnnealingSampler,1000,0.5,5.0,geometric,0.56,1.4359381359381358,0.01648,25
 SimulatedAnnealingSampler,1000,0.5,5.0,linear,0.44,1.3982064232064229,0.011840000000000002,25
 SimulatedAnnealingSampler,1000,0.5,10.0,geometric,0.6,1.4785090218423549,0.014000000000000002,25
 SimulatedAnnealingSampler,1000,0.5,10.0,linear,0.4,1.3572222222222219,0.00824,25
