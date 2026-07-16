@@ -1,0 +1,11 @@
+solver,num_sweeps,beta_min,beta_max,beta_schedule_type,feasibility_rate,mean_approx_ratio,mean_time_s,num_runs
+PathIntegralAnnealingSampler,1000,0.1,1.0,geometric,0.84,1.4125886311762845,2.18512,25
+PathIntegralAnnealingSampler,1000,0.01,0.5,linear,0.84,1.4318733028944133,2.23332,25
+PathIntegralAnnealingSampler,1000,0.1,0.5,linear,0.84,1.4452324068997902,2.22712,25
+PathIntegralAnnealingSampler,1000,0.1,0.5,geometric,0.8,1.4533983590783897,2.2172799999999997,25
+PathIntegralAnnealingSampler,1000,1e-09,0.5,linear,0.8,1.4634745750242617,2.2311199999999998,25
+SimulatedAnnealingSampler,1000,0.1,0.5,linear,1.0,1.4123817681710233,0.029120000000000004,25
+SimulatedAnnealingSampler,1000,1e-09,0.5,linear,1.0,1.4274067760387248,0.03404,25
+SimulatedAnnealingSampler,1000,0.01,0.5,linear,0.96,1.4305238282255353,0.03324,25
+SimulatedAnnealingSampler,1000,0.1,1.0,geometric,0.92,1.4010061669239602,0.028840000000000005,25
+SimulatedAnnealingSampler,1000,0.1,0.5,geometric,0.92,1.4374526058315629,0.031200000000000002,25
