@@ -27,12 +27,6 @@ def run_experiment():
     solver = SimulatedAnnealingSampler()
     # solver = PathIntegralAnnealingSampler()
 
-    beta_min = 1e-9
-    beta_max = 1
-
-    Hp_field = np.linspace(beta_min, beta_max, num=NUM_SWEEPS)
-    Hd_field = np.linspace(beta_max, beta_min, num=NUM_SWEEPS)
-
     all_rows = []
 
     for filename in os.listdir(DATASET_PATH):
@@ -59,7 +53,7 @@ def run_experiment():
             for seed in SEEDS:
                 t0 = time.time()
                 # sampleset = solver.sample(bqm, num_reads=NUM_READS, num_sweeps=NUM_SWEEPS, seed=seed, beta_schedule_type="custom", Hp_field=Hp_field, Hd_field=Hd_field)                
-                sampleset = solver.sample(bqm, num_reads=NUM_READS, num_sweeps=NUM_SWEEPS, seed=seed, beta_schedule_type="linear")
+                sampleset = solver.sample(bqm, num_reads=NUM_READS, num_sweeps=NUM_SWEEPS, seed=seed, beta_schedule_type="linear", beta_range=(1e-1, 5e-1))
                 elapsed = time.time() - t0
                 total_elapsed += elapsed
 
