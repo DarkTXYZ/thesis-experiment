@@ -3,12 +3,12 @@ import pickle
 import time
 import numpy as np
 import pandas as pd
-from dwave.samplers import SimulatedAnnealingSampler
+from dwave.samplers import PathIntegralAnnealingSampler
 import Utils.MinLA as minla
 import networkx as nx
 
 DATASET_PATH = "Dataset/quantum_dataset"
-RESULTS_PATH = "Results/sa_experiment"
+RESULTS_PATH = "Results/pia_experiment"
 
 SEEDS = [42, 123, 456, 789, 999]
 NUM_READS = 10
@@ -24,7 +24,7 @@ def convert_graph_data_to_nx(graph_data):
 
 def run_experiment():
     os.makedirs(RESULTS_PATH, exist_ok=True)
-    solver = SimulatedAnnealingSampler()
+    solver = PathIntegralAnnealingSampler()
 
     all_rows = []
 
@@ -51,7 +51,7 @@ def run_experiment():
 
             for seed in SEEDS:
                 t0 = time.time()
-                sampleset = solver.sample(bqm, num_reads=NUM_READS, num_sweeps=NUM_SWEEPS, seed=seed, beta_schedule_type="linear", beta_range=(1e-1, 5e-1))
+                sampleset = solver.sample(bqm, num_reads=NUM_READS, num_sweeps=NUM_SWEEPS, seed=seed, beta_schedule_type="geometric", beta_range=(1e-1, 1))
                 elapsed = time.time() - t0
                 total_elapsed += elapsed
 
@@ -75,7 +75,7 @@ def run_experiment():
                 "n": n,
                 "m": m,
                 "graph_id": graph_id,
-                "solver": "SimulatedAnnealingSampler",
+                "solver": "PathIntegralAnnealingSampler",
                 "feasible": feasible,
                 "feasible_seed_count": feasible_seed_count,
                 "avg_minla_cost": avg_minla_cost,
@@ -95,7 +95,7 @@ def run_experiment():
 
     df = pd.DataFrame(all_rows)
     timestamp = time.strftime("%Y%m%d_%H%M%S")
-    csv_path = os.path.join(RESULTS_PATH, f"sa_experiment_{timestamp}.csv")
+    csv_path = os.path.join(RESULTS_PATH, f"pia_experiment_{timestamp}.csv")
     df.to_csv(csv_path, index=False)
     print(f"Saved CSV summary -> {csv_path}")
 
