@@ -30,88 +30,76 @@ def run_experiment():
     all_rows = []
 
     for filename in os.listdir(DATASET_PATH):
-        if not filename.endswith(".pkl"):
+        if not filename.endswith(".pkl") or filename == "quantum_extra.pkl":
             continue
 
         with open(os.path.join(DATASET_PATH, filename), "rb") as f:
             data = pickle.load(f)
 
-        if "graphs" in data:
-            entries = [data]
-        else:
-            # quantum_extra.pkl is keyed by vertex count instead of holding
-            # a single dataset at the top level.
-            entries = list(data.values())
+        total_graphs = len(data["graphs"])
+        print(f"[{filename}] N={data['num_vertices']} | {total_graphs} graphs")
 
-        for entry in entries:
-            _run_entry(entry, filename, solver, all_rows)
+        for graph_id, graph in enumerate(data["graphs"]):
+            G = convert_graph_data_to_nx(graph)
+            n = G.number_of_nodes()
+            m = G.number_of_edges()
+            lower_bound = graph["lower_bound"]
+            bqm = minla.generate_bqm_instance(G)
+
+            best_feasible_costs = []
+            feasible_seed_count = 0
+            total_elapsed = 0
+
+            for seed in SEEDS:
+                t0 = time.time()
+                # sampleset = solver.sample(bqm, num_reads=NUM_READS, num_sweeps=NUM_SWEEPS, seed=seed, beta_schedule_type="custom", Hp_field=Hp_field, Hd_field=Hd_field)
+                sampleset = solver.sample(bqm, num_reads=NUM_READS, num_sweeps=NUM_SWEEPS, seed=seed, beta_schedule_type="linear", beta_range=(1e-1, 5e-1))
+                elapsed = time.time() - t0
+                total_elapsed += elapsed
+
+                best_cost = None
+                for sample in sampleset.samples():
+                    ordering, is_feasible = minla.decode_solution(sample, n)
+                    if is_feasible:
+                        cost = minla.calculate_min_linear_arrangement(G, ordering)
+                        if best_cost is None or cost < best_cost:
+                            best_cost = cost
+
+                if best_cost is not None:
+                    best_feasible_costs.append(best_cost)
+                    feasible_seed_count += 1
+
+            feasible = len(best_feasible_costs) > 0
+            avg_minla_cost = np.mean(best_feasible_costs) if feasible else None
+            approx_ratio = avg_minla_cost / lower_bound if feasible else None
+
+            all_rows.append({
+                "n": n,
+                "m": m,
+                "graph_id": graph_id,
+                "solver": "SimulatedAnnealingSampler",
+                "feasible": feasible,
+                "feasible_seed_count": feasible_seed_count,
+                "avg_minla_cost": avg_minla_cost,
+                "lower_bound": lower_bound,
+                "approx_ratio": approx_ratio,
+                "time_s": round(total_elapsed, 3),
+                "num_seeds": len(SEEDS),
+                "num_reads": NUM_READS,
+                "num_sweeps": NUM_SWEEPS,
+            })
+
+            print(
+                f"  [{filename}] graph {graph_id + 1}/{total_graphs} | "
+                f"feasible={feasible} | seeds={feasible_seed_count}/{len(SEEDS)} | "
+                f"time={total_elapsed:.2f}s"
+            )
 
     df = pd.DataFrame(all_rows)
     timestamp = time.strftime("%Y%m%d_%H%M%S")
     csv_path = os.path.join(RESULTS_PATH, f"sa_experiment_{timestamp}.csv")
     df.to_csv(csv_path, index=False)
     print(f"Saved CSV summary -> {csv_path}")
-
-
-def _run_entry(data, filename, solver, all_rows):
-    total_graphs = len(data["graphs"])
-    print(f"[{filename}] N={data['num_vertices']} | {total_graphs} graphs")
-
-    for graph_id, graph in enumerate(data["graphs"]):
-        G = convert_graph_data_to_nx(graph)
-        n = G.number_of_nodes()
-        m = G.number_of_edges()
-        lower_bound = graph["lower_bound"]
-        bqm = minla.generate_bqm_instance(G)
-
-        best_feasible_costs = []
-        feasible_seed_count = 0
-        total_elapsed = 0
-
-        for seed in SEEDS:
-            t0 = time.time()
-            # sampleset = solver.sample(bqm, num_reads=NUM_READS, num_sweeps=NUM_SWEEPS, seed=seed, beta_schedule_type="custom", Hp_field=Hp_field, Hd_field=Hd_field)
-            sampleset = solver.sample(bqm, num_reads=NUM_READS, num_sweeps=NUM_SWEEPS, seed=seed, beta_schedule_type="linear", beta_range=(1e-1, 5e-1))
-            elapsed = time.time() - t0
-            total_elapsed += elapsed
-
-            best_cost = None
-            for sample in sampleset.samples():
-                ordering, is_feasible = minla.decode_solution(sample, n)
-                if is_feasible:
-                    cost = minla.calculate_min_linear_arrangement(G, ordering)
-                    if best_cost is None or cost < best_cost:
-                        best_cost = cost
-
-            if best_cost is not None:
-                best_feasible_costs.append(best_cost)
-                feasible_seed_count += 1
-
-        feasible = len(best_feasible_costs) > 0
-        avg_minla_cost = np.mean(best_feasible_costs) if feasible else None
-        approx_ratio = avg_minla_cost / lower_bound if feasible else None
-
-        all_rows.append({
-            "n": n,
-            "m": m,
-            "graph_id": graph_id,
-            "solver": "SimulatedAnnealingSampler",
-            "feasible": feasible,
-            "feasible_seed_count": feasible_seed_count,
-            "avg_minla_cost": avg_minla_cost,
-            "lower_bound": lower_bound,
-            "approx_ratio": approx_ratio,
-            "time_s": round(total_elapsed, 3),
-            "num_seeds": len(SEEDS),
-            "num_reads": NUM_READS,
-            "num_sweeps": NUM_SWEEPS,
-        })
-
-        print(
-            f"  [{filename}] graph {graph_id + 1}/{total_graphs} | "
-            f"feasible={feasible} | seeds={feasible_seed_count}/{len(SEEDS)} | "
-            f"time={total_elapsed:.2f}s"
-        )
 
 
 if __name__ == "__main__":
