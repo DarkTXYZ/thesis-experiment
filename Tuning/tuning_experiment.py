@@ -23,8 +23,8 @@ SEEDS = [42, 123, 456, 789, 999]
 NUM_READS = 10
 
 NUM_SWEEPS_GRID = [100, 500, 1000]
-BETA_MIN_GRID = [1e-9, 0.01, 0.1]
-BETA_MAX_GRID = [1, 10, 100]
+BETA_MIN_GRID = [1e-9, 0.01, 0.1, 0.5]
+BETA_MAX_GRID = [0.1, 0.3, 0.5, 1, 5, 10]
 BETA_RANGE_GRID = [
     (beta_min, beta_max)
     for beta_min in BETA_MIN_GRID
