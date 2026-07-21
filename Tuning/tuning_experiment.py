@@ -57,6 +57,14 @@ def load_existing_results():
     else:
         existing_df["qubits_per_chain"] = existing_df["qubits_per_chain"].fillna(1).astype(int)
 
+    # Rows written before bqm.normalize() was added ran on the raw (un-normalized)
+    # bqm - backfill as False so they don't get conflated with the new runs and
+    # get re-run under the now-normalized energy landscape.
+    if "bqm_normalized" not in existing_df.columns:
+        existing_df["bqm_normalized"] = False
+    else:
+        existing_df["bqm_normalized"] = existing_df["bqm_normalized"].fillna(False).astype(bool)
+
     existing_keys = {
         (
             str(row.solver),
@@ -67,6 +75,7 @@ def load_existing_results():
             float(row.beta_max),
             str(row.beta_schedule_type),
             int(row.qubits_per_chain),
+            bool(row.bqm_normalized),
         )
         for row in existing_df.itertuples()
     }
@@ -124,7 +133,7 @@ def run_experiment():
             for qubits_per_chain in QUBITS_PER_CHAIN_GRID
         ],
     }
-
+    
     os.makedirs(RESULTS_DIR, exist_ok=True)
     existing_df, existing_keys = load_existing_results()
     all_results = existing_df.to_dict("records") if not existing_df.empty else []
@@ -133,6 +142,8 @@ def run_experiment():
 
     try:
         for solver_name, solver in SOLVERS.items():
+            configs = solver_configs[solver_name]
+            total_configs = len(configs)
             for graph_data in graphs:
                 G = convert_graph_data_to_nx(graph_data)
                 n = G.number_of_nodes()
@@ -141,11 +152,15 @@ def run_experiment():
                 lower_bound = graph_data["lower_bound"]
                 bqm = minla.generate_bqm_instance(G)
 
-                for config_count, (num_sweeps, beta_range, schedule_type) in enumerate(configs, 1):
+                bqm.normalize()
+                bqm_normalized = True
+
+                for config_count, (num_sweeps, beta_range, schedule_type, qubits_per_chain) in enumerate(configs, 1):
                     for seed in SEEDS:
                         run_key = (
                             solver_name, int(graph_id), int(seed), int(num_sweeps),
                             float(beta_range[0]), float(beta_range[1]), schedule_type,
+                            int(qubits_per_chain), bqm_normalized,
                         )
                         if run_key in existing_keys:
                             continue
@@ -158,6 +173,7 @@ def run_experiment():
                             beta_range=list(beta_range),
                             beta_schedule_type=schedule_type,
                             seed=seed,
+                            qubits_per_chain=qubits_per_chain,
                         )
                         elapsed = time.time() - t0
 
@@ -182,6 +198,8 @@ def run_experiment():
                             "beta_min": beta_range[0],
                             "beta_max": beta_range[1],
                             "beta_schedule_type": schedule_type,
+                            "qubits_per_chain": qubits_per_chain,
+                            "bqm_normalized": bqm_normalized,
                             "feasible": feasible,
                             "minla_cost": best_cost,
                             "lower_bound": lower_bound,
@@ -190,7 +208,7 @@ def run_experiment():
                         })
 
                         print_result(solver_name, config_count, total_configs, n, graph_id, seed,
-                                     num_sweeps, beta_range, schedule_type, feasible, best_cost, elapsed)
+                                     num_sweeps, beta_range, schedule_type, qubits_per_chain, feasible, best_cost, elapsed)
 
     except KeyboardInterrupt:
         print("\nInterrupted. Partial results saved.")
@@ -201,7 +219,7 @@ def run_experiment():
 
     # Aggregate across graphs and seeds per solver + config
     agg_rows = []
-    group_cols = ["solver", "num_sweeps", "beta_min", "beta_max", "beta_schedule_type"]
+    group_cols = ["solver", "num_sweeps", "beta_min", "beta_max", "beta_schedule_type", "qubits_per_chain", "bqm_normalized"]
     for keys, group in df.groupby(group_cols):
         feasible_runs = group[group["feasible"] == True]
         agg_rows.append({
@@ -231,7 +249,8 @@ def run_experiment():
         print(
             f"{solver_name}: num_sweeps={best['num_sweeps']}, "
             f"beta_range=({best['beta_min']:.2e}, {best['beta_max']:.2e}), "
-            f"beta_schedule_type={best['beta_schedule_type']} | "
+            f"beta_schedule_type={best['beta_schedule_type']}, "
+            f"qubits_per_chain={best['qubits_per_chain']} | "
             f"feasibility_rate={best['feasibility_rate']:.2%}, "
             f"mean_approx_ratio={best['mean_approx_ratio']:.4f}, "
             f"mean_time_s={best['mean_time_s']:.3f}"

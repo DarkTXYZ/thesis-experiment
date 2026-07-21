@@ -25,8 +25,8 @@ NUM_READS = 10
 NUM_SWEEPS_GRID = [100, 500, 1000]
 
 # OpenJijSA: annealed beta_min -> beta_max schedule.
-BETA_MIN_GRID = [1e-9, 0.01, 0.1, 0.5]
-BETA_MAX_GRID = [0.1, 0.3, 0.5, 1, 5, 10]
+BETA_MIN_GRID = [1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1, 10, 100, 1000, 10000, 100000, 1e6, 1e7, 1e8, 1e9]
+BETA_MAX_GRID = [1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1, 10, 100, 1000, 10000, 100000, 1e6, 1e7, 1e8, 1e9]
 BETA_RANGE_GRID = [
     (beta_min, beta_max)
     for beta_min in BETA_MIN_GRID
