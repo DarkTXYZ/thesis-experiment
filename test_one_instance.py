@@ -1,3 +1,4 @@
+from math import gamma
 import os
 import sys
 import pickle
@@ -5,6 +6,7 @@ import time
 import pandas as pd
 import networkx as nx
 import openjij as oj
+from dwave.samplers import SimulatedAnnealingSampler, PathIntegralAnnealingSampler
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import Utils.MinLA as minla
@@ -12,7 +14,7 @@ import Utils.MinLA as minla
 PARENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATASET_PATH = os.path.join(PARENT_DIR, "Dataset/quantum_dataset/quantum_extra.pkl")
 
-SEEDS = [42, 123, 456, 789, 999]
+# SEEDS = [42, 123, 456, 789, 999]
 NUM_READS = 10
 NUM_SWEEPS = 1000
 
@@ -47,44 +49,38 @@ def print_result(solver_name, config_count, total_configs, n, graph_id, seed,
     )
     
 def run_experiment():
-    graphs = read_extra_graphs()[0]
-    
-    
-    configs = [
-        (beta, gamma, trotter, seed) for beta in SQA_BETA_GRID for gamma in SQA_GAMMA_GRID for trotter in TROTTERS for seed in SEEDS
-    ]
-    
-    solver = oj.SQASampler()
-    total_configs = len(configs)
-    
-    for graph in graphs:
-        G = convert_graph_data_to_nx(graph)
-        n = G.number_of_nodes()
-        m = G.number_of_edges()
-        graph_id = graph["id"]
-        lower_bound = graph["lower_bound"]
-        bqm = minla.generate_bqm_instance(G)
-        
-        bqm.normalize()
-    
-        for config_count, (beta, gamma, trotter, seed) in enumerate(configs, start=1):
-            t0 = time.time()
-            sampleset = solver.sample(bqm, num_reads=NUM_READS, num_sweeps=NUM_SWEEPS, beta=beta, gamma=gamma, trotter=trotter, seed=seed)
-            elapsed = time.time() - t0
-            
-            best_cost = None
-            for sample in sampleset.samples():
-                ordering, is_feasible = minla.decode_solution(sample, n)
-                if is_feasible:
-                    cost = minla.calculate_min_linear_arrangement(G, ordering)
-                    if best_cost is None or cost < best_cost:
-                        best_cost = cost
+    graph = read_extra_graphs()[1]
 
-            feasible = best_cost is not None
-            approx_ratio = best_cost / lower_bound if feasible else None
-            
-            print_result("OpenJijSQA", config_count, total_configs, n, graph_id, seed,
-                NUM_SWEEPS, (beta, beta), trotter, gamma, feasible, best_cost, elapsed)
+    solver = PathIntegralAnnealingSampler()
+
+    G = convert_graph_data_to_nx(graph)
+    n = G.number_of_nodes()
+    print(n)
+    m = G.number_of_edges()
+    graph_id = graph["id"]
+    lower_bound = graph["lower_bound"]
+    bqm = minla.generate_bqm_instance(G)
+
+    bqm.normalize()
+
+    t0 = time.time()
+    sampleset = solver.sample(bqm, num_reads=NUM_READS, num_sweeps=NUM_SWEEPS, beta_range=(0.0002331898746950031, 83.72455984681673), beta_schedule_type = "linear", gamma=15.561673661957062)
+    elapsed = time.time() - t0
+
+    best_cost = None
+    for sample in sampleset.samples():
+        ordering, is_feasible = minla.decode_solution(sample, n)
+        if is_feasible:
+            cost = minla.calculate_min_linear_arrangement(G, ordering)
+            if best_cost is None or cost < best_cost:
+                best_cost = cost
+
+    feasible = best_cost is not None
+    approx_ratio = best_cost / lower_bound if feasible else None
+
+    print(feasible)
+    print(elapsed)
+    print(approx_ratio)
             
 if __name__ == "__main__":
     run_experiment()

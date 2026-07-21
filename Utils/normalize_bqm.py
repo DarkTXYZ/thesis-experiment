@@ -1,9 +1,14 @@
+import os
+import sys
 import time
 import networkx as nx
 import optuna
 import pandas as pd
 from MinLA import generate_bqm_instance, decode_solution, calculate_min_linear_arrangement, calculate_lower_obj_bound
 from dwave.samplers import SimulatedAnnealingSampler, PathIntegralAnnealingSampler
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from Baseline.lower_bound import MinLALowerBounds
 
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
@@ -12,18 +17,15 @@ GRAPH_SEED = 42
 
 SEEDS = [42, 123, 456, 789, 999]
 NUM_READS = 10
-TRIALS_PER_SOLVER = 1000
+TRIALS_PER_SOLVER = 100
 
 # Search bounds shared by both samplers - both use the same beta-annealing
 # schedule machinery. bqm.normalize() puts coefficients on a standard ~[-1,1]
 # scale, so these are absolute beta values (no extra scale factor).
-BETA_MIN_BOUNDS = (1e-9, 1.0)
-BETA_MAX_UPPER = 100.0
-NUM_SWEEPS_PER_BETA_BOUNDS = (1, 20)
-# num_sweeps is derived as num_sweeps_per_beta * num_beta_steps rather than
-# suggested directly - the sampler requires num_sweeps to be exactly
-# divisible by num_sweeps_per_beta, and this makes that hold by construction.
-NUM_BETA_STEPS_BOUNDS = (10, 200)
+BETA_MIN_BOUNDS = 1.0
+BETA_MAX_UPPER = 1e9
+NUM_SWEEPS = 1000
+NUM_SWEEPS_PER_BETA = 1
 
 # PathIntegralAnnealingSampler-only knobs; SimulatedAnnealingSampler.sample()
 # has no such parameters at all. qubits_per_chain=1 collapses to plain
@@ -31,12 +33,12 @@ NUM_BETA_STEPS_BOUNDS = (10, 200)
 # quantum-tunneling behavior. Gamma is the transverse field magnitude and
 # chain_coupler_strength ties a chain's Trotter slices together.
 QUBITS_PER_CHAIN_BOUNDS = (1, 4)
-GAMMA_BOUNDS = (0.1, 20.0)
-CHAIN_COUPLER_STRENGTH_BOUNDS = (0.1, 10.0)
+GAMMA_BOUNDS = (1e-9, 1e9)
+CHAIN_COUPLER_STRENGTH_BOUNDS = (1e-9, 1e9)
 
 SOLVERS = {
     # "SimulatedAnnealingSampler": SimulatedAnnealingSampler(),
-    "PathIntegralAnnealingSampler": PathIntegralAnnealingSampler(),
+    "PA": PathIntegralAnnealingSampler(),
 }
 
 # Infeasible trials still need a finite value to give Optuna - approx_ratio is
@@ -46,23 +48,20 @@ INFEASIBLE_APPROX_RATIO = 10.0
 
 
 def build_sample_kwargs(trial, solver_name):
-    beta_min = trial.suggest_float("beta_min", *BETA_MIN_BOUNDS, log=True)
-    beta_max = trial.suggest_float("beta_max", beta_min, BETA_MAX_UPPER, log=True)
+    # beta_min = trial.suggest_float("beta_min", *BETA_MIN_BOUNDS, log=True)
+    beta_min = BETA_MIN_BOUNDS
+    beta_max = trial.suggest_float("beta_max", BETA_MIN_BOUNDS, BETA_MAX_UPPER, log=True)
     schedule_type = trial.suggest_categorical("beta_schedule_type", ["linear", "geometric"])
-    num_sweeps_per_beta = trial.suggest_int("num_sweeps_per_beta", *NUM_SWEEPS_PER_BETA_BOUNDS)
-    num_beta_steps = trial.suggest_int("num_beta_steps", *NUM_BETA_STEPS_BOUNDS, log=True)
-    num_sweeps = num_sweeps_per_beta * num_beta_steps
-    trial.set_user_attr("num_sweeps", num_sweeps)
 
     sample_kwargs = dict(
         num_reads=NUM_READS,
-        num_sweeps=num_sweeps,
+        num_sweeps=NUM_SWEEPS,
         beta_range=[beta_min, beta_max],
         beta_schedule_type=schedule_type,
-        num_sweeps_per_beta=num_sweeps_per_beta,
+        num_sweeps_per_beta=NUM_SWEEPS_PER_BETA,
     )
 
-    if solver_name == "SimulatedAnnealingSampler":
+    if solver_name == "SA":
         sample_kwargs["randomize_order"] = trial.suggest_categorical("randomize_order", [False, True])
         sample_kwargs["proposal_acceptance_criteria"] = trial.suggest_categorical(
             "proposal_acceptance_criteria", ["Metropolis", "Gibbs"])
@@ -107,7 +106,9 @@ def make_objective(solver_name, solver, G, n, lower_bound, bqm):
         print(
             f"[{solver_name}] trial {trial.number:<4} sweeps={sample_kwargs['num_sweeps']:<5} "
             f"beta=({beta_min:.2e},{beta_max:.2e}) type={sample_kwargs['beta_schedule_type']:<9} "
-            f"spb={sample_kwargs['num_sweeps_per_beta']:<3} | "
+            f"gamma={sample_kwargs['Gamma']:<3} | "
+            f"ccs={sample_kwargs['chain_coupler_strength']:<3} | "
+            f"qpc={sample_kwargs['qubits_per_chain']:<3} | "
             f"feas_rate={feasibility_rate:.0%} approx_ratio={approx_ratio:.4f} time={elapsed:.2f}s"
         )
 
@@ -118,11 +119,11 @@ def make_objective(solver_name, solver, G, n, lower_bound, bqm):
 
 def run_search():
     G = nx.erdos_renyi_graph(N, 0.5, seed=GRAPH_SEED)
-    if not nx.is_connected(G):
-        largest_cc = max(nx.connected_components(G), key=len)
-        G = G.subgraph(largest_cc).copy()
+    while not nx.is_connected(G):
+        G = nx.erdos_renyi_graph(N, 0.5, seed=GRAPH_SEED)
+        
     n = G.number_of_nodes()
-    lower_bound = calculate_lower_obj_bound(G)
+    lower_bound = MinLALowerBounds(G).bound()
 
     bqm = generate_bqm_instance(G)
     bqm.normalize()
@@ -139,6 +140,7 @@ def run_search():
         study.optimize(
             make_objective(solver_name, solver, G, n, lower_bound, bqm),
             n_trials=TRIALS_PER_SOLVER,
+            n_jobs=-1,
         )
 
         trials_df = study.trials_dataframe()
