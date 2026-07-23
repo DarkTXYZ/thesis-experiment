@@ -21,7 +21,8 @@ SEEDS = [42, 123, 456, 789, 999]
 NUM_READS = 10
 
 BETA_GRID = [float(b) for b in np.logspace(-4, 4, 9)]  # 1e-9 ... 1e9, one point per decade
-NUM_SWEEPS = 1000
+NUM_SWEEPS = 100
+NUM_SWEEPS_PER_BETA = 1
 
 # PathIntegralAnnealingSampler-only knobs; SimulatedAnnealingSampler.sample()
 # has no such parameters at all. qubits_per_chain=1 collapses to plain
@@ -42,23 +43,42 @@ SOLVERS = {
 INFEASIBLE_APPROX_RATIO = 10.0
 
 
+def build_beta_schedule(beta_min, beta_max, schedule_type):
+    """Construct the per-sweep beta values ourselves instead of letting the
+    sampler's 'linear'/'geometric' beta_schedule_type interpolate them, so we
+    always pass beta_schedule_type='custom' downstream."""
+    num_betas, rem = divmod(NUM_SWEEPS, NUM_SWEEPS_PER_BETA)
+    if rem:
+        raise ValueError("NUM_SWEEPS must be a multiple of NUM_SWEEPS_PER_BETA")
+
+    if schedule_type == "linear":
+        return np.linspace(beta_min, beta_max, num=num_betas)
+    elif schedule_type == "geometric":
+        return np.geomspace(beta_min, beta_max, num=num_betas)
+    raise ValueError(f"Unknown beta schedule type: {schedule_type}")
+
+
 def build_sample_kwargs(trial, solver_name):
     beta_min = trial.suggest_categorical("beta_min", BETA_GRID)
     beta_max = trial.suggest_categorical("beta_max", BETA_GRID)
     schedule_type = trial.suggest_categorical("beta_schedule_type", ["linear", "geometric"])
+    beta_schedule = build_beta_schedule(beta_min, beta_max, schedule_type)
 
     sample_kwargs = dict(
         num_reads=NUM_READS,
         num_sweeps=NUM_SWEEPS,
-        beta_range=[beta_min, beta_max],
-        beta_schedule_type=schedule_type,
+        num_sweeps_per_beta=NUM_SWEEPS_PER_BETA,
+        beta_schedule_type="custom",
     )
 
     if solver_name == "SA":
+        sample_kwargs["beta_schedule"] = beta_schedule
         sample_kwargs["randomize_order"] = trial.suggest_categorical("randomize_order", [False, True])
         sample_kwargs["proposal_acceptance_criteria"] = trial.suggest_categorical(
             "proposal_acceptance_criteria", ["Metropolis", "Gibbs"])
     else:
+        sample_kwargs["Hp_field"] = beta_schedule
+        sample_kwargs["Hd_field"] = beta_schedule[::-1]
         sample_kwargs["qubits_per_chain"] = QUBITS_PER_CHAIN_BOUNDS
         # sample_kwargs["qubits_per_chain"] = trial.suggest_int("qubits_per_chain", *QUBITS_PER_CHAIN_BOUNDS)
         sample_kwargs["Gamma"] = trial.suggest_categorical("gamma", GAMMA_BOUNDS)
@@ -108,7 +128,9 @@ def make_objective(solver_name, solver, graph_cache):
     stays feasible on the most graphs rather than one overfit to a single graph."""
     def objective(trial):
         sample_kwargs = build_sample_kwargs(trial, solver_name)
-        beta_min, beta_max = sample_kwargs["beta_range"]
+        beta_min = trial.params["beta_min"]
+        beta_max = trial.params["beta_max"]
+        schedule_type = trial.params["beta_schedule_type"]
 
         if beta_min > beta_max:
             trial.set_user_attr("graphs_feasible", 0)
@@ -143,7 +165,7 @@ def make_objective(solver_name, solver, graph_cache):
 
         print(
             f"[{solver_name}] trial {trial.number:<4} sweeps={sample_kwargs['num_sweeps']:<5} "
-            f"beta=({beta_min:.2e},{beta_max:.2e}) type={sample_kwargs['beta_schedule_type']:<9} "
+            f"beta=({beta_min:.2e},{beta_max:.2e}) type={schedule_type:<9} "
             f"gamma={sample_kwargs['Gamma']:<3} | "
             f"qpc={sample_kwargs['qubits_per_chain']:<3} | "
             f"graphs_feasible={graphs_feasible}/{len(graph_cache)} "
