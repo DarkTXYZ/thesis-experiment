@@ -21,7 +21,11 @@ SEEDS = [42, 123, 456, 789, 999]
 NUM_READS = 10
 
 BETA_GRID = [float(b) for b in np.logspace(-4, 4, 9)]  # 1e-9 ... 1e9, one point per decade
-NUM_SWEEPS = 100
+# Only beta_min <= beta_max combos are valid schedules, so build that set up
+# front rather than suggesting beta_min/beta_max independently and discarding
+# the invalid half of the grid at trial time.
+BETA_RANGES = [(lo, hi) for lo in BETA_GRID for hi in BETA_GRID if lo <= hi]
+NUM_SWEEPS = 1000
 NUM_SWEEPS_PER_BETA = 1
 
 # PathIntegralAnnealingSampler-only knobs; SimulatedAnnealingSampler.sample()
@@ -29,8 +33,9 @@ NUM_SWEEPS_PER_BETA = 1
 # classical SA (no chains); >1 is what actually turns on path-integral/
 # quantum-tunneling behavior. Gamma is the transverse field magnitude and
 # chain_coupler_strength ties a chain's Trotter slices together.
-QUBITS_PER_CHAIN_BOUNDS = 4
+QUBITS_PER_CHAIN_BOUNDS = 1
 GAMMA_BOUNDS = [float(b) for b in np.logspace(-4, 4, 9)]
+# GAMMA_BOUNDS = 1
 
 SOLVERS = {
     # "SimulatedAnnealingSampler": SimulatedAnnealingSampler(),
@@ -59,8 +64,7 @@ def build_beta_schedule(beta_min, beta_max, schedule_type):
 
 
 def build_sample_kwargs(trial, solver_name):
-    beta_min = trial.suggest_categorical("beta_min", BETA_GRID)
-    beta_max = trial.suggest_categorical("beta_max", BETA_GRID)
+    beta_min, beta_max = trial.suggest_categorical("beta_range", BETA_RANGES)
     schedule_type = trial.suggest_categorical("beta_schedule_type", ["linear", "geometric"])
     beta_schedule = build_beta_schedule(beta_min, beta_max, schedule_type)
 
@@ -80,6 +84,8 @@ def build_sample_kwargs(trial, solver_name):
         sample_kwargs["Hp_field"] = beta_schedule
         sample_kwargs["Hd_field"] = beta_schedule[::-1]
         sample_kwargs["qubits_per_chain"] = QUBITS_PER_CHAIN_BOUNDS
+        # sample_kwargs["Gamma"] = GAMMA_BOUNDS
+
         # sample_kwargs["qubits_per_chain"] = trial.suggest_int("qubits_per_chain", *QUBITS_PER_CHAIN_BOUNDS)
         sample_kwargs["Gamma"] = trial.suggest_categorical("gamma", GAMMA_BOUNDS)
         # sample_kwargs["chain_coupler_strength"] = trial.suggest_float(
@@ -128,14 +134,8 @@ def make_objective(solver_name, solver, graph_cache):
     stays feasible on the most graphs rather than one overfit to a single graph."""
     def objective(trial):
         sample_kwargs = build_sample_kwargs(trial, solver_name)
-        beta_min = trial.params["beta_min"]
-        beta_max = trial.params["beta_max"]
+        beta_min, beta_max = trial.params["beta_range"]
         schedule_type = trial.params["beta_schedule_type"]
-
-        if beta_min > beta_max:
-            trial.set_user_attr("graphs_feasible", 0)
-            trial.set_user_attr("time_s", 0.0)
-            return 0.0, INFEASIBLE_APPROX_RATIO
 
         t0 = time.time()
         graphs_feasible = 0
@@ -179,7 +179,7 @@ def make_objective(solver_name, solver, graph_cache):
 
 def run_search():
     graph_cache = load_graph_cache()
-    grid_size = len(BETA_GRID) * len(BETA_GRID) * len(GAMMA_BOUNDS) * 2
+    grid_size = len(BETA_RANGES) * len(GAMMA_BOUNDS) * 2  # x2 for linear/geometric schedule_type
 
     print(f"{len(graph_cache)} graphs, {grid_size} grid points x {len(SEEDS)} seeds x {len(graph_cache)} graphs per solver")
 
