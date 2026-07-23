@@ -8,10 +8,10 @@ import networkx as nx
 import openjij as oj
 from dwave.samplers import SimulatedAnnealingSampler, PathIntegralAnnealingSampler
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import Utils.MinLA as minla
 
-PARENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PARENT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATASET_PATH = os.path.join(PARENT_DIR, "Dataset/quantum_dataset/quantum_extra.pkl")
 
 # SEEDS = [42, 123, 456, 789, 999]
@@ -55,7 +55,6 @@ def run_experiment():
 
     G = convert_graph_data_to_nx(graph)
     n = G.number_of_nodes()
-    print(n)
     m = G.number_of_edges()
     graph_id = graph["id"]
     lower_bound = graph["lower_bound"]
@@ -64,7 +63,7 @@ def run_experiment():
     bqm.normalize()
 
     t0 = time.time()
-    sampleset = solver.sample(bqm, num_reads=NUM_READS, num_sweeps=NUM_SWEEPS, beta_range=(0.0002331898746950031, 83.72455984681673), beta_schedule_type = "linear", gamma=15.561673661957062)
+    sampleset = solver.sample(bqm, num_reads=NUM_READS, num_sweeps=NUM_SWEEPS, beta_range=(0.1, 2*n*n-2*n+1), beta_schedule_type = "linear")
     elapsed = time.time() - t0
 
     best_cost = None

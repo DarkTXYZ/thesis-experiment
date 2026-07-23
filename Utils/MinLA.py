@@ -110,6 +110,31 @@ def generate_bqm_instance(graph: nx.Graph) -> dimod.BinaryQuadraticModel:
     model = H.compile()
     return model.to_bqm()
 
+def normalize_bqm(bqm: dimod.BinaryQuadraticModel, method: str = "median") -> float:
+    """Scale a BQM's biases in place so their typical magnitude is 1.
+
+    Unlike dimod's built-in bqm.normalize() (which scales by the max
+    absolute bias and is thus sensitive to outliers), this scales by
+    the median or RMS of the nonzero absolute biases.
+
+    Returns the scale factor that was applied (bias / scale = new bias).
+    """
+    biases = np.abs(np.fromiter(
+        (*bqm.linear.values(), *bqm.quadratic.values()), dtype=float))
+    biases = biases[biases != 0]
+    if biases.size == 0:
+        return 1.0
+
+    if method == "median":
+        scale = np.median(biases)
+    elif method == "rms":
+        scale = np.sqrt(np.mean(biases ** 2))
+    else:
+        raise ValueError(f"Unknown normalization method: {method}")
+
+    bqm.scale(1.0 / scale)
+    return scale
+
 def calculate_min_linear_arrangement(graph: nx.Graph, ordering: List[int]):
     position = {vertex: label for vertex, label in enumerate(ordering)}
     cost = 0

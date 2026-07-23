@@ -1,0 +1,194 @@
+import os
+import pickle
+import sys
+import time
+import networkx as nx
+import numpy as np
+import optuna
+import pandas as pd
+from optuna.samplers import BruteForceSampler
+from dwave.samplers import SimulatedAnnealingSampler, PathIntegralAnnealingSampler
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from Utils.MinLA import generate_bqm_instance, decode_solution, calculate_min_linear_arrangement, calculate_lower_obj_bound
+
+optuna.logging.set_verbosity(optuna.logging.WARNING)
+
+PARENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATASET_PATH = os.path.join(PARENT_DIR, "Dataset/quantum_dataset/quantum_extra.pkl")
+
+SEEDS = [42, 123, 456, 789, 999]
+NUM_READS = 10
+
+BETA_GRID = [float(b) for b in np.logspace(-4, 4, 9)]  # 1e-9 ... 1e9, one point per decade
+NUM_SWEEPS = 1000
+
+# PathIntegralAnnealingSampler-only knobs; SimulatedAnnealingSampler.sample()
+# has no such parameters at all. qubits_per_chain=1 collapses to plain
+# classical SA (no chains); >1 is what actually turns on path-integral/
+# quantum-tunneling behavior. Gamma is the transverse field magnitude and
+# chain_coupler_strength ties a chain's Trotter slices together.
+QUBITS_PER_CHAIN_BOUNDS = 4
+GAMMA_BOUNDS = [float(b) for b in np.logspace(-4, 4, 9)]
+
+SOLVERS = {
+    # "SimulatedAnnealingSampler": SimulatedAnnealingSampler(),
+    "PA": PathIntegralAnnealingSampler(),
+}
+
+# Infeasible trials still need a finite value to give Optuna - approx_ratio is
+# always >=1.0 for a feasible config, so a fixed sentinel above any realistic
+# ratio marks "infeasible" as strictly worse without using an unbounded value.
+INFEASIBLE_APPROX_RATIO = 10.0
+
+
+def build_sample_kwargs(trial, solver_name):
+    beta_min = trial.suggest_categorical("beta_min", BETA_GRID)
+    beta_max = trial.suggest_categorical("beta_max", BETA_GRID)
+    schedule_type = trial.suggest_categorical("beta_schedule_type", ["linear", "geometric"])
+
+    sample_kwargs = dict(
+        num_reads=NUM_READS,
+        num_sweeps=NUM_SWEEPS,
+        beta_range=[beta_min, beta_max],
+        beta_schedule_type=schedule_type,
+    )
+
+    if solver_name == "SA":
+        sample_kwargs["randomize_order"] = trial.suggest_categorical("randomize_order", [False, True])
+        sample_kwargs["proposal_acceptance_criteria"] = trial.suggest_categorical(
+            "proposal_acceptance_criteria", ["Metropolis", "Gibbs"])
+    else:
+        sample_kwargs["qubits_per_chain"] = QUBITS_PER_CHAIN_BOUNDS
+        # sample_kwargs["qubits_per_chain"] = trial.suggest_int("qubits_per_chain", *QUBITS_PER_CHAIN_BOUNDS)
+        sample_kwargs["Gamma"] = trial.suggest_categorical("gamma", GAMMA_BOUNDS)
+        # sample_kwargs["chain_coupler_strength"] = trial.suggest_float(
+        #     "chain_coupler_strength", *CHAIN_COUPLER_STRENGTH_BOUNDS, log=True)
+
+    return sample_kwargs
+
+
+def convert_graph_data_to_nx(graph_data):
+    G = nx.Graph()
+    G.add_nodes_from(range(graph_data["num_vertices"]))
+    G.add_edges_from(graph_data["edges"])
+    return G
+
+
+def read_extra_graphs():
+    with open(DATASET_PATH, "rb") as f:
+        extra_data = pickle.load(f)
+
+    graphs = []
+    for group in extra_data.values():
+        for graph_data in group["graphs"]:
+            graphs.append(graph_data)
+    return graphs
+
+
+def load_graph_cache():
+    """Precompute (G, n, lower_bound, bqm) once per graph so every trial reuses it."""
+    cache = []
+    for graph_data in read_extra_graphs():
+        G = convert_graph_data_to_nx(graph_data)
+        bqm = generate_bqm_instance(G)
+        bqm.normalize()
+        cache.append({
+            "graph_id": graph_data["id"],
+            "G": G,
+            "n": G.number_of_nodes(),
+            "lower_bound": graph_data["lower_bound"],
+            "bqm": bqm,
+        })
+    return cache
+
+
+def make_objective(solver_name, solver, graph_cache):
+    """Evaluate one param combo across every graph, so the winner is the combo that
+    stays feasible on the most graphs rather than one overfit to a single graph."""
+    def objective(trial):
+        sample_kwargs = build_sample_kwargs(trial, solver_name)
+        beta_min, beta_max = sample_kwargs["beta_range"]
+
+        if beta_min > beta_max:
+            trial.set_user_attr("graphs_feasible", 0)
+            trial.set_user_attr("time_s", 0.0)
+            return 0.0, INFEASIBLE_APPROX_RATIO
+
+        t0 = time.time()
+        graphs_feasible = 0
+        approx_ratios = []
+
+        for graph in graph_cache:
+            G, n, lower_bound, bqm = graph["G"], graph["n"], graph["lower_bound"], graph["bqm"]
+            best_cost = None
+            for seed in SEEDS:
+                sampleset = solver.sample(bqm, seed=seed, **sample_kwargs)
+                for sample in sampleset.samples():
+                    ordering, is_feasible = decode_solution(sample, n)
+                    if is_feasible:
+                        cost = calculate_min_linear_arrangement(G, ordering)
+                        if best_cost is None or cost < best_cost:
+                            best_cost = cost
+            if best_cost is not None:
+                graphs_feasible += 1
+                approx_ratios.append(best_cost / lower_bound)
+
+        elapsed = time.time() - t0
+        graphs_feasible_rate = graphs_feasible / len(graph_cache)
+        mean_approx_ratio = sum(approx_ratios) / len(approx_ratios) if approx_ratios else INFEASIBLE_APPROX_RATIO
+
+        trial.set_user_attr("graphs_feasible", graphs_feasible)
+        trial.set_user_attr("time_s", round(elapsed, 3))
+
+        print(
+            f"[{solver_name}] trial {trial.number:<4} sweeps={sample_kwargs['num_sweeps']:<5} "
+            f"beta=({beta_min:.2e},{beta_max:.2e}) type={sample_kwargs['beta_schedule_type']:<9} "
+            f"gamma={sample_kwargs['Gamma']:<3} | "
+            f"qpc={sample_kwargs['qubits_per_chain']:<3} | "
+            f"graphs_feasible={graphs_feasible}/{len(graph_cache)} "
+            f"mean_approx_ratio={mean_approx_ratio:.4f} time={elapsed:.2f}s"
+        )
+
+        return graphs_feasible_rate, mean_approx_ratio
+
+    return objective
+
+
+def run_search():
+    graph_cache = load_graph_cache()
+    grid_size = len(BETA_GRID) * len(BETA_GRID) * len(GAMMA_BOUNDS) * 2
+
+    print(f"{len(graph_cache)} graphs, {grid_size} grid points x {len(SEEDS)} seeds x {len(graph_cache)} graphs per solver")
+
+    all_rows = []
+    for solver_name, solver in SOLVERS.items():
+        print(f"\n=== {solver_name} ===")
+        study = optuna.create_study(
+            directions=["maximize", "minimize"],
+            study_name=f"{solver_name}_robust",
+            sampler=BruteForceSampler(),
+        )
+        study.optimize(
+            make_objective(solver_name, solver, graph_cache),
+            n_jobs=-1,
+        )
+
+        trials_df = study.trials_dataframe()
+        trials_df["solver"] = solver_name
+        all_rows.append(trials_df)
+
+        print(f"\nPareto-optimal trials for {solver_name} (graphs_feasible desc, mean_approx_ratio asc):")
+        for t in sorted(study.best_trials, key=lambda t: (-t.values[0], t.values[1])):
+            print(f"  trial {t.number:<4} graphs_feasible={t.user_attrs['graphs_feasible']}/{len(graph_cache)} "
+                  f"mean_approx_ratio={t.values[1]:.4f} params={t.params}")
+
+    df = pd.concat(all_rows, ignore_index=True)
+    csv_path = "normalize_bqm_optuna_search.csv"
+    df.to_csv(csv_path, index=False)
+    print(f"\nResults saved to {csv_path}")
+    return df
+
+
+if __name__ == "__main__":
+    run_search()
