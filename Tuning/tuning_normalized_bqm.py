@@ -20,12 +20,12 @@ DATASET_PATH = os.path.join(PARENT_DIR, "Dataset/quantum_dataset/quantum_extra.p
 SEEDS = [42, 123, 456, 789, 999]
 NUM_READS = 10
 
-BETA_GRID = [float(b) for b in np.logspace(-4, 4, 9)]  # 1e-9 ... 1e9, one point per decade
+BETA_GRID = [float(b) for b in np.logspace(-2, 0, 3)]  # 1e-4 ... 1e0, one point per decade
 # Only beta_min <= beta_max combos are valid schedules, so build that set up
 # front rather than suggesting beta_min/beta_max independently and discarding
 # the invalid half of the grid at trial time.
 BETA_RANGES = [(lo, hi) for lo in BETA_GRID for hi in BETA_GRID if lo <= hi]
-NUM_SWEEPS = 1000
+NUM_SWEEPS = 100
 NUM_SWEEPS_PER_BETA = 1
 
 # PathIntegralAnnealingSampler-only knobs; SimulatedAnnealingSampler.sample()
@@ -33,7 +33,7 @@ NUM_SWEEPS_PER_BETA = 1
 # classical SA (no chains); >1 is what actually turns on path-integral/
 # quantum-tunneling behavior. Gamma is the transverse field magnitude and
 # chain_coupler_strength ties a chain's Trotter slices together.
-QUBITS_PER_CHAIN_BOUNDS = 1
+QUBITS_PER_CHAIN_BOUNDS = 1 
 GAMMA_BOUNDS = [float(b) for b in np.logspace(-4, 4, 9)]
 # GAMMA_BOUNDS = 1
 
@@ -46,6 +46,8 @@ SOLVERS = {
 # always >=1.0 for a feasible config, so a fixed sentinel above any realistic
 # ratio marks "infeasible" as strictly worse without using an unbounded value.
 INFEASIBLE_APPROX_RATIO = 10.0
+
+CSV_PATH = os.path.join(PARENT_DIR, "normalize_bqm_optuna_search.csv")
 
 
 def build_beta_schedule(beta_min, beta_max, schedule_type):
@@ -64,7 +66,11 @@ def build_beta_schedule(beta_min, beta_max, schedule_type):
 
 
 def build_sample_kwargs(trial, solver_name):
-    beta_min, beta_max = trial.suggest_categorical("beta_range", BETA_RANGES)
+    # suggest_categorical requires None/bool/int/float/str choices for
+    # persistent storage, so suggest an index into BETA_RANGES rather than
+    # the (lo, hi) tuple itself.
+    beta_range_idx = trial.suggest_categorical("beta_range_idx", list(range(len(BETA_RANGES))))
+    beta_min, beta_max = BETA_RANGES[beta_range_idx]
     schedule_type = trial.suggest_categorical("beta_schedule_type", ["linear", "geometric"])
     beta_schedule = build_beta_schedule(beta_min, beta_max, schedule_type)
 
@@ -129,13 +135,70 @@ def load_graph_cache():
     return cache
 
 
-def make_objective(solver_name, solver, graph_cache):
+def trial_config_key(trial, beta_min, beta_max):
+    """Identify a trial by its resolved param *values* rather than
+    beta_range_idx, since that index's meaning shifts whenever BETA_GRID
+    changes. Assumes graph_cache/SEEDS/NUM_READS are unchanged between runs
+    being compared, since those affect the result for a given config too."""
+    other_params = tuple(
+        sorted((k, v) for k, v in trial.params.items() if k not in ("beta_range_idx", "beta_schedule_type"))
+    )
+    return (round(beta_min, 12), round(beta_max, 12), trial.params["beta_schedule_type"]) + other_params
+
+
+def load_cached_results(csv_path, solver_name):
+    """Map config key -> prior COMPLETE result for solver_name, so reruns of
+    the same grid can skip trials already recorded in csv_path."""
+    if not os.path.exists(csv_path):
+        return {}
+
+    df = pd.read_csv(csv_path)
+    df = df[(df["solver"] == solver_name) & (df["state"] == "COMPLETE")]
+    required = {"user_attrs_beta_min", "user_attrs_beta_max", "params_beta_schedule_type", "values_0", "values_1", "user_attrs_graphs_feasible"}
+    if df.empty or not required.issubset(df.columns):
+        return {}
+
+    other_param_cols = sorted(
+        c for c in df.columns
+        if c.startswith("params_") and c not in ("params_beta_range_idx", "params_beta_schedule_type")
+    )
+
+    cached = {}
+    for _, row in df.iterrows():
+        key = (
+            (round(row["user_attrs_beta_min"], 12), round(row["user_attrs_beta_max"], 12), row["params_beta_schedule_type"])
+            + tuple(sorted((c[len("params_"):], row[c]) for c in other_param_cols))
+        )
+        cached[key] = {
+            "graphs_feasible_rate": row["values_0"],
+            "mean_approx_ratio": row["values_1"],
+            "graphs_feasible": row["user_attrs_graphs_feasible"],
+        }
+    return cached
+
+
+def make_objective(solver_name, solver, graph_cache, cached_results):
     """Evaluate one param combo across every graph, so the winner is the combo that
     stays feasible on the most graphs rather than one overfit to a single graph."""
     def objective(trial):
         sample_kwargs = build_sample_kwargs(trial, solver_name)
-        beta_min, beta_max = trial.params["beta_range"]
+        beta_min, beta_max = BETA_RANGES[trial.params["beta_range_idx"]]
         schedule_type = trial.params["beta_schedule_type"]
+        trial.set_user_attr("beta_min", beta_min)
+        trial.set_user_attr("beta_max", beta_max)
+
+        cached = cached_results.get(trial_config_key(trial, beta_min, beta_max))
+        if cached is not None:
+            trial.set_user_attr("graphs_feasible", cached["graphs_feasible"])
+            trial.set_user_attr("time_s", 0.0)
+            trial.set_user_attr("skipped", True)
+            print(
+                f"[{solver_name}] trial {trial.number:<4} SKIPPED (already in csv) "
+                f"beta=({beta_min:.2e},{beta_max:.2e}) type={schedule_type:<9} "
+                f"graphs_feasible={cached['graphs_feasible']}/{len(graph_cache)} "
+                f"mean_approx_ratio={cached['mean_approx_ratio']:.4f}"
+            )
+            return cached["graphs_feasible_rate"], cached["mean_approx_ratio"]
 
         t0 = time.time()
         graphs_feasible = 0
@@ -186,14 +249,18 @@ def run_search():
     all_rows = []
     for solver_name, solver in SOLVERS.items():
         print(f"\n=== {solver_name} ===")
+        cached_results = load_cached_results(CSV_PATH, solver_name)
+        if cached_results:
+            print(f"Found {len(cached_results)} already-completed {solver_name} configs in {CSV_PATH}; these will be skipped.")
+
         study = optuna.create_study(
             directions=["maximize", "minimize"],
             study_name=f"{solver_name}_robust",
             sampler=BruteForceSampler(),
         )
         study.optimize(
-            make_objective(solver_name, solver, graph_cache),
-            n_jobs=-1,
+            make_objective(solver_name, solver, graph_cache, cached_results),
+            n_jobs=8,
         )
 
         trials_df = study.trials_dataframe()
@@ -206,9 +273,8 @@ def run_search():
                   f"mean_approx_ratio={t.values[1]:.4f} params={t.params}")
 
     df = pd.concat(all_rows, ignore_index=True)
-    csv_path = "normalize_bqm_optuna_search.csv"
-    df.to_csv(csv_path, index=False)
-    print(f"\nResults saved to {csv_path}")
+    df.to_csv(CSV_PATH, index=False)
+    print(f"\nResults saved to {CSV_PATH}")
     return df
 
 
