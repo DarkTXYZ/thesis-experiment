@@ -31,17 +31,25 @@ NUM_READS = 10
 # others. Instead we compute each graph's own hot/cold beta estimate (from
 # its un-normalized biases, rescaled by its own normalization factor) and
 # only tune a shared multiplier on top of that per-instance estimate.
-BETA_SCALE_MULTIPLIERS = [0.1, 0.3, 1.0, 3.0, 10.0]
-NUM_SWEEPS = 1000
-NUM_SWEEPS_PER_BETA = 1
+BETA_SCALE_MULTIPLIERS = [1]
+NUM_SWEEPS = 10
+NUM_SWEEPS_PER_BETA = 2
 
-# PathIntegralAnnealingSampler-only knobs; SimulatedAnnealingSampler.sample()
-# has no such parameters at all. qubits_per_chain=1 collapses to plain
+# PathIntegralAnnealingSampler-only knob; SimulatedAnnealingSampler.sample()
+# has no such parameter at all. qubits_per_chain=1 collapses to plain
 # classical SA (no chains); >1 is what actually turns on path-integral/
-# quantum-tunneling behavior. Gamma is the transverse field magnitude and
-# chain_coupler_strength ties a chain's Trotter slices together.
+# quantum-tunneling behavior.
 QUBITS_PER_CHAIN_BOUNDS = 1
-GAMMA_BOUNDS = [float(b) for b in np.logspace(-4, 4, 9)]
+
+# The sampler also accepts a scalar 'Gamma' kwarg, but with a custom
+# (Hp_field/Hd_field) schedule it is dead: run() immediately overwrites its
+# internal transverse-field state with Hd_field[0] before the first sweep,
+# so Gamma is discarded unread (verified against dwave-samplers source and
+# empirically - varying Gamma alone across 1e-4..1e4 produced identical
+# energies for a fixed seed). The transverse field is controlled entirely by
+# Hd_field, so we tune its magnitude directly via this multiplier instead.
+# HD_SCALE_MULTIPLIERS = [float(b) for b in np.logspace(-2, 0, 3)]
+HD_SCALE_MULTIPLIERS = [1]
 
 SOLVERS = {
     # "SimulatedAnnealingSampler": SimulatedAnnealingSampler(),
@@ -69,7 +77,7 @@ def build_beta_schedule(beta_min, beta_max, schedule_type):
     raise ValueError(f"Unknown beta schedule type: {schedule_type}")
 
 
-def build_sample_kwargs(solver_name, beta_min, beta_max, schedule_type, gamma, randomize_order, proposal_acceptance_criteria):
+def build_sample_kwargs(solver_name, beta_min, beta_max, schedule_type, hd_scale_multiplier, randomize_order, proposal_acceptance_criteria):
     beta_schedule = build_beta_schedule(beta_min, beta_max, schedule_type)
 
     sample_kwargs = dict(
@@ -85,9 +93,8 @@ def build_sample_kwargs(solver_name, beta_min, beta_max, schedule_type, gamma, r
         sample_kwargs["proposal_acceptance_criteria"] = proposal_acceptance_criteria
     else:
         sample_kwargs["Hp_field"] = beta_schedule
-        sample_kwargs["Hd_field"] = beta_schedule[::-1]
+        sample_kwargs["Hd_field"] = hd_scale_multiplier * beta_schedule[::-1]
         sample_kwargs["qubits_per_chain"] = QUBITS_PER_CHAIN_BOUNDS
-        sample_kwargs["Gamma"] = gamma
 
     return sample_kwargs
 
@@ -121,20 +128,19 @@ def load_graph_cache():
         G = convert_graph_data_to_nx(graph_data)
 
         bqm_raw = generate_bqm_instance(G)
-        bqm_raw.normalize()  # just to get the scale factor, not to keep the normalized BQM
         hot_beta, cold_beta = default_beta_range(bqm_raw)
 
-        # bqm = generate_bqm_instance(G)
-        # scale = bqm.normalize()
+        bqm = generate_bqm_instance(G)
+        scale = bqm.normalize()
 
         cache.append({
             "graph_id": graph_data["id"],
             "G": G,
             "n": G.number_of_nodes(),
             "lower_bound": graph_data["lower_bound"],
-            "bqm": bqm_raw,
-            "beta_min_base": hot_beta,
-            "beta_max_base": cold_beta,
+            "bqm": bqm,
+            "beta_min_base": hot_beta / scale,
+            "beta_max_base": cold_beta / scale,
         })
     return cache
 
@@ -146,13 +152,13 @@ def make_objective(solver_name, solver, graph_cache):
         beta_scale_multiplier = trial.suggest_categorical("beta_scale_multiplier", BETA_SCALE_MULTIPLIERS)
         schedule_type = trial.suggest_categorical("beta_schedule_type", ["linear", "geometric"])
 
-        gamma = randomize_order = proposal_acceptance_criteria = None
+        hd_scale_multiplier = randomize_order = proposal_acceptance_criteria = None
         if solver_name == "SA":
             randomize_order = trial.suggest_categorical("randomize_order", [False, True])
             proposal_acceptance_criteria = trial.suggest_categorical(
                 "proposal_acceptance_criteria", ["Metropolis", "Gibbs"])
         else:
-            gamma = trial.suggest_categorical("gamma", GAMMA_BOUNDS)
+            hd_scale_multiplier = trial.suggest_categorical("hd_scale_multiplier", HD_SCALE_MULTIPLIERS)
 
         t0 = time.time()
         graphs_feasible = 0
@@ -168,7 +174,7 @@ def make_objective(solver_name, solver, graph_cache):
             ))
             sample_kwargs = build_sample_kwargs(
                 solver_name, beta_min, beta_max, schedule_type,
-                gamma, randomize_order, proposal_acceptance_criteria,
+                hd_scale_multiplier, randomize_order, proposal_acceptance_criteria,
             )
 
             best_cost = None
@@ -194,7 +200,7 @@ def make_objective(solver_name, solver, graph_cache):
         print(
             f"[{solver_name}] trial {trial.number:<4} sweeps={NUM_SWEEPS:<5} "
             f"beta_scale={beta_scale_multiplier:<6} type={schedule_type:<9} "
-            f"gamma={gamma} | "
+            f"hd_scale={hd_scale_multiplier} | "
             f"graphs_feasible={graphs_feasible}/{len(graph_cache)} "
             f"mean_approx_ratio={mean_approx_ratio:.4f} time={elapsed:.2f}s"
         )
@@ -206,38 +212,38 @@ def make_objective(solver_name, solver, graph_cache):
 
 def run_search():
     graph_cache = load_graph_cache()
-    grid_size = len(BETA_SCALE_MULTIPLIERS) * len(GAMMA_BOUNDS) * 2  # x2 for linear/geometric schedule_type
+    grid_size = len(BETA_SCALE_MULTIPLIERS) * len(HD_SCALE_MULTIPLIERS) * 2  # x2 for linear/geometric schedule_type
 
     print(f"{len(graph_cache)} graphs, {grid_size} grid points x {len(SEEDS)} seeds x {len(graph_cache)} graphs per solver")
     for graph in graph_cache:
         print(f"  graph {graph['graph_id']}: beta_range_base=({graph['beta_min_base']:.3e}, {graph['beta_max_base']:.3e})")
 
-    # all_rows = []
-    # for solver_name, solver in SOLVERS.items():
-    #     print(f"\n=== {solver_name} ===")
-    #     study = optuna.create_study(
-    #         directions=["maximize", "minimize"],
-    #         study_name=f"{solver_name}_robust_based_on_instance",
-    #         sampler=BruteForceSampler(),
-    #     )
-    #     study.optimize(
-    #         make_objective(solver_name, solver, graph_cache),
-    #         n_jobs=8,
-    #     )
+    all_rows = []
+    for solver_name, solver in SOLVERS.items():
+        print(f"\n=== {solver_name} ===")
+        study = optuna.create_study(
+            directions=["maximize", "minimize"],
+            study_name=f"{solver_name}_robust_based_on_instance",
+            sampler=BruteForceSampler(),
+        )
+        study.optimize(
+            make_objective(solver_name, solver, graph_cache),
+            n_jobs=-1,
+        )
 
-    #     trials_df = study.trials_dataframe()
-    #     trials_df["solver"] = solver_name
-    #     all_rows.append(trials_df)
+        trials_df = study.trials_dataframe()
+        trials_df["solver"] = solver_name
+        all_rows.append(trials_df)
 
-    #     print(f"\nPareto-optimal trials for {solver_name} (graphs_feasible desc, mean_approx_ratio asc):")
-    #     for t in sorted(study.best_trials, key=lambda t: (-t.values[0], t.values[1])):
-    #         print(f"  trial {t.number:<4} graphs_feasible={t.user_attrs['graphs_feasible']}/{len(graph_cache)} "
-    #               f"mean_approx_ratio={t.values[1]:.4f} params={t.params}")
+        print(f"\nPareto-optimal trials for {solver_name} (graphs_feasible desc, mean_approx_ratio asc):")
+        for t in sorted(study.best_trials, key=lambda t: (-t.values[0], t.values[1])):
+            print(f"  trial {t.number:<4} graphs_feasible={t.user_attrs['graphs_feasible']}/{len(graph_cache)} "
+                  f"mean_approx_ratio={t.values[1]:.4f} params={t.params}")
 
-    # df = pd.concat(all_rows, ignore_index=True)
-    # df.to_csv(CSV_PATH, index=False)
-    # print(f"\nResults saved to {CSV_PATH}")
-    # return df
+    df = pd.concat(all_rows, ignore_index=True)
+    df.to_csv(CSV_PATH, index=False)
+    print(f"\nResults saved to {CSV_PATH}")
+    return df
 
 
 if __name__ == "__main__":
