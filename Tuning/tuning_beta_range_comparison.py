@@ -1,15 +1,22 @@
-"""Find the best (beta_min, beta_max) pair, searched directly over [0, 1].
+"""Find the best (beta_min, beta_max) pair, searched directly as fixed breakpoints.
 
 The per-instance beta ranges elsewhere in this repo come from default_beta_range()
-on the un-normalized bqm rescaled by 1/normalize_scale, which produces a ~500x-wide
-range (e.g. 0.66 to 343 for one graph in this dataset). That width is what forced
-hd_scale down to near-zero just to keep the mirrored Hd_field from overwhelming the
-anneal (see git history of this file). Since the bqm is normalized, its biases are
-O(1), so beta values of that same order are the physically relevant range to search -
-this sweeps (beta_min, beta_max) directly over [0, 1] per graph instead of deriving
-them from the raw-bias heuristic. With betas already this small, the natural mirrored
-Hd_field (= reversed Hp_field) stays well-scaled too, so hd_scale_multiplier is fixed
-at 1 (no extra scaling) rather than searched.
+on the un-normalized bqm rescaled by 1/normalize_scale (e.g. 0.66 to 343 for the
+n=10 graph this script evaluates). Normalizing shrinks biases by the same factor
+it shrinks beta_min/beta_max apart from - it does NOT mean beta itself should be
+O(1): since acceptance probability goes as exp(-beta*deltaE), shrinking deltaE
+(smaller normalized biases) requires a proportionally LARGER beta to reach the same
+"coldness", not a smaller one. Measured default_beta_range()-derived estimates across
+this dataset's graphs range ~340-1071, growing with graph size. BETA_BREAKPOINTS below
+brackets that same order of magnitude as a direct sanity check against the per-instance
+heuristic, instead of assuming a scale a priori.
+
+NUM_SWEEPS=200 is likewise measured, not guessed: at num_sweeps=10 (this script's
+original value) every beta range tested gave 0/N feasible reads - zero signal to
+compare on. Scanning num_sweeps on the n=10 graph at beta_max=343 showed feasibility
+climbing 0%(10)->12%(50)->34%(100)->62%(200)->93%(1000), while the best solution found
+already plateaus by num_sweeps=200. 200 is the point where there's enough signal to
+compare beta ranges without paying for sweeps beyond the quality plateau.
 """
 import os
 import sys
@@ -24,13 +31,14 @@ import tuning_normalized_bqm_based_on_instance as base
 CSV_PATH = os.path.join(base.PARENT_DIR, "beta_range_comparison.csv")
 
 # Fixed, not searched: pin every other knob so the comparison isolates beta_min/beta_max.
-base.NUM_SWEEPS = 1000
-base.NUM_SWEEPS_PER_BETA = 2
-SCHEDULE_TYPE = "linear"
+base.NUM_SWEEPS = 200
+base.NUM_SWEEPS_PER_BETA = 10
+SCHEDULE_TYPE = "geometric"
 HD_SCALE_MULTIPLIER = 1  # identity - no extra scaling of Hd_field, see module docstring.
 
-BETA_BREAKPOINTS = [1.0, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048]
-BETA_RANGES = list(combinations(BETA_BREAKPOINTS, 2))  # all (beta_min, beta_max) with beta_min < beta_max
+BETA_BREAKPOINTS = [512]
+# BETA_RANGES = list(combinations(BETA_BREAKPOINTS, 2))  # all (beta_min, beta_max) with beta_min < beta_max
+BETA_RANGES = [(1, beta) for beta in BETA_BREAKPOINTS]  # all (0, beta_max) pairs
 
 
 def evaluate(solver, graph_cache, beta_min, beta_max):
