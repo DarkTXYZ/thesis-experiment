@@ -64,6 +64,8 @@ def evaluate(solver, graph_cache, beta_min, beta_max):
         if best_cost is not None:
             graphs_feasible += 1
             approx_ratios.append(best_cost / lower_bound)
+            
+        break
 
     elapsed = time.time() - t0
     mean_approx_ratio = (
