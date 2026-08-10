@@ -12,7 +12,7 @@ RESULTS_PATH = "Results/pia_experiment"
 
 SEEDS = [42, 123, 456, 789, 999]
 NUM_READS = 10
-NUM_SWEEPS = 1000
+NUM_SWEEPS = 500
 
 
 def convert_graph_data_to_nx(graph_data):

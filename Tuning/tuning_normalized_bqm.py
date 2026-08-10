@@ -20,7 +20,7 @@ DATASET_PATH = os.path.join(PARENT_DIR, "Dataset/quantum_dataset/quantum_extra.p
 SEEDS = [42, 123, 456, 789, 999]
 NUM_READS = 10
 
-BETA_GRID = [float(b) for b in np.logspace(-2, 0, 3)]  # 1e-4 ... 1e0, one point per decade
+BETA_GRID = [float(b) for b in np.logspace(1, 4, 4)]  # 1e-4 ... 1e0, one point per decade
 # Only beta_min <= beta_max combos are valid schedules, so build that set up
 # front rather than suggesting beta_min/beta_max independently and discarding
 # the invalid half of the grid at trial time.
