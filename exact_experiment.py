@@ -23,6 +23,8 @@ GRAPH_DISPLAY_NAMES = {
 
 PIA_NUM_READS = 10
 PIA_NUM_SWEEPS = 1000
+Hp_field = np.linspace(0, 1, PIA_NUM_SWEEPS)
+Hd_field = np.linspace(1, 0, PIA_NUM_SWEEPS)
 
 
 def decode_thermometer(sample, n):
@@ -61,7 +63,8 @@ def solve_with_exact(graph, bqm, n):
 
 def solve_with_pia(graph, bqm, n):
     sampler = PathIntegralAnnealingSampler()
-    response = sampler.sample(bqm, num_reads=PIA_NUM_READS, num_sweeps=PIA_NUM_SWEEPS)
+
+    response = sampler.sample(bqm, num_reads=PIA_NUM_READS, num_sweeps=PIA_NUM_SWEEPS, beta_schedule_type="custom", Hp_field=Hp_field, Hd_field=Hd_field)
 
     best_cost = None
     feasible_count = 0
