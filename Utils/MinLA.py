@@ -9,28 +9,45 @@ from typing import Dict, Tuple
 import numpy as np
 from gurobipy import GRB
 
-def calculate_upper_obj_bound(G: nx.Graph):
+def calculate_upper_obj_bound(G: nx.Graph) -> int:
     n = G.number_of_nodes()
     m = G.number_of_edges()
     
-    naive = m * (n - 1)
-    complete = n * (n - 1) * (n + 1) / 6.0
+    if m == 0:
+        return 0
+        
+    # 1. Naive Bound (UB_naive) - Eq. (4)
+    # (Not strictly needed for the final min(), but kept for structural completeness)
+    ub_naive = m * (n - 1)
     
-    number_of_edges_remaining = m
-    edges = 0
+    # 2. Edge Bound (UB_edge) - Eq. (5)
+    ub_edge = 0
+    edges_remaining = m
     edge_length = n - 1
-    while number_of_edges_remaining > 0:
-        possible_edges_at_length = n - edge_length
-        if (number_of_edges_remaining >= possible_edges_at_length):
-            edges += possible_edges_at_length * edge_length
-            number_of_edges_remaining -= possible_edges_at_length
-            edge_length -= 1
-        else:
-            edges += number_of_edges_remaining * edge_length
-            number_of_edges_remaining = 0
-            edge_length -= 1
     
-    return min(naive, complete, edges)
+    while edges_remaining > 0:
+        # At distance (edge_length), there are at most (n - edge_length) possible edges
+        possible_edges = n - edge_length
+        if edges_remaining >= possible_edges:
+            ub_edge += possible_edges * edge_length
+            edges_remaining -= possible_edges
+        else:
+            ub_edge += edges_remaining * edge_length
+            edges_remaining = 0
+        edge_length -= 1
+        
+    # 3. Degree Bound (UB_deg) - Eq. (6)
+    ub_deg_sum = 0
+    for _, d in G.degree():
+        # g(d) = d * (2N - d - 1) / 2
+        g_d = (d * (2 * n - d - 1)) / 2.0
+        ub_deg_sum += g_d
+        
+    ub_deg = ub_deg_sum / 2.0
+    
+    # Eq. (8): U = min { UB_edge, UB_deg }
+    # We cast to int. If ub_deg is a float like 10.5, the max integer cost is 10.
+    return int(min(ub_edge, ub_deg))
 
 def calculate_lower_obj_bound(G: nx.Graph):
     n = G.number_of_nodes()
