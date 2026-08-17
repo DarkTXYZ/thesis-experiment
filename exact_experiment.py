@@ -76,7 +76,7 @@ def solve_with_pia(graph, bqm, n):
     return best_cost, feasible_count
 
 
-def report(solver_name, graph_name, graph, gt_obj, gt_solutions, feasible_solutions):
+def report(solver_name, graph_name, graph, gt_obj, gt_solutions, feasible_solutions, penalty_mode):
     if not feasible_solutions:
         print(f"  {solver_name}: No feasible solutions found!")
         return
@@ -90,7 +90,7 @@ def report(solver_name, graph_name, graph, gt_obj, gt_solutions, feasible_soluti
     is_optimal = best_cost == gt_obj
     match = gt_set == found_set
 
-    print(f"  {solver_name}:")
+    print(f"  {solver_name} (penalty: {penalty_mode}):")
     print(f"    Best obj: {best_cost} (optimal: {is_optimal})")
     print(f"    #optimal solutions found: {len(found_set)} / {len(gt_set)}")
     print(f"    Total feasible: {len(feasible_solutions)}")
@@ -125,55 +125,57 @@ def main():
         gt_solutions = [tuple(s) for s in gt["solutions"]]
         gt_set = set(gt_solutions)
 
-        bqm = generate_bqm_instance(graph)
-
         print(f"\n{'='*50}")
         print(f"Graph: {graph_name} (n={n}, m={graph.number_of_edges()}), ground truth obj: {gt_obj}")
 
-        # dimod ExactSolver
-        exact_results = solve_with_exact(graph, bqm, n)
-        report("dimod.ExactSolver", graph_name, graph, gt_obj, gt_solutions, exact_results)
+        for penalty_mode in ['lucas', 'exact']:
+            bqm = generate_bqm_instance(graph, penalty_mode)
 
-        if exact_results:
-            exact_best = min(s[1] for s in exact_results)
-            exact_optimal = set(s[0] for s in exact_results if s[1] == exact_best)
-            exact_match = gt_set == exact_optimal
-        else:
-            exact_best = None
-            exact_optimal = set()
-            exact_match = False
+            # dimod ExactSolver
+            exact_results = solve_with_exact(graph, bqm, n)
+            report("dimod.ExactSolver", graph_name, graph, gt_obj, gt_solutions, exact_results, penalty_mode)
 
-        # Path Integral Annealing
-        pia_best, pia_feasible_count = solve_with_pia(graph, bqm, n)
-        if pia_best is not None:
-            print(f"  PathIntegralAnnealing: Best obj: {pia_best} (optimal: {pia_best == gt_obj})")
-            print(f"    Total feasible: {pia_feasible_count}")
-        else:
-            print(f"  PathIntegralAnnealing: No feasible solutions found!")
+            if exact_results:
+                exact_best = min(s[1] for s in exact_results)
+                exact_optimal = set(s[0] for s in exact_results if s[1] == exact_best)
+                exact_match = gt_set == exact_optimal
+            else:
+                exact_best = None
+                exact_optimal = set()
+                exact_match = False
 
-        m = graph.number_of_edges()
-        density = round(2 * m / (n * (n - 1)), 4) if n > 1 else 0
-        display_name = GRAPH_DISPLAY_NAMES.get(graph_name, graph_name)
+            # Path Integral Annealing
+            pia_best, pia_feasible_count = solve_with_pia(graph, bqm, n)
+            if pia_best is not None:
+                print(f"  PathIntegralAnnealing (penalty: {penalty_mode}): Best obj: {pia_best} (optimal: {pia_best == gt_obj})")
+                print(f"    Total feasible: {pia_feasible_count}")
+            else:
+                print(f"  PathIntegralAnnealing (penalty: {penalty_mode}): No feasible solutions found!")
 
-        rows.append({
-            "Graph": display_name,
-            "|V|": n,
-            "|E|": m,
-            "Density": density,
-            "QUBO Variables": n * n,
-            "Optimal MinLA": gt_obj,
-            "# Optimal Permutations": len(gt_set),
-            "ExactSolver MinLA": exact_best,
-            "ExactSolver # Feasible": len(exact_results),
-            "ExactSolver # Optimal Found": len(exact_optimal),
-            "ExactSolver All Found": exact_match,
-            "PIA MinLA": pia_best,
-            "PIA # Feasible": pia_feasible_count,
-            "PIA Optimal": pia_best == gt_obj if pia_best is not None else False,
-        })
+            m = graph.number_of_edges()
+            density = round(2 * m / (n * (n - 1)), 4) if n > 1 else 0
+            display_name = GRAPH_DISPLAY_NAMES.get(graph_name, graph_name)
+
+            rows.append({
+                "Graph": display_name,
+                "Penalty Mode": penalty_mode,
+                "|V|": n,
+                "|E|": m,
+                "Density": density,
+                "QUBO Variables": n * n,
+                "Optimal MinLA": gt_obj,
+                "# Optimal Permutations": len(gt_set),
+                "ExactSolver MinLA": exact_best,
+                "ExactSolver # Feasible": len(exact_results),
+                "ExactSolver # Optimal Found": len(exact_optimal),
+                "ExactSolver All Found": exact_match,
+                "PIA MinLA": pia_best,
+                "PIA # Feasible": pia_feasible_count,
+                "PIA Optimal": pia_best == gt_obj if pia_best is not None else False,
+            })
 
     fieldnames = [
-        "Graph", "|V|", "|E|", "Density", "QUBO Variables",
+        "Graph", "Penalty Mode", "|V|", "|E|", "Density", "QUBO Variables",
         "Optimal MinLA", "# Optimal Permutations",
         "ExactSolver MinLA", "ExactSolver # Feasible", "ExactSolver # Optimal Found", "ExactSolver All Found",
         "PIA MinLA", "PIA # Feasible", "PIA Optimal",

@@ -79,16 +79,16 @@ def calculate_lucas_bound(G: nx.Graph):
     
     return mu_thermometer, mu_bijective
 
-def get_penalties(graph: nx.Graph, penalty_mode: str = 'exact') -> tuple[float, float]:
+def get_penalties(graph: nx.Graph, penalty_mode: str = 'lucas') -> tuple[float, float]:
     if penalty_mode == "lucas":
         return calculate_lucas_bound(graph)
     elif penalty_mode == "exact":
         return calculate_exact_bound(graph)
     raise ValueError(f"Unknown penalty mode: {penalty_mode}")
 
-def generate_bqm_instance(graph: nx.Graph) -> dimod.BinaryQuadraticModel:
+def generate_bqm_instance(graph: nx.Graph, penalty_mode: str = 'lucas') -> dimod.BinaryQuadraticModel:
     n = graph.number_of_nodes()
-    mu_thermo, mu_bijec = get_penalties(graph)
+    mu_thermo, mu_bijec = get_penalties(graph, penalty_mode)
     
     X = Array.create('X', shape=(n, n), vartype='BINARY')
     
