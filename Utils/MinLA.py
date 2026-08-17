@@ -30,14 +30,14 @@ def calculate_upper_obj_bound(G: nx.Graph):
             number_of_edges_remaining = 0
             edge_length -= 1
     
-    return int(min(naive, complete, edges)) + 1
+    return naive
 
 def calculate_lower_obj_bound(G: nx.Graph):
     n = G.number_of_nodes()
     m = G.number_of_edges()
     
     number_of_edges_remaining = m
-    edges = 0
+    edges = 0 
     edge_length = 1
     while number_of_edges_remaining > 0:
         possible_edges_at_length = n - edge_length
@@ -66,18 +66,20 @@ def calculate_lower_obj_bound(G: nx.Graph):
 
 def calculate_exact_bound(G: nx.Graph):
     upper_bound_obj = calculate_upper_obj_bound(G)
-    return upper_bound_obj + 1, upper_bound_obj + 1
+    return (upper_bound_obj + 1), upper_bound_obj + 1
 
 def calculate_lucas_bound(G: nx.Graph):
     degree_sequence = (d for _, d in G.degree())
     delta = max(degree_sequence)
-    
-    mu_thermometer = delta * G.number_of_nodes() / 2 + 1
+    n = G.number_of_nodes() 
+
+    # mu_thermometer = delta * (n * (n+1) // 2) + 1
+    mu_thermometer = delta + 1
     mu_bijective = delta + 1
     
     return mu_thermometer, mu_bijective
 
-def get_penalties(graph: nx.Graph, penalty_mode: str = 'lucas') -> tuple[float, float]:
+def get_penalties(graph: nx.Graph, penalty_mode: str = 'exact') -> tuple[float, float]:
     if penalty_mode == "lucas":
         return calculate_lucas_bound(graph)
     elif penalty_mode == "exact":
