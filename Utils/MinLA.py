@@ -30,7 +30,7 @@ def calculate_upper_obj_bound(G: nx.Graph):
             number_of_edges_remaining = 0
             edge_length -= 1
     
-    return naive
+    return min(naive, complete, edges)
 
 def calculate_lower_obj_bound(G: nx.Graph):
     n = G.number_of_nodes()
