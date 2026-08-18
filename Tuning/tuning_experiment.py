@@ -4,6 +4,7 @@ import pickle
 import time
 import pandas as pd
 import networkx as nx
+import numpy as np
 from dwave.samplers import SimulatedAnnealingSampler, PathIntegralAnnealingSampler
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -123,7 +124,7 @@ def run_experiment():
                 lower_bound = graph_data["lower_bound"]
 
                 for penalty in PENALTY_METHODS:
-                    bqm = minla.generate_bqm_instance(G, penalty_method=penalty)
+                    bqm = minla.generate_bqm_instance(G, penalty_mode=penalty)
                     bqm.normalize()
                     bqm_normalized = True
 
@@ -136,16 +137,32 @@ def run_experiment():
                             )
                             if run_key in existing_keys:
                                 continue
-
+                            
                             t0 = time.time()
-                            sampleset = solver.sample(
-                                bqm,
-                                num_reads=NUM_READS,
-                                num_sweeps=num_sweeps,
-                                beta_range=list(beta_range),
-                                beta_schedule_type=schedule_type,
-                                seed=seed,
-                            )
+                            
+                            if solver_name == "PathIntegralAnnealingSampler":
+                                
+                                Hp_field = np.linspace(beta_range[0], beta_range[1], num_sweeps)
+                                Hd_field = np.linspace(beta_range[1], beta_range[0], num_sweeps)
+                                
+                                sampleset = solver.sample(
+                                    bqm,
+                                    num_reads=NUM_READS,
+                                    num_sweeps=num_sweeps,
+                                    beta_schedule_type='custom',
+                                    Hp_field=Hp_field,
+                                    Hd_field=Hd_field,
+                                    seed=seed,
+                                )
+                            else:
+                                sampleset = solver.sample(
+                                    bqm,
+                                    num_reads=NUM_READS,
+                                    num_sweeps=num_sweeps,
+                                    beta_range=list(beta_range),
+                                    beta_schedule_type=schedule_type,
+                                    seed=seed,
+                                )
                             elapsed = time.time() - t0
 
                             best_cost = None
