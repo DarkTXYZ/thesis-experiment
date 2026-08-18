@@ -125,15 +125,12 @@ def run_experiment():
 
                 for penalty in PENALTY_METHODS:
                     bqm = minla.generate_bqm_instance(G, penalty_mode=penalty)
-                    bqm.normalize()
-                    bqm_normalized = True
 
                     for config_count, (num_sweeps, beta_range, schedule_type) in enumerate(configs, 1):
                         for seed in SEEDS:
                             run_key = (
                                 solver_name, penalty, int(graph_id), int(seed), int(num_sweeps),
                                 float(beta_range[0]), float(beta_range[1]), schedule_type,
-                                bqm_normalized,
                             )
                             if run_key in existing_keys:
                                 continue
@@ -191,7 +188,6 @@ def run_experiment():
                                 "beta_min": beta_range[0],
                                 "beta_max": beta_range[1],
                                 "beta_schedule_type": schedule_type,
-                                "bqm_normalized": bqm_normalized,
                                 "feasible": feasible,
                                 "minla_cost": best_cost,
                                 "lower_bound": lower_bound,
