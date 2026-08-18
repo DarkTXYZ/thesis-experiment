@@ -13,15 +13,13 @@ PARENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATASET_PATH = os.path.join(PARENT_DIR, "Dataset/quantum_dataset/quantum_extra.pkl")
 RESULTS_DIR = os.path.join(PARENT_DIR, "Results/tuning_experiment")
 
-# Single accumulating master file - every run reads this, skips configs already
-# in it, and overwrites it with old + newly run rows. Avoids the CSVs ballooning
-# from re-reading previous cumulative snapshots on each run.
 DETAILED_CSV = os.path.join(RESULTS_DIR, "tuning_experiment_detailed.csv")
 SUMMARY_CSV = os.path.join(RESULTS_DIR, "tuning_experiment_summary.csv")
 
 SEEDS = [42, 123, 456, 789, 999]
 NUM_READS = 10
 
+PENALTY_METHODS = ["lucas", "exact"]
 NUM_SWEEPS_GRID = [100, 500, 1000]
 BETA_MIN_GRID = [1e-9, 0.01, 0.1, 0.5]
 BETA_MAX_GRID = [0.1, 0.3, 0.5, 1, 5, 10]
@@ -32,11 +30,6 @@ BETA_RANGE_GRID = [
     if beta_min <= beta_max
 ]
 SCHEDULE_TYPES = ["linear", "geometric"]
-
-# Trotter slices per logical qubit. PathIntegralAnnealingSampler-only: this is
-# what actually turns on path-integral/quantum-tunneling behavior instead of
-# collapsing to plain simulated annealing (the default, 1, has no chains at
-# all). SimulatedAnnealingSampler.sample() has no such parameter.
 QUBITS_PER_CHAIN_GRID = [1, 2]
 
 SOLVERS = {
@@ -45,29 +38,28 @@ SOLVERS = {
 }
 
 def load_existing_results():
-    """Load the master detailed CSV so already-tested configs can be skipped."""
     if not os.path.exists(DETAILED_CSV):
         return pd.DataFrame(), set()
 
     existing_df = pd.read_csv(DETAILED_CSV)
-    # Rows written before qubits_per_chain was tracked ran with the sampler
-    # default (1) - backfill so they keep matching on re-run and survive groupby.
+    
     if "qubits_per_chain" not in existing_df.columns:
         existing_df["qubits_per_chain"] = 1
     else:
         existing_df["qubits_per_chain"] = existing_df["qubits_per_chain"].fillna(1).astype(int)
 
-    # Rows written before bqm.normalize() was added ran on the raw (un-normalized)
-    # bqm - backfill as False so they don't get conflated with the new runs and
-    # get re-run under the now-normalized energy landscape.
     if "bqm_normalized" not in existing_df.columns:
         existing_df["bqm_normalized"] = False
     else:
         existing_df["bqm_normalized"] = existing_df["bqm_normalized"].fillna(False).astype(bool)
 
+    if "penalty" not in existing_df.columns:
+        existing_df["penalty"] = "unknown"
+
     existing_keys = {
         (
             str(row.solver),
+            str(row.penalty),
             int(row.graph_id),
             int(row.seed),
             int(row.num_sweeps),
@@ -100,12 +92,12 @@ def read_extra_graphs():
     return graphs
 
 
-def print_result(solver_name, config_count, total_configs, n, graph_id, seed,
+def print_result(solver_name, penalty, config_count, total_configs, n, graph_id, seed,
                   num_sweeps, beta_range, schedule_type, qubits_per_chain, feasible, cost, elapsed):
     status = "OK" if feasible else "--"
     cost_str = f"{cost:6.2f}" if cost is not None else "   N/A"
     print(
-        f"[{solver_name}] [{config_count}/{total_configs}] N={n} graph={graph_id} seed={seed:<3} | "
+        f"[{solver_name}] [{penalty}] [{config_count}/{total_configs}] N={n} graph={graph_id} seed={seed:<3} | "
         f"sweeps={num_sweeps:<5} beta=({beta_range[0]:.2e},{beta_range[1]:.2e}) "
         f"type={schedule_type:9} qpc={qubits_per_chain:<3} | {status} cost={cost_str} | time={elapsed:.2f}s"
     )
@@ -120,8 +112,7 @@ def run_experiment():
         for beta_range in BETA_RANGE_GRID
         for schedule_type in SCHEDULE_TYPES
     ]
-    # qubits_per_chain only means something for PathIntegralAnnealingSampler;
-    # SA's configs stay pinned at 1 so both solvers share the same result schema.
+
     solver_configs = {
         "SimulatedAnnealingSampler": [
             (num_sweeps, beta_range, schedule_type, 1)
@@ -138,7 +129,7 @@ def run_experiment():
     existing_df, existing_keys = load_existing_results()
     all_results = existing_df.to_dict("records") if not existing_df.empty else []
     if existing_keys:
-        print(f"Found {len(existing_keys)} previously run (solver, graph, seed, config) combos - will skip them.")
+        print(f"Found {len(existing_keys)} previously run (solver, penalty, graph, seed, config) combos - will skip them.")
 
     try:
         for solver_name, solver in SOLVERS.items():
@@ -150,65 +141,68 @@ def run_experiment():
                 m = G.number_of_edges()
                 graph_id = graph_data["id"]
                 lower_bound = graph_data["lower_bound"]
-                bqm = minla.generate_bqm_instance(G)
 
-                bqm.normalize()
-                bqm_normalized = True
+                for penalty in PENALTY_METHODS:
+                    # Construct the BQM using the specific penalty logic
+                    bqm = minla.generate_bqm_instance(G, penalty_method=penalty)
+                    bqm.normalize()
+                    bqm_normalized = True
 
-                for config_count, (num_sweeps, beta_range, schedule_type, qubits_per_chain) in enumerate(configs, 1):
-                    for seed in SEEDS:
-                        run_key = (
-                            solver_name, int(graph_id), int(seed), int(num_sweeps),
-                            float(beta_range[0]), float(beta_range[1]), schedule_type,
-                            int(qubits_per_chain), bqm_normalized,
-                        )
-                        if run_key in existing_keys:
-                            continue
+                    for config_count, (num_sweeps, beta_range, schedule_type, qubits_per_chain) in enumerate(configs, 1):
+                        for seed in SEEDS:
+                            run_key = (
+                                solver_name, penalty, int(graph_id), int(seed), int(num_sweeps),
+                                float(beta_range[0]), float(beta_range[1]), schedule_type,
+                                int(qubits_per_chain), bqm_normalized,
+                            )
+                            if run_key in existing_keys:
+                                continue
 
-                        t0 = time.time()
-                        sampleset = solver.sample(
-                            bqm,
-                            num_reads=NUM_READS,
-                            num_sweeps=num_sweeps,
-                            beta_range=list(beta_range),
-                            beta_schedule_type=schedule_type,
-                            seed=seed,
-                            qubits_per_chain=qubits_per_chain,
-                        )
-                        elapsed = time.time() - t0
+                            t0 = time.time()
+                            sampleset = solver.sample(
+                                bqm,
+                                num_reads=NUM_READS,
+                                num_sweeps=num_sweeps,
+                                beta_range=list(beta_range),
+                                beta_schedule_type=schedule_type,
+                                seed=seed,
+                                qubits_per_chain=qubits_per_chain,
+                            )
+                            elapsed = time.time() - t0
 
-                        best_cost = None
-                        for sample in sampleset.samples():
-                            ordering, is_feasible = minla.decode_solution(sample, n)
-                            if is_feasible:
-                                cost = minla.calculate_min_linear_arrangement(G, ordering)
-                                if best_cost is None or cost < best_cost:
-                                    best_cost = cost
+                            best_cost = None
+                            for sample in sampleset.samples():
+                                ordering, is_feasible = minla.decode_solution(sample, n)
+                                if is_feasible:
+                                    cost = minla.calculate_min_linear_arrangement(G, ordering)
+                                    if best_cost is None or cost < best_cost:
+                                        best_cost = cost
 
-                        feasible = best_cost is not None
-                        approx_ratio = best_cost / lower_bound if feasible else None
+                            feasible = best_cost is not None
+                            approx_ratio = best_cost / lower_bound if feasible else None
 
-                        all_results.append({
-                            "solver": solver_name,
-                            "n": n,
-                            "m": m,
-                            "graph_id": graph_id,
-                            "seed": seed,
-                            "num_sweeps": num_sweeps,
-                            "beta_min": beta_range[0],
-                            "beta_max": beta_range[1],
-                            "beta_schedule_type": schedule_type,
-                            "qubits_per_chain": qubits_per_chain,
-                            "bqm_normalized": bqm_normalized,
-                            "feasible": feasible,
-                            "minla_cost": best_cost,
-                            "lower_bound": lower_bound,
-                            "approx_ratio": approx_ratio,
-                            "time_s": round(elapsed, 3),
-                        })
+                            all_results.append({
+                                "solver": solver_name,
+                                "penalty": penalty,
+                                "n": n,
+                                "m": m,
+                                "graph_id": graph_id,
+                                "seed": seed,
+                                "num_sweeps": num_sweeps,
+                                "beta_min": beta_range[0],
+                                "beta_max": beta_range[1],
+                                "beta_schedule_type": schedule_type,
+                                "qubits_per_chain": qubits_per_chain,
+                                "bqm_normalized": bqm_normalized,
+                                "feasible": feasible,
+                                "minla_cost": best_cost,
+                                "lower_bound": lower_bound,
+                                "approx_ratio": approx_ratio,
+                                "time_s": round(elapsed, 3),
+                            })
 
-                        print_result(solver_name, config_count, total_configs, n, graph_id, seed,
-                                     num_sweeps, beta_range, schedule_type, qubits_per_chain, feasible, best_cost, elapsed)
+                            print_result(solver_name, penalty, config_count, total_configs, n, graph_id, seed,
+                                         num_sweeps, beta_range, schedule_type, qubits_per_chain, feasible, best_cost, elapsed)
 
     except KeyboardInterrupt:
         print("\nInterrupted. Partial results saved.")
@@ -217,9 +211,10 @@ def run_experiment():
     df.to_csv(DETAILED_CSV, index=False)
     print(f"\nDetailed results saved to {DETAILED_CSV}")
 
-    # Aggregate across graphs and seeds per solver + config
+    # Aggregation groups by solver and hyperparameter configs across BOTH penalties
     agg_rows = []
     group_cols = ["solver", "num_sweeps", "beta_min", "beta_max", "beta_schedule_type", "qubits_per_chain", "bqm_normalized"]
+    
     for keys, group in df.groupby(group_cols):
         feasible_runs = group[group["feasible"] == True]
         agg_rows.append({
@@ -227,16 +222,15 @@ def run_experiment():
             "feasibility_rate": len(feasible_runs) / len(group),
             "mean_approx_ratio": feasible_runs["approx_ratio"].mean() if len(feasible_runs) > 0 else None,
             "mean_time_s": group["time_s"].mean(),
-            "num_runs": len(group),
+            "num_runs": len(group),  # This will now be 100 runs (5 graphs * 2 penalties * 10 seeds)
         })
 
     agg_df = pd.DataFrame(agg_rows)
     agg_df.to_csv(SUMMARY_CSV, index=False)
     print(f"Summary results saved to {SUMMARY_CSV}")
 
-    # Best config per solver: highest feasibility rate, then lowest mean approx_ratio, then lowest runtime
     print("\n" + "=" * 70)
-    print("BEST CONFIG PER SOLVER")
+    print("BEST CONFIG PER SOLVER (Combined across Lucas & Exact)")
     print("=" * 70)
     for solver_name in SOLVERS:
         solver_df = agg_df[agg_df["solver"] == solver_name].copy()
