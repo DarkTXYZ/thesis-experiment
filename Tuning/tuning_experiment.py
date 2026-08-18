@@ -30,7 +30,6 @@ BETA_RANGE_GRID = [
     if beta_min <= beta_max
 ]
 SCHEDULE_TYPES = ["linear", "geometric"]
-QUBITS_PER_CHAIN_GRID = [1, 2]
 
 SOLVERS = {
     "SimulatedAnnealingSampler": SimulatedAnnealingSampler(),
@@ -42,11 +41,6 @@ def load_existing_results():
         return pd.DataFrame(), set()
 
     existing_df = pd.read_csv(DETAILED_CSV)
-    
-    if "qubits_per_chain" not in existing_df.columns:
-        existing_df["qubits_per_chain"] = 1
-    else:
-        existing_df["qubits_per_chain"] = existing_df["qubits_per_chain"].fillna(1).astype(int)
 
     if "bqm_normalized" not in existing_df.columns:
         existing_df["bqm_normalized"] = False
@@ -66,7 +60,6 @@ def load_existing_results():
             float(row.beta_min),
             float(row.beta_max),
             str(row.beta_schedule_type),
-            int(row.qubits_per_chain),
             bool(row.bqm_normalized),
         )
         for row in existing_df.itertuples()
@@ -93,37 +86,25 @@ def read_extra_graphs():
 
 
 def print_result(solver_name, penalty, config_count, total_configs, n, graph_id, seed,
-                  num_sweeps, beta_range, schedule_type, qubits_per_chain, feasible, cost, elapsed):
+                  num_sweeps, beta_range, schedule_type, feasible, cost, elapsed):
     status = "OK" if feasible else "--"
     cost_str = f"{cost:6.2f}" if cost is not None else "   N/A"
     print(
         f"[{solver_name}] [{penalty}] [{config_count}/{total_configs}] N={n} graph={graph_id} seed={seed:<3} | "
         f"sweeps={num_sweeps:<5} beta=({beta_range[0]:.2e},{beta_range[1]:.2e}) "
-        f"type={schedule_type:9} qpc={qubits_per_chain:<3} | {status} cost={cost_str} | time={elapsed:.2f}s"
+        f"type={schedule_type:9} | {status} cost={cost_str} | time={elapsed:.2f}s"
     )
 
 
 def run_experiment():
     graphs = read_extra_graphs()
 
-    base_configs = [
+    configs = [
         (num_sweeps, beta_range, schedule_type)
         for num_sweeps in NUM_SWEEPS_GRID
         for beta_range in BETA_RANGE_GRID
         for schedule_type in SCHEDULE_TYPES
     ]
-
-    solver_configs = {
-        "SimulatedAnnealingSampler": [
-            (num_sweeps, beta_range, schedule_type, 1)
-            for num_sweeps, beta_range, schedule_type in base_configs
-        ],
-        "PathIntegralAnnealingSampler": [
-            (num_sweeps, beta_range, schedule_type, qubits_per_chain)
-            for num_sweeps, beta_range, schedule_type in base_configs
-            for qubits_per_chain in QUBITS_PER_CHAIN_GRID
-        ],
-    }
     
     os.makedirs(RESULTS_DIR, exist_ok=True)
     existing_df, existing_keys = load_existing_results()
@@ -133,7 +114,6 @@ def run_experiment():
 
     try:
         for solver_name, solver in SOLVERS.items():
-            configs = solver_configs[solver_name]
             total_configs = len(configs)
             for graph_data in graphs:
                 G = convert_graph_data_to_nx(graph_data)
@@ -143,17 +123,16 @@ def run_experiment():
                 lower_bound = graph_data["lower_bound"]
 
                 for penalty in PENALTY_METHODS:
-                    # Construct the BQM using the specific penalty logic
                     bqm = minla.generate_bqm_instance(G, penalty_method=penalty)
                     bqm.normalize()
                     bqm_normalized = True
 
-                    for config_count, (num_sweeps, beta_range, schedule_type, qubits_per_chain) in enumerate(configs, 1):
+                    for config_count, (num_sweeps, beta_range, schedule_type) in enumerate(configs, 1):
                         for seed in SEEDS:
                             run_key = (
                                 solver_name, penalty, int(graph_id), int(seed), int(num_sweeps),
                                 float(beta_range[0]), float(beta_range[1]), schedule_type,
-                                int(qubits_per_chain), bqm_normalized,
+                                bqm_normalized,
                             )
                             if run_key in existing_keys:
                                 continue
@@ -166,7 +145,6 @@ def run_experiment():
                                 beta_range=list(beta_range),
                                 beta_schedule_type=schedule_type,
                                 seed=seed,
-                                qubits_per_chain=qubits_per_chain,
                             )
                             elapsed = time.time() - t0
 
@@ -192,7 +170,6 @@ def run_experiment():
                                 "beta_min": beta_range[0],
                                 "beta_max": beta_range[1],
                                 "beta_schedule_type": schedule_type,
-                                "qubits_per_chain": qubits_per_chain,
                                 "bqm_normalized": bqm_normalized,
                                 "feasible": feasible,
                                 "minla_cost": best_cost,
@@ -202,7 +179,7 @@ def run_experiment():
                             })
 
                             print_result(solver_name, penalty, config_count, total_configs, n, graph_id, seed,
-                                         num_sweeps, beta_range, schedule_type, qubits_per_chain, feasible, best_cost, elapsed)
+                                         num_sweeps, beta_range, schedule_type, feasible, best_cost, elapsed)
 
     except KeyboardInterrupt:
         print("\nInterrupted. Partial results saved.")
@@ -211,9 +188,8 @@ def run_experiment():
     df.to_csv(DETAILED_CSV, index=False)
     print(f"\nDetailed results saved to {DETAILED_CSV}")
 
-    # Aggregation groups by solver and hyperparameter configs across BOTH penalties
     agg_rows = []
-    group_cols = ["solver", "num_sweeps", "beta_min", "beta_max", "beta_schedule_type", "qubits_per_chain", "bqm_normalized"]
+    group_cols = ["solver", "num_sweeps", "beta_min", "beta_max", "beta_schedule_type", "bqm_normalized"]
     
     for keys, group in df.groupby(group_cols):
         feasible_runs = group[group["feasible"] == True]
@@ -222,7 +198,7 @@ def run_experiment():
             "feasibility_rate": len(feasible_runs) / len(group),
             "mean_approx_ratio": feasible_runs["approx_ratio"].mean() if len(feasible_runs) > 0 else None,
             "mean_time_s": group["time_s"].mean(),
-            "num_runs": len(group),  # This will now be 100 runs (5 graphs * 2 penalties * 10 seeds)
+            "num_runs": len(group),
         })
 
     agg_df = pd.DataFrame(agg_rows)
@@ -243,8 +219,7 @@ def run_experiment():
         print(
             f"{solver_name}: num_sweeps={best['num_sweeps']}, "
             f"beta_range=({best['beta_min']:.2e}, {best['beta_max']:.2e}), "
-            f"beta_schedule_type={best['beta_schedule_type']}, "
-            f"qubits_per_chain={best['qubits_per_chain']} | "
+            f"beta_schedule_type={best['beta_schedule_type']} | "
             f"feasibility_rate={best['feasibility_rate']:.2%}, "
             f"mean_approx_ratio={best['mean_approx_ratio']:.4f}, "
             f"mean_time_s={best['mean_time_s']:.3f}"
