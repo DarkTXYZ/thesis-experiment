@@ -142,8 +142,12 @@ def run_experiment():
                             
                             if solver_name == "PathIntegralAnnealingSampler":
                                 
-                                Hp_field = np.linspace(beta_range[0], beta_range[1], num_sweeps)
-                                Hd_field = np.linspace(beta_range[1], beta_range[0], num_sweeps)
+                                if schedule_type == "linear":
+                                    Hp_field = np.linspace(beta_range[0], beta_range[1], num_sweeps)
+                                    Hd_field = np.linspace(beta_range[1], beta_range[0], num_sweeps)
+                                else:
+                                    Hp_field = np.geomspace(beta_range[0], beta_range[1], num_sweeps)
+                                    Hd_field = np.geomspace(beta_range[1], beta_range[0], num_sweeps)
                                 
                                 sampleset = solver.sample(
                                     bqm,
