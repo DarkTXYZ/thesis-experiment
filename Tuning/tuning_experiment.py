@@ -200,7 +200,8 @@ def run_experiment():
     print(f"\nDetailed results saved to {DETAILED_CSV}")
 
     agg_rows = []
-    group_cols = ["solver", "num_sweeps", "beta_min", "beta_max", "beta_schedule_type"]
+    # ADDED "penalty" TO THE GROUPING COLUMNS HERE
+    group_cols = ["solver", "penalty", "num_sweeps", "beta_min", "beta_max", "beta_schedule_type"]
     
     for keys, group in df.groupby(group_cols):
         feasible_runs = group[group["feasible"] == True]
@@ -217,24 +218,30 @@ def run_experiment():
     print(f"Summary results saved to {SUMMARY_CSV}")
 
     print("\n" + "=" * 70)
-    print("BEST CONFIG PER SOLVER (Combined across Lucas & Exact)")
+    print("BEST CONFIG PER SOLVER AND PENALTY MODEL")
     print("=" * 70)
+    
+    # UPDATED THIS LOOP TO ITERATE OVER BOTH SOLVER AND PENALTY
     for solver_name in SOLVERS:
-        solver_df = agg_df[agg_df["solver"] == solver_name].copy()
-        solver_df["mean_approx_ratio"] = solver_df["mean_approx_ratio"].fillna(float("inf"))
-        solver_df = solver_df.sort_values(
-            by=["feasibility_rate", "mean_approx_ratio", "mean_time_s"],
-            ascending=[False, True, True],
-        )
-        best = solver_df.iloc[0]
-        print(
-            f"{solver_name}: num_sweeps={best['num_sweeps']}, "
-            f"beta_range=({best['beta_min']:.2e}, {best['beta_max']:.2e}), "
-            f"beta_schedule_type={best['beta_schedule_type']} | "
-            f"feasibility_rate={best['feasibility_rate']:.2%}, "
-            f"mean_approx_ratio={best['mean_approx_ratio']:.4f}, "
-            f"mean_time_s={best['mean_time_s']:.3f}"
-        )
+        for penalty in PENALTY_METHODS:
+            solver_df = agg_df[(agg_df["solver"] == solver_name) & (agg_df["penalty"] == penalty)].copy()
+            if solver_df.empty:
+                continue
+            
+            solver_df["mean_approx_ratio"] = solver_df["mean_approx_ratio"].fillna(float("inf"))
+            solver_df = solver_df.sort_values(
+                by=["feasibility_rate", "mean_approx_ratio", "mean_time_s"],
+                ascending=[False, True, True],
+            )
+            best = solver_df.iloc[0]
+            print(
+                f"{solver_name} [{penalty.upper()}]: num_sweeps={best['num_sweeps']}, "
+                f"beta_range=({best['beta_min']:.2e}, {best['beta_max']:.2e}), "
+                f"beta_schedule_type={best['beta_schedule_type']} | "
+                f"feasibility_rate={best['feasibility_rate']:.2%}, "
+                f"mean_approx_ratio={best['mean_approx_ratio']:.4f}, "
+                f"mean_time_s={best['mean_time_s']:.3f}"
+            )
 
     return df, agg_df
 

@@ -14,6 +14,19 @@ SEEDS = [42, 123, 456, 789, 999]
 NUM_READS = 10
 NUM_SWEEPS = 1000
 
+PENALTY_METHODS = ["lucas", "exact"]
+
+# Optimal hyperparameters derived from the tuning experiment for PIASampler
+TUNED_CONFIGS = {
+    "lucas": {
+        "beta_schedule_type": "geometric",
+        "beta_range": (0.5, 5.0)
+    },
+    "exact": {
+        "beta_schedule_type": "geometric",
+        "beta_range": (0.01, 10.0)
+    }
+}
 
 def convert_graph_data_to_nx(graph_data):
     G = nx.Graph()
@@ -43,61 +56,85 @@ def run_experiment():
             n = G.number_of_nodes()
             m = G.number_of_edges()
             lower_bound = graph["lower_bound"]
-            bqm = minla.generate_bqm_instance(G)
 
-            best_feasible_costs = []
-            feasible_seed_count = 0
-            total_elapsed = 0
+            for penalty in PENALTY_METHODS:
+                bqm = minla.generate_bqm_instance(G, penalty_mode=penalty)
+                config = TUNED_CONFIGS[penalty]
 
-            for seed in SEEDS:
-                t0 = time.time()
-                sampleset = solver.sample(bqm, num_reads=NUM_READS, num_sweeps=NUM_SWEEPS, seed=seed, beta_schedule_type="geometric", beta_range=(1e-1, 1))
-                elapsed = time.time() - t0
-                total_elapsed += elapsed
+                best_feasible_costs = []
+                feasible_seed_count = 0
+                total_elapsed = 0
 
-                best_cost = None
-                for sample in sampleset.samples():
-                    ordering, is_feasible = minla.decode_solution(sample, n)
-                    if is_feasible:
-                        cost = minla.calculate_min_linear_arrangement(G, ordering)
-                        if best_cost is None or cost < best_cost:
-                            best_cost = cost
+                # Precompute the longitudinal and transverse fields for path-integral simulation
+                b_min, b_max = config["beta_range"]
+                if config["beta_schedule_type"] == "linear":
+                    Hp_field = np.linspace(b_min, b_max, NUM_SWEEPS)
+                    Hd_field = np.linspace(b_max, b_min, NUM_SWEEPS)
+                else:
+                    Hp_field = np.geomspace(b_min, b_max, NUM_SWEEPS)
+                    Hd_field = np.geomspace(b_max, b_min, NUM_SWEEPS)
 
-                if best_cost is not None:
-                    best_feasible_costs.append(best_cost)
-                    feasible_seed_count += 1
+                for seed in SEEDS:
+                    t0 = time.time()
+                    sampleset = solver.sample(
+                        bqm, 
+                        num_reads=NUM_READS, 
+                        num_sweeps=NUM_SWEEPS, 
+                        seed=seed, 
+                        beta_schedule_type="custom",
+                        Hp_field=Hp_field,
+                        Hd_field=Hd_field
+                    )
+                    elapsed = time.time() - t0
+                    total_elapsed += elapsed
 
-            feasible = len(best_feasible_costs) > 0
-            avg_minla_cost = np.mean(best_feasible_costs) if feasible else None
-            approx_ratio = avg_minla_cost / lower_bound if feasible else None
+                    best_cost = None
+                    for sample in sampleset.samples():
+                        ordering, is_feasible = minla.decode_solution(sample, n)
+                        if is_feasible:
+                            cost = minla.calculate_min_linear_arrangement(G, ordering)
+                            if best_cost is None or cost < best_cost:
+                                best_cost = cost
 
-            all_rows.append({
-                "n": n,
-                "m": m,
-                "graph_id": graph_id,
-                "solver": "PathIntegralAnnealingSampler",
-                "feasible": feasible,
-                "feasible_seed_count": feasible_seed_count,
-                "avg_minla_cost": avg_minla_cost,
-                "lower_bound": lower_bound,
-                "approx_ratio": approx_ratio,
-                "time_s": round(total_elapsed, 3),
-                "num_seeds": len(SEEDS),
-                "num_reads": NUM_READS,
-                "num_sweeps": NUM_SWEEPS,
-            })
+                    if best_cost is not None:
+                        best_feasible_costs.append(best_cost)
+                        feasible_seed_count += 1
 
-            print(
-                f"  [{filename}] graph {graph_id + 1}/{total_graphs} | "
-                f"feasible={feasible} | seeds={feasible_seed_count}/{len(SEEDS)} | "
-                f"time={total_elapsed:.2f}s"
-            )
+                feasible = len(best_feasible_costs) > 0
+                avg_minla_cost = np.mean(best_feasible_costs) if feasible else None
+                approx_ratio = avg_minla_cost / lower_bound if feasible else None
+
+                all_rows.append({
+                    "n": n,
+                    "m": m,
+                    "graph_id": graph_id,
+                    "solver": "PathIntegralAnnealingSampler",
+                    "penalty": penalty,
+                    "feasible": feasible,
+                    "feasible_seed_count": feasible_seed_count,
+                    "avg_minla_cost": avg_minla_cost,
+                    "lower_bound": lower_bound,
+                    "approx_ratio": approx_ratio,
+                    "time_s": round(total_elapsed, 3),
+                    "num_seeds": len(SEEDS),
+                    "num_reads": NUM_READS,
+                    "num_sweeps": NUM_SWEEPS,
+                    "beta_schedule_type": config["beta_schedule_type"],
+                    "beta_min": config["beta_range"][0],
+                    "beta_max": config["beta_range"][1]
+                })
+
+                print(
+                    f"  [{filename}] graph {graph_id + 1}/{total_graphs} | penalty={penalty.upper():5} | "
+                    f"feasible={feasible!s:5} | seeds={feasible_seed_count}/{len(SEEDS)} | "
+                    f"time={total_elapsed:.2f}s"
+                )
 
     df = pd.DataFrame(all_rows)
     timestamp = time.strftime("%Y%m%d_%H%M%S")
     csv_path = os.path.join(RESULTS_PATH, f"pia_experiment_{timestamp}.csv")
     df.to_csv(csv_path, index=False)
-    print(f"Saved CSV summary -> {csv_path}")
+    print(f"\nSaved CSV summary -> {csv_path}")
 
 
 if __name__ == "__main__":

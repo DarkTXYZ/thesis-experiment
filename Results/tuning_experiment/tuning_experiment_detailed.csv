@@ -3785,7 +3785,7 @@ SimulatedAnnealingSampler,exact,15,46,100,456,1000,1e-09,5.0,linear,False,,104.0
 SimulatedAnnealingSampler,exact,15,46,100,789,1000,1e-09,5.0,linear,False,,104.00000000000006,,0.003
 SimulatedAnnealingSampler,exact,15,46,100,999,1000,1e-09,5.0,linear,False,,104.00000000000006,,0.003
 SimulatedAnnealingSampler,exact,15,46,100,42,1000,1e-09,5.0,geometric,False,,104.00000000000006,,0.036
-SimulatedAnnealingSampler,exact,15,46,100,123,1000,1e-09,5.0,geometric,True,268.0,104.00000000000006,2.5769230769230758,0.035
+SimulatedAnnealingSampler,exact,15,46,100,123,1000,1e-09,5.0,geometric,True,268.0,104.00000000000006,2.576923076923076,0.035
 SimulatedAnnealingSampler,exact,15,46,100,456,1000,1e-09,5.0,geometric,False,,104.00000000000006,,0.035
 SimulatedAnnealingSampler,exact,15,46,100,789,1000,1e-09,5.0,geometric,False,,104.00000000000006,,0.035
 SimulatedAnnealingSampler,exact,15,46,100,999,1000,1e-09,5.0,geometric,True,248.0,104.00000000000006,2.3846153846153832,0.036
@@ -3814,7 +3814,7 @@ SimulatedAnnealingSampler,exact,15,46,100,123,1000,0.01,0.3,linear,False,,104.00
 SimulatedAnnealingSampler,exact,15,46,100,456,1000,0.01,0.3,linear,False,,104.00000000000006,,0.007
 SimulatedAnnealingSampler,exact,15,46,100,789,1000,0.01,0.3,linear,False,,104.00000000000006,,0.007
 SimulatedAnnealingSampler,exact,15,46,100,999,1000,0.01,0.3,linear,False,,104.00000000000006,,0.007
-SimulatedAnnealingSampler,exact,15,46,100,42,1000,0.01,0.3,geometric,True,268.0,104.00000000000006,2.5769230769230758,0.013
+SimulatedAnnealingSampler,exact,15,46,100,42,1000,0.01,0.3,geometric,True,268.0,104.00000000000006,2.576923076923076,0.013
 SimulatedAnnealingSampler,exact,15,46,100,123,1000,0.01,0.3,geometric,False,,104.00000000000006,,0.013
 SimulatedAnnealingSampler,exact,15,46,100,456,1000,0.01,0.3,geometric,False,,104.00000000000006,,0.013
 SimulatedAnnealingSampler,exact,15,46,100,789,1000,0.01,0.3,geometric,True,239.0,104.00000000000006,2.298076923076922,0.013
@@ -10120,7 +10120,7 @@ PathIntegralAnnealingSampler,exact,15,46,100,456,100,0.5,10.0,geometric,False,,1
 PathIntegralAnnealingSampler,exact,15,46,100,789,100,0.5,10.0,geometric,False,,104.00000000000006,,0.259
 PathIntegralAnnealingSampler,exact,15,46,100,999,100,0.5,10.0,geometric,False,,104.00000000000006,,0.256
 PathIntegralAnnealingSampler,exact,15,46,100,42,500,1e-09,0.1,linear,False,,104.00000000000006,,0.692
-PathIntegralAnnealingSampler,exact,15,46,100,123,500,1e-09,0.1,linear,True,268.0,104.00000000000006,2.5769230769230758,0.674
+PathIntegralAnnealingSampler,exact,15,46,100,123,500,1e-09,0.1,linear,True,268.0,104.00000000000006,2.576923076923076,0.674
 PathIntegralAnnealingSampler,exact,15,46,100,456,500,1e-09,0.1,linear,False,,104.00000000000006,,0.68
 PathIntegralAnnealingSampler,exact,15,46,100,789,500,1e-09,0.1,linear,False,,104.00000000000006,,0.695
 PathIntegralAnnealingSampler,exact,15,46,100,999,500,1e-09,0.1,linear,False,,104.00000000000006,,0.672
@@ -10423,7 +10423,7 @@ PathIntegralAnnealingSampler,exact,15,46,100,42,1000,0.01,0.5,linear,False,,104.
 PathIntegralAnnealingSampler,exact,15,46,100,123,1000,0.01,0.5,linear,False,,104.00000000000006,,1.373
 PathIntegralAnnealingSampler,exact,15,46,100,456,1000,0.01,0.5,linear,False,,104.00000000000006,,1.368
 PathIntegralAnnealingSampler,exact,15,46,100,789,1000,0.01,0.5,linear,False,,104.00000000000006,,1.371
-PathIntegralAnnealingSampler,exact,15,46,100,999,1000,0.01,0.5,linear,True,268.0,104.00000000000006,2.5769230769230758,1.364
+PathIntegralAnnealingSampler,exact,15,46,100,999,1000,0.01,0.5,linear,True,268.0,104.00000000000006,2.576923076923076,1.364
 PathIntegralAnnealingSampler,exact,15,46,100,42,1000,0.01,0.5,geometric,False,,104.00000000000006,,1.347
 PathIntegralAnnealingSampler,exact,15,46,100,123,1000,0.01,0.5,geometric,True,227.0,104.00000000000006,2.1826923076923066,1.358
 PathIntegralAnnealingSampler,exact,15,46,100,456,1000,0.01,0.5,geometric,False,,104.00000000000006,,1.348
