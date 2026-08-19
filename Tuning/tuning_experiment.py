@@ -43,11 +43,6 @@ def load_existing_results():
 
     existing_df = pd.read_csv(DETAILED_CSV)
 
-    if "bqm_normalized" not in existing_df.columns:
-        existing_df["bqm_normalized"] = False
-    else:
-        existing_df["bqm_normalized"] = existing_df["bqm_normalized"].fillna(False).astype(bool)
-
     if "penalty" not in existing_df.columns:
         existing_df["penalty"] = "unknown"
 
@@ -61,7 +56,6 @@ def load_existing_results():
             float(row.beta_min),
             float(row.beta_max),
             str(row.beta_schedule_type),
-            bool(row.bqm_normalized),
         )
         for row in existing_df.itertuples()
     }
@@ -206,7 +200,7 @@ def run_experiment():
     print(f"\nDetailed results saved to {DETAILED_CSV}")
 
     agg_rows = []
-    group_cols = ["solver", "num_sweeps", "beta_min", "beta_max", "beta_schedule_type", "bqm_normalized"]
+    group_cols = ["solver", "num_sweeps", "beta_min", "beta_max", "beta_schedule_type"]
     
     for keys, group in df.groupby(group_cols):
         feasible_runs = group[group["feasible"] == True]
