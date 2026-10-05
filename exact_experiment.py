@@ -7,7 +7,7 @@ import networkx as nx
 import numpy as np
 from dwave.samplers import PathIntegralAnnealingSampler
 
-from Utils.MinLA import generate_bqm_instance, calculate_min_linear_arrangement
+from Utils.MinLA import generate_bqm_instance, calculate_min_linear_arrangement, decode_solution
 
 DATASET_DIR = "Dataset/exact_dataset"
 PKL_PATH = os.path.join(DATASET_DIR, "exact_dataset.pkl")
@@ -27,39 +27,26 @@ PIA_SEED = 42
 Hp_field = np.linspace(0, 1, PIA_NUM_SWEEPS)
 Hd_field = np.linspace(1, 0, PIA_NUM_SWEEPS)
 
-
-def decode_thermometer(sample, n):
-    """Decode thermometer-encoded sample to node ordering (0-indexed)."""
-    sol = np.array([
-        [sample.get(f'X[{u}][{k}]', 0) for k in range(n)]
-        for u in range(n)
-    ], dtype=int)
-
-    # Check thermometer validity: no 0 followed by 1
-    for u in range(n):
-        if np.any((sol[u, :-1] == 0) & (sol[u, 1:] == 1)):
-            return None, False
-
-    labels = np.sum(sol, axis=1)  # 1..n in thermometer
-    if set(labels) != set(range(1, n + 1)):
-        return None, False
-
-    ordering = labels - 1  # convert to 0-indexed
-    return ordering.tolist(), True
-
-
-def solve_with_exact(graph, bqm, n):
+def solve_with_exact(graph, bqm : dimod.BinaryQuadraticModel, n):
     sampler = dimod.ExactSolver()
     response = sampler.sample(bqm)
 
     feasible_solutions = []
-    for sample, energy in zip(response.samples(), response.data_vectors["energy"]):
-        ordering, is_feasible = decode_thermometer(dict(sample), n)
+    infeasible_energies = []  # Track energies of invalid assignments
+
+    for sample, energy in zip(response.samples(), bqm.energies(response.samples())):
+        ordering, is_feasible = decode_solution(dict(sample), n)
         if is_feasible:
             cost = calculate_min_linear_arrangement(graph, ordering)
+            
+            # Store the tuple of (ordering, MinLA cost, BQM energy)
             feasible_solutions.append((tuple(ordering), cost, energy))
+        else:
+            infeasible_energies.append(energy)
 
-    return feasible_solutions
+    min_infeasible_energy = min(infeasible_energies) if infeasible_energies else None
+
+    return feasible_solutions, min_infeasible_energy
 
 
 def solve_with_pia(graph, bqm, n):
@@ -70,7 +57,7 @@ def solve_with_pia(graph, bqm, n):
     best_cost = None
     feasible_count = 0
     for sample, energy in zip(response.samples(), response.data_vectors["energy"]):
-        ordering, is_feasible = decode_thermometer(dict(sample), n)
+        ordering, is_feasible = decode_solution(dict(sample), n)
         if is_feasible:
             feasible_count += 1
             cost = calculate_min_linear_arrangement(graph, ordering)
@@ -80,12 +67,15 @@ def solve_with_pia(graph, bqm, n):
     return best_cost, feasible_count
 
 
-def report(solver_name, graph_name, graph, gt_obj, gt_solutions, feasible_solutions, penalty_mode):
+def report(solver_name, graph_name, graph, gt_obj, gt_solutions, feasible_solutions, min_infeasible_energy, penalty_mode):
     if not feasible_solutions:
         print(f"  {solver_name}: No feasible solutions found!")
+        if min_infeasible_energy is not None:
+            print(f"    Lowest invalid energy: {min_infeasible_energy}")
         return
 
     best_cost = min(s[1] for s in feasible_solutions)
+    best_feasible_energy = min(s[2] for s in feasible_solutions)
     optimal_solutions = [s[0] for s in feasible_solutions if s[1] == best_cost]
 
     gt_set = set(gt_solutions)
@@ -96,6 +86,16 @@ def report(solver_name, graph_name, graph, gt_obj, gt_solutions, feasible_soluti
 
     print(f"  {solver_name} (penalty: {penalty_mode}):")
     print(f"    Best obj: {best_cost} (optimal: {is_optimal})")
+    print(f"    Best feasible BQM energy: {best_feasible_energy}")
+    
+    # Check if an invalid state beats the valid state
+    if min_infeasible_energy is not None:
+        print(f"    Lowest invalid BQM energy: {min_infeasible_energy}")
+        if min_infeasible_energy < best_feasible_energy:
+            print(f"    🚨 WARNING: Invalid states exist with LOWER energy than the best valid state!")
+        elif min_infeasible_energy == best_feasible_energy:
+            print(f"    ⚠️ WARNING: Invalid states exist with EQUAL energy to the best valid state!")
+
     print(f"    #optimal solutions found: {len(found_set)} / {len(gt_set)}")
     print(f"    Total feasible: {len(feasible_solutions)}")
     print(f"    Exact match: {match}")
@@ -106,7 +106,6 @@ def report(solver_name, graph_name, graph, gt_obj, gt_solutions, feasible_soluti
             print(f"    Missing: {len(missing)} solutions")
         if extra:
             print(f"    Extra: {len(extra)} solutions")
-
 
 def main():
     with open(PKL_PATH, "rb") as f:
@@ -136,8 +135,8 @@ def main():
             bqm = generate_bqm_instance(graph, penalty_mode)
 
             # dimod ExactSolver
-            exact_results = solve_with_exact(graph, bqm, n)
-            report("dimod.ExactSolver", graph_name, graph, gt_obj, gt_solutions, exact_results, penalty_mode)
+            exact_results, min_infeasible_energy = solve_with_exact(graph, bqm, n)
+            report("dimod.ExactSolver", graph_name, graph, gt_obj, gt_solutions, exact_results, min_infeasible_energy, penalty_mode)
 
             if exact_results:
                 exact_best = min(s[1] for s in exact_results)

@@ -1,7 +1,9 @@
 import glob
 import os
 
+import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 
 # Proactively added RandomSampler for when you run it
 RESULT_DIRS = {
@@ -10,6 +12,7 @@ RESULT_DIRS = {
     "Random": "Results/random_experiment", 
 }
 OUTPUT_PATH = "Results/sampler_experiment_summary.csv"
+BOXPLOT_PATH = "Results/plots/results_boxplot.png"
 
 
 def latest_csv(result_dir):
@@ -88,8 +91,75 @@ def print_summary(summary_df):
                 )
 
 
+def plot_raw_approx_ratio_boxplot(result_frames):
+    """Save raw feasible approximation-ratio distributions for PIA and SA."""
+    frames = []
+    solver_map = {
+        "PathIntegralAnnealingSampler": "PIASampler",
+        "SimulatedAnnealingSampler": "SASampler",
+    }
+
+    for df in result_frames:
+        if "penalty" not in df.columns:
+            continue
+        frame = df.copy()
+        frame["Sampler_Name"] = frame["solver"].map(solver_map)
+        frame = frame.dropna(subset=["Sampler_Name", "approx_ratio"])
+        frame["Configuration"] = (
+            frame["Sampler_Name"] + " (" + frame["penalty"].astype(str).str.capitalize() + ")"
+        )
+        frames.append(frame)
+
+    if not frames:
+        print("\nNo PIA or SA approximation ratios available for boxplot.")
+        return
+
+    df_plot = pd.concat(frames, ignore_index=True)
+    print(f"Graph sizes: {sorted(df_plot['n'].unique())}")
+
+    hue_order = [
+        "SASampler (Exact)",
+        "SASampler (Lucas)",
+        "PIASampler (Exact)",
+        "PIASampler (Lucas)",
+    ]
+    sns.set_theme(style="whitegrid")
+    figure, axes = plt.subplots(figsize=(8, 7))
+    sns.boxplot(
+        data=df_plot,
+        x="n",
+        y="approx_ratio",
+        hue="Configuration",
+        hue_order=hue_order,
+        palette="Set2",
+        showfliers=True,
+        ax=axes,
+    )
+    # plt.title("Distribution of Approximation Ratio across Graph Sizes", fontsize=14, pad=15)
+    plt.ylabel(r"Approximation Ratio ($\rho^{\mathregular{UB}}$)", fontsize=12)
+    plt.xlabel(r"Graph Size ($N$)", fontsize=12)
+    _, y_max = axes.get_ylim()
+    axes.set_ylim(0.95, y_max * 1.05)
+    axes.legend(
+        title="Sampler and Selection Method",
+        loc="upper right",
+        bbox_to_anchor=(0.98, 0.98),
+        ncol=2,
+        fontsize=8,
+        title_fontsize=9,
+        frameon=True,
+        framealpha=0.9,
+    )
+    figure.tight_layout()
+    os.makedirs(os.path.dirname(BOXPLOT_PATH), exist_ok=True)
+    figure.savefig(BOXPLOT_PATH, dpi=300)
+    plt.close(figure)
+    print(f"Saved raw approximation-ratio boxplot -> {BOXPLOT_PATH}")
+
+
 def main():
     all_summaries = []
+    result_frames = []
 
     for label, result_dir in RESULT_DIRS.items():
         csv_path = latest_csv(result_dir)
@@ -99,9 +169,13 @@ def main():
 
         print(f"[{label}] Using latest result file: {csv_path}")
         df = pd.read_csv(csv_path)
+        if "penalty" not in df.columns:
+            df["penalty"] = "N/A"
         summary_df = summarize(df)
         print_summary(summary_df)
         all_summaries.append(summary_df)
+        if label in {"PIA", "SA"}:
+            result_frames.append(df)
 
     if not all_summaries:
         print("\nNo results to summarize.")
@@ -111,6 +185,7 @@ def main():
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
     combined.to_csv(OUTPUT_PATH, index=False)
     print(f"\nSaved combined summary -> {OUTPUT_PATH}")
+    plot_raw_approx_ratio_boxplot(result_frames)
 
 
 if __name__ == "__main__":
