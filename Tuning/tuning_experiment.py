@@ -46,19 +46,26 @@ def load_existing_results():
     if "penalty" not in existing_df.columns:
         existing_df["penalty"] = "unknown"
 
-    existing_keys = {
-        (
+    existing_keys = set()
+    for row in existing_df.itertuples():
+        # Older result files do not have dataset_key, so retain their
+        # n/m/graph_id identity as a compatibility fallback.
+        graph_identity = (
+            str(row.dataset_key)
+            if "dataset_key" in existing_df.columns
+            and pd.notna(row.dataset_key)
+            else (int(row.n), int(row.m), int(row.graph_id))
+        )
+        existing_keys.add((
             str(row.solver),
             str(row.penalty),
-            int(row.graph_id),
+            graph_identity,
             int(row.seed),
             int(row.num_sweeps),
             float(row.beta_min),
             float(row.beta_max),
             str(row.beta_schedule_type),
-        )
-        for row in existing_df.itertuples()
-    }
+        ))
     return existing_df, existing_keys
 
 
@@ -74,9 +81,16 @@ def read_extra_graphs():
         extra_data = pickle.load(f)
 
     graphs = []
-    for group in extra_data.values():
+    for group_key, group in extra_data.items():
         for graph_data in group["graphs"]:
-            graphs.append(graph_data)
+            graph = dict(graph_data)
+            # graph_id is only unique within a group in quantum_extra.pkl.
+            # Preserve it for reporting, but use the composite key for
+            # resuming interrupted tuning runs.
+            graph["dataset_key"] = (
+                f"{group_key}:graph{graph_data['id']}"
+            )
+            graphs.append(graph)
     return graphs
 
 
@@ -115,6 +129,7 @@ def run_experiment():
                 n = G.number_of_nodes()
                 m = G.number_of_edges()
                 graph_id = graph_data["id"]
+                dataset_key = graph_data["dataset_key"]
                 lower_bound = graph_data["lower_bound"]
 
                 for penalty in PENALTY_METHODS:
@@ -123,10 +138,15 @@ def run_experiment():
                     for config_count, (num_sweeps, beta_range, schedule_type) in enumerate(configs, 1):
                         for seed in SEEDS:
                             run_key = (
-                                solver_name, penalty, int(graph_id), int(seed), int(num_sweeps),
+                                solver_name, penalty, dataset_key, int(seed), int(num_sweeps),
                                 float(beta_range[0]), float(beta_range[1]), schedule_type,
                             )
-                            if run_key in existing_keys:
+                            legacy_run_key = (
+                                solver_name, penalty, (n, m, int(graph_id)), int(seed),
+                                int(num_sweeps), float(beta_range[0]), float(beta_range[1]),
+                                schedule_type,
+                            )
+                            if run_key in existing_keys or legacy_run_key in existing_keys:
                                 continue
                             
                             t0 = time.time()
@@ -177,6 +197,7 @@ def run_experiment():
                                 "n": n,
                                 "m": m,
                                 "graph_id": graph_id,
+                                "dataset_key": dataset_key,
                                 "seed": seed,
                                 "num_sweeps": num_sweeps,
                                 "beta_min": beta_range[0],
