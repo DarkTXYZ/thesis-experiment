@@ -269,7 +269,6 @@
 
 # if __name__ == "__main__":
 #     run_experiment()
-
 import os
 import sys
 import pickle
@@ -279,6 +278,7 @@ import networkx as nx
 import numpy as np
 from dwave.samplers import SimulatedAnnealingSampler, PathIntegralAnnealingSampler
 
+# Ensure Utils is accessible
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import Utils.MinLA as minla
 
@@ -289,8 +289,9 @@ RESULTS_DIR = os.path.join(PARENT_DIR, "Results/tuning_experiment")
 DETAILED_CSV = os.path.join(RESULTS_DIR, "tuning_experiment_detailed.csv")
 SUMMARY_CSV = os.path.join(RESULTS_DIR, "tuning_experiment_summary.csv")
 
-SEEDS = [42, 123, 456, 789, 999]
-NUM_READS = 10
+# Constants for Tuning
+SEED = 42
+NUM_READS = 50  # Increased reads to replace multiple seeds, better for statistical mean
 
 PENALTY_METHODS = ["lucas", "exact"]
 NUM_SWEEPS_GRID = [1, 5, 10, 50, 100, 500, 1000]
@@ -310,6 +311,7 @@ SOLVERS = {
 }
 
 def load_existing_results():
+    """Loads existing detailed results to allow for pausing and resuming the tuning process."""
     if not os.path.exists(DETAILED_CSV):
         return pd.DataFrame(), set()
 
@@ -324,8 +326,7 @@ def load_existing_results():
     for row in existing_df.itertuples():
         graph_identity = (
             str(row.dataset_key)
-            if "dataset_key" in existing_df.columns
-            and pd.notna(row.dataset_key)
+            if "dataset_key" in existing_df.columns and pd.notna(row.dataset_key)
             else (int(row.n), int(row.m), int(row.graph_id))
         )
         existing_keys.add((
@@ -349,10 +350,12 @@ def convert_graph_data_to_nx(graph_data):
 
 
 def read_extra_graphs():
+    """Reads the tuning dataset and explicitly extracts the edge probability (p)."""
     with open(DATASET_PATH, "rb") as f:
         extra_data = pickle.load(f)
 
     graphs = []
+    # Assuming extra_data is structured where group_key represents the density (e.g., 0.2, 0.5, 0.8)
     for group_key, group in extra_data.items():
         for graph_data in group["graphs"]:
             graph = dict(graph_data)
@@ -386,8 +389,9 @@ def run_experiment():
     os.makedirs(RESULTS_DIR, exist_ok=True)
     existing_df, existing_keys = load_existing_results()
     all_results = existing_df.to_dict("records") if not existing_df.empty else []
+    
     if existing_keys:
-        print(f"Found {len(existing_keys)} previously run (solver, penalty, graph, seed, config) combos - will skip them.")
+        print(f"Found {len(existing_keys)} previously run combos. Resuming...")
 
     try:
         for solver_name, solver in SOLVERS.items():
@@ -405,93 +409,108 @@ def run_experiment():
                     bqm = minla.generate_bqm_instance(G, penalty_mode=penalty)
 
                     for config_count, (num_sweeps, beta_range, schedule_type) in enumerate(configs, 1):
-                        for seed in SEEDS:
-                            run_key = (
-                                solver_name, penalty, dataset_key, int(seed), int(num_sweeps),
-                                float(beta_range[0]), float(beta_range[1]), schedule_type,
-                            )
-                            legacy_run_key = (
-                                solver_name, penalty, (n, m, int(graph_id)), int(seed),
-                                int(num_sweeps), float(beta_range[0]), float(beta_range[1]),
-                                schedule_type,
-                            )
-                            if run_key in existing_keys or legacy_run_key in existing_keys:
-                                continue
-                            
-                            t0 = time.time()
-                            
-                            if solver_name == "PathIntegralAnnealingSampler":
-                                
-                                if schedule_type == "linear":
-                                    Hp_field = np.linspace(beta_range[0], beta_range[1], num_sweeps)
-                                    Hd_field = np.linspace(beta_range[1], beta_range[0], num_sweeps)
-                                else:
-                                    Hp_field = np.geomspace(beta_range[0], beta_range[1], num_sweeps)
-                                    Hd_field = np.geomspace(beta_range[1], beta_range[0], num_sweeps)
-                                
-                                sampleset = solver.sample(
-                                    bqm,
-                                    num_reads=NUM_READS,
-                                    num_sweeps=num_sweeps,
-                                    beta_schedule_type='custom',
-                                    Hp_field=Hp_field,
-                                    Hd_field=Hd_field,
-                                    seed=seed,
-                                )
+                        run_key = (
+                            solver_name, penalty, dataset_key, int(SEED), int(num_sweeps),
+                            float(beta_range[0]), float(beta_range[1]), schedule_type,
+                        )
+                        legacy_run_key = (
+                            solver_name, penalty, (n, m, int(graph_id)), int(SEED),
+                            int(num_sweeps), float(beta_range[0]), float(beta_range[1]),
+                            schedule_type,
+                        )
+                        if run_key in existing_keys or legacy_run_key in existing_keys:
+                            continue
+                        
+                        t0 = time.time()
+                        
+                        if solver_name == "PathIntegralAnnealingSampler":
+                            if schedule_type == "linear":
+                                Hp_field = np.linspace(beta_range[0], beta_range[1], num_sweeps)
+                                Hd_field = np.linspace(beta_range[1], beta_range[0], num_sweeps)
                             else:
-                                sampleset = solver.sample(
-                                    bqm,
-                                    num_reads=NUM_READS,
-                                    num_sweeps=num_sweeps,
-                                    beta_range=list(beta_range),
-                                    beta_schedule_type=schedule_type,
-                                    seed=seed,
-                                )
-                            elapsed = time.time() - t0
+                                Hp_field = np.geomspace(beta_range[0], beta_range[1], num_sweeps)
+                                Hd_field = np.geomspace(beta_range[1], beta_range[0], num_sweeps)
+                            
+                            sampleset = solver.sample(
+                                bqm,
+                                num_reads=NUM_READS,
+                                num_sweeps=num_sweeps,
+                                beta_schedule_type='custom',
+                                Hp_field=Hp_field,
+                                Hd_field=Hd_field,
+                                seed=SEED,
+                            )
+                        else:
+                            sampleset = solver.sample(
+                                bqm,
+                                num_reads=NUM_READS,
+                                num_sweeps=num_sweeps,
+                                beta_range=list(beta_range),
+                                beta_schedule_type=schedule_type,
+                                seed=SEED,
+                            )
+                        elapsed = time.time() - t0
 
+                        # --- RIGOROUS TUNING: Evaluate based on Mean Feasible Cost ---
+                        feasible_costs = []
+                        total_feasible_reads = 0
+
+                        for datum in sampleset.data(["sample", "num_occurrences"]):
+                            sample = datum.sample
+                            occurrences = datum.num_occurrences
+                            
+                            ordering, is_feasible = minla.decode_solution(sample, n)
+                            if is_feasible:
+                                cost = minla.calculate_min_linear_arrangement(G, ordering)
+                                feasible_costs.extend([cost] * occurrences)
+                                total_feasible_reads += occurrences
+
+                        feasible = len(feasible_costs) > 0
+                        
+                        if feasible:
+                            best_cost = min(feasible_costs)
+                            # Tune based on the expected (mean) cost of the sampler
+                            metric_cost = np.mean(feasible_costs) 
+                            approx_ratio = metric_cost / lower_bound
+                        else:
                             best_cost = None
-                            for sample in sampleset.samples():
-                                ordering, is_feasible = minla.decode_solution(sample, n)
-                                if is_feasible:
-                                    cost = minla.calculate_min_linear_arrangement(G, ordering)
-                                    if best_cost is None or cost < best_cost:
-                                        best_cost = cost
+                            metric_cost = None
+                            approx_ratio = None
 
-                            feasible = best_cost is not None
-                            approx_ratio = best_cost / lower_bound if feasible else None
+                        all_results.append({
+                            "solver": solver_name,
+                            "penalty": penalty,
+                            "p": p_val,
+                            "n": n,
+                            "m": m,
+                            "graph_id": graph_id,
+                            "dataset_key": dataset_key,
+                            "seed": SEED,
+                            "num_sweeps": num_sweeps,
+                            "beta_min": beta_range[0],
+                            "beta_max": beta_range[1],
+                            "beta_schedule_type": schedule_type,
+                            "feasible": feasible,
+                            "minla_cost": metric_cost,  # Logging mean for tuning aggregation
+                            "best_cost": best_cost,     # Logging best just for record keeping
+                            "lower_bound": lower_bound,
+                            "approx_ratio": approx_ratio,
+                            "time_s": round(elapsed, 3),
+                        })
 
-                            all_results.append({
-                                "solver": solver_name,
-                                "penalty": penalty,
-                                "p": p_val,
-                                "n": n,
-                                "m": m,
-                                "graph_id": graph_id,
-                                "dataset_key": dataset_key,
-                                "seed": seed,
-                                "num_sweeps": num_sweeps,
-                                "beta_min": beta_range[0],
-                                "beta_max": beta_range[1],
-                                "beta_schedule_type": schedule_type,
-                                "feasible": feasible,
-                                "minla_cost": best_cost,
-                                "lower_bound": lower_bound,
-                                "approx_ratio": approx_ratio,
-                                "time_s": round(elapsed, 3),
-                            })
-
-                            print_result(solver_name, penalty, config_count, total_configs, n, p_val, graph_id, seed,
-                                         num_sweeps, beta_range, schedule_type, feasible, best_cost, elapsed)
+                        print_result(solver_name, penalty, config_count, total_configs, n, p_val, graph_id, SEED,
+                                     num_sweeps, beta_range, schedule_type, feasible, metric_cost, elapsed)
 
     except KeyboardInterrupt:
         print("\nInterrupted. Partial results saved.")
 
+    # Save detailed data
     df = pd.DataFrame(all_results)
     df.to_csv(DETAILED_CSV, index=False)
     print(f"\nDetailed results saved to {DETAILED_CSV}")
 
+    # Generate Summary Aggregation (Grouped by p)
     agg_rows = []
-    # ADDED "p" TO THE GROUPING COLUMNS HERE to tune for each density separately
     group_cols = ["solver", "penalty", "p", "num_sweeps", "beta_min", "beta_max", "beta_schedule_type"]
     
     for keys, group in df.groupby(group_cols):
@@ -508,14 +527,13 @@ def run_experiment():
     agg_df.to_csv(SUMMARY_CSV, index=False)
     print(f"Summary results saved to {SUMMARY_CSV}")
 
+    # Print the winning configurations per density
     print("\n" + "=" * 70)
     print("BEST CONFIG PER SOLVER, PENALTY MODEL, AND GRAPH DENSITY (p)")
     print("=" * 70)
     
-    # Extract unique probabilities from the dataframe
-    unique_ps = sorted(df["p"].unique())
+    unique_ps = sorted([p for p in df["p"].unique() if pd.notna(p)])
     
-    # UPDATED THIS LOOP TO ITERATE OVER p, SOLVER, AND PENALTY
     for p_val in unique_ps:
         print(f"\n--- Best Configurations for p = {p_val} ---")
         for solver_name in SOLVERS:
@@ -545,7 +563,6 @@ def run_experiment():
                 )
 
     return df, agg_df
-
 
 if __name__ == "__main__":
     run_experiment()
