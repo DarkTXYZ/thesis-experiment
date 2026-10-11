@@ -13,12 +13,13 @@ from generate_dataset import generate_connected_random_graph, is_isomorphic_to_a
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 EXTRA_SEED = 1042
-DENSITY = 0.5
-COUNTS = {10: 2, 15: 1, 20: 1, 25: 1}
+DENSITIES = [0.2, 0.5, 0.8]
+COUNTS = {10: 3, 15: 3, 20: 3, 25: 3}
 
 
-def load_existing_graphs(n: int) -> list[nx.Graph]:
-    filepath = os.path.join(SCRIPT_DIR, f"quantum_n{n}.pkl")
+def load_existing_graphs(n: int, density: float) -> list[nx.Graph]:
+    # Updated to load the density-specific files created in the previous step
+    filepath = os.path.join(SCRIPT_DIR, f"quantum_n{n}_d{density}.pkl")
     with open(filepath, "rb") as f:
         data = pickle.load(f)
 
@@ -31,20 +32,24 @@ def load_existing_graphs(n: int) -> list[nx.Graph]:
     return graphs
 
 
-def generate_extra_graphs_for_n(n: int, count: int) -> list:
-    existing_graphs = load_existing_graphs(n)
+def generate_extra_graphs(n: int, count: int, density: float) -> list:
+    existing_graphs = load_existing_graphs(n, density)
     new_graphs = []
     graphs_data = []
 
-    random.seed(EXTRA_SEED + n)
-    np.random.seed(EXTRA_SEED + n)
+    # Offset the seed by density to ensure variety across densities
+    seed_val = EXTRA_SEED + n + int(density * 100)
+    random.seed(seed_val)
+    np.random.seed(seed_val)
 
     i = 0
     attempts = 0
     max_attempts = count * 1000
 
     while i < count and attempts < max_attempts:
-        graph = generate_connected_random_graph(n, DENSITY)
+        # Handle the tuple return (graph, discarded) from the updated generator
+        result = generate_connected_random_graph(n, density)
+        graph = result[0] if isinstance(result, tuple) else result
 
         if is_isomorphic_to_any(graph, existing_graphs) or is_isomorphic_to_any(graph, new_graphs):
             attempts += 1
@@ -67,7 +72,7 @@ def generate_extra_graphs_for_n(n: int, count: int) -> list:
         attempts += 1
 
     if i < count:
-        print(f"  WARNING: Only generated {i}/{count} extra graphs for N={n} after {attempts} attempts")
+        print(f"  WARNING: Only generated {i}/{count} extra graphs for N={n}, d={density} after {attempts} attempts")
 
     return graphs_data
 
@@ -76,17 +81,21 @@ def main():
     output_path = os.path.join(SCRIPT_DIR, "quantum_extra.pkl")
     extra_data = {}
 
-    for n, count in COUNTS.items():
-        print(f"Generating {count} extra graph(s) for N={n}...")
-        graphs_data = generate_extra_graphs_for_n(n, count)
-        extra_data[n] = {
-            "num_vertices": n,
-            "density": DENSITY,
-            "num_graphs": len(graphs_data),
-            "seed": EXTRA_SEED + n,
-            "graphs": graphs_data,
-        }
-        print(f"  Generated {len(graphs_data)} graph(s) for N={n}")
+    for density in DENSITIES:
+        for n, count in COUNTS.items():
+            print(f"Generating {count} extra graph(s) for N={n} with density {density}...")
+            graphs_data = generate_extra_graphs(n, count, density)
+            
+            # Use a combined key like "n10_d0.5" to store in the dict
+            key = f"n{n}_d{density}"
+            extra_data[key] = {
+                "num_vertices": n,
+                "density": density,
+                "num_graphs": len(graphs_data),
+                "seed": EXTRA_SEED + n + int(density * 100),
+                "graphs": graphs_data,
+            }
+            print(f"  Generated {len(graphs_data)} graph(s) for N={n}, d={density}")
 
     with open(output_path, "wb") as f:
         pickle.dump(extra_data, f)

@@ -1,14 +1,38 @@
 [
   {
-    "name": "quantum_n5",
-    "num_vertices": 5,
-    "num_graphs": 21,
-    "density": 0.5,
-    "avg_density": 0.6190476190476191,
-    "avg_edges": 6.190476190476191
+    "name": "quantum_n10_d0.2",
+    "num_vertices": 10,
+    "num_graphs": 100,
+    "density": 0.2,
+    "avg_density": 0.2688888888888889,
+    "avg_edges": 12.1
   },
   {
-    "name": "quantum_n10",
+    "name": "quantum_n15_d0.2",
+    "num_vertices": 15,
+    "num_graphs": 100,
+    "density": 0.2,
+    "avg_density": 0.222,
+    "avg_edges": 23.31
+  },
+  {
+    "name": "quantum_n20_d0.2",
+    "num_vertices": 20,
+    "num_graphs": 100,
+    "density": 0.2,
+    "avg_density": 0.2094736842105263,
+    "avg_edges": 39.8
+  },
+  {
+    "name": "quantum_n25_d0.2",
+    "num_vertices": 25,
+    "num_graphs": 100,
+    "density": 0.2,
+    "avg_density": 0.20186666666666667,
+    "avg_edges": 60.56
+  },
+  {
+    "name": "quantum_n10_d0.5",
     "num_vertices": 10,
     "num_graphs": 100,
     "density": 0.5,
@@ -16,7 +40,7 @@
     "avg_edges": 22.34
   },
   {
-    "name": "quantum_n15",
+    "name": "quantum_n15_d0.5",
     "num_vertices": 15,
     "num_graphs": 100,
     "density": 0.5,
@@ -24,7 +48,7 @@
     "avg_edges": 52.41
   },
   {
-    "name": "quantum_n20",
+    "name": "quantum_n20_d0.5",
     "num_vertices": 20,
     "num_graphs": 100,
     "density": 0.5,
@@ -32,11 +56,43 @@
     "avg_edges": 94.29
   },
   {
-    "name": "quantum_n25",
+    "name": "quantum_n25_d0.5",
     "num_vertices": 25,
     "num_graphs": 100,
     "density": 0.5,
     "avg_density": 0.5001666666666666,
     "avg_edges": 150.05
+  },
+  {
+    "name": "quantum_n10_d0.8",
+    "num_vertices": 10,
+    "num_graphs": 100,
+    "density": 0.8,
+    "avg_density": 0.7964444444444445,
+    "avg_edges": 35.84
+  },
+  {
+    "name": "quantum_n15_d0.8",
+    "num_vertices": 15,
+    "num_graphs": 100,
+    "density": 0.8,
+    "avg_density": 0.803047619047619,
+    "avg_edges": 84.32
+  },
+  {
+    "name": "quantum_n20_d0.8",
+    "num_vertices": 20,
+    "num_graphs": 100,
+    "density": 0.8,
+    "avg_density": 0.7999473684210527,
+    "avg_edges": 151.99
+  },
+  {
+    "name": "quantum_n25_d0.8",
+    "num_vertices": 25,
+    "num_graphs": 100,
+    "density": 0.8,
+    "avg_density": 0.8018000000000001,
+    "avg_edges": 240.54
   }
 ]
