@@ -62,12 +62,27 @@ def read_extra_graphs():
     return graphs
 
 
-def print_result(solver_name, penalty, config_count, total_configs, n, p_val, graph_id, seed,
+def format_duration(seconds):
+    seconds = int(seconds)
+    hours, remainder = divmod(seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    if hours:
+        return f"{hours}h{minutes:02d}m"
+    if minutes:
+        return f"{minutes}m{seconds:02d}s"
+    return f"{seconds}s"
+
+
+def print_result(run_idx, total_runs, cumulative_elapsed, solver_name, penalty, n, p_val, graph_id, seed,
                   num_sweeps, beta_range, schedule_type, feasible, cost, elapsed):
     status = "OK" if feasible else "--"
     cost_str = f"{cost:6.2f}" if cost is not None else "   N/A"
+    pct = 100 * run_idx / total_runs
+    avg_time = cumulative_elapsed / run_idx
+    eta = avg_time * (total_runs - run_idx)
     print(
-        f"[{solver_name}] [{penalty}] [{config_count}/{total_configs}] N={n} p={p_val} graph={graph_id} seed={seed:<3} | "
+        f"[{run_idx}/{total_runs} {pct:5.1f}% ETA {format_duration(eta):>6}] "
+        f"[{solver_name}] [{penalty}] N={n} p={p_val} graph={graph_id} seed={seed:<3} | "
         f"sweeps={num_sweeps:<5} beta=({beta_range[0]:.2e},{beta_range[1]:.2e}) "
         f"type={schedule_type:9} | {status} cost={cost_str} | time={elapsed:.2f}s"
     )
@@ -85,9 +100,12 @@ def run_experiment():
     os.makedirs(RESULTS_DIR, exist_ok=True)
     all_results = []
 
+    total_runs = len(SOLVERS) * len(graphs) * len(PENALTY_METHODS) * len(configs)
+    run_idx = 0
+    cumulative_elapsed = 0.0
+
     try:
         for solver_name, solver in SOLVERS.items():
-            total_configs = len(configs)
             for graph_data in graphs:
                 G = convert_graph_data_to_nx(graph_data)
                 n = G.number_of_nodes()
@@ -100,7 +118,8 @@ def run_experiment():
                 for penalty in PENALTY_METHODS:
                     bqm = minla.generate_bqm_instance(G, penalty_mode=penalty)
 
-                    for config_count, (beta_range, schedule_type) in enumerate(configs, 1):
+                    for beta_range, schedule_type in configs:
+                        run_idx += 1
                         t0 = time.time()
                         
                         if solver_name == "PathIntegralAnnealingSampler":
@@ -186,8 +205,9 @@ def run_experiment():
                             "sum_approx_ratio": sum_approx_ratio,
                         })
 
-                        print_result(solver_name, penalty, config_count, total_configs, n, p_val, graph_id, SEED,
-                                     NUM_SWEEPS, beta_range, schedule_type, feasible, metric_cost, elapsed)
+                        cumulative_elapsed += elapsed
+                        print_result(run_idx, total_runs, cumulative_elapsed, solver_name, penalty, n, p_val,
+                                     graph_id, SEED, NUM_SWEEPS, beta_range, schedule_type, feasible, metric_cost, elapsed)
 
     except KeyboardInterrupt:
         print("\nInterrupted. Partial results saved.")
