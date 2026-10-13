@@ -1,4 +1,5 @@
 import csv
+import math
 import os
 import pickle
 
@@ -21,32 +22,55 @@ GRAPH_DISPLAY_NAMES = {
     "g01": "G_01", "g02": "G_02",
 }
 
-PIA_NUM_READS = 10
-PIA_NUM_SWEEPS = 1000
+BQM_DISPLAY_NAMES = {
+    "exact": "ExactBQM",
+    "lucas": "LucasBQM",
+}
+
+PIA_NUM_READS = 25
+PIA_NUM_SWEEPS = 500
 PIA_SEED = 42
 Hp_field = np.linspace(0, 1, PIA_NUM_SWEEPS)
 Hd_field = np.linspace(1, 0, PIA_NUM_SWEEPS)
 
 def solve_with_exact(graph, bqm : dimod.BinaryQuadraticModel, n):
+    """Enumerate every binary assignment of the BQM with dimod.ExactSolver.
+
+    Returns:
+        feasible_solutions: list of (ordering, MinLA cost, BQM energy) for
+            every assignment that decodes to a valid linear arrangement.
+        ground_state_energy: the minimum BQM energy over ALL assignments
+            (feasible and infeasible).
+        ground_state_count: number of assignments (feasible or not) attaining
+            ground_state_energy.
+        infeasible_ground_state: True if an infeasible assignment attains
+            ground_state_energy (would indicate the formulation is broken).
+    """
     sampler = dimod.ExactSolver()
     response = sampler.sample(bqm)
 
     feasible_solutions = []
-    infeasible_energies = []  # Track energies of invalid assignments
+    all_energies = []
 
     for sample, energy in zip(response.samples(), bqm.energies(response.samples())):
         ordering, is_feasible = decode_solution(dict(sample), n)
+        all_energies.append((energy, is_feasible))
         if is_feasible:
+            # decode_solution returns 1-indexed positions (1..n); shift to
+            # 0-indexed (0..n-1) to match CpSolver's position convention.
+            ordering = ordering - 1
             cost = calculate_min_linear_arrangement(graph, ordering)
-            
+
             # Store the tuple of (ordering, MinLA cost, BQM energy)
             feasible_solutions.append((tuple(ordering), cost, energy))
-        else:
-            infeasible_energies.append(energy)
 
-    min_infeasible_energy = min(infeasible_energies) if infeasible_energies else None
+    ground_state_energy = min(e for e, _ in all_energies)
+    ground_state_count = sum(1 for e, _ in all_energies if e == ground_state_energy)
+    infeasible_ground_state = any(
+        e == ground_state_energy and not is_feasible for e, is_feasible in all_energies
+    )
 
-    return feasible_solutions, min_infeasible_energy
+    return feasible_solutions, ground_state_energy, ground_state_count, infeasible_ground_state
 
 
 def solve_with_pia(graph, bqm, n):
@@ -60,6 +84,7 @@ def solve_with_pia(graph, bqm, n):
         ordering, is_feasible = decode_solution(dict(sample), n)
         if is_feasible:
             feasible_count += 1
+            ordering = ordering - 1
             cost = calculate_min_linear_arrangement(graph, ordering)
             if best_cost is None or cost < best_cost:
                 best_cost = cost
@@ -67,15 +92,18 @@ def solve_with_pia(graph, bqm, n):
     return best_cost, feasible_count
 
 
-def report(solver_name, graph_name, graph, gt_obj, gt_solutions, feasible_solutions, min_infeasible_energy, penalty_mode):
+def report(solver_name, graph_name, graph, gt_obj, gt_solutions, feasible_solutions,
+           ground_state_energy, ground_state_count, infeasible_ground_state, n, bqm_name):
+    expected_feasible = math.factorial(n)
+
+    print(f"  {solver_name} ({bqm_name}):")
+
     if not feasible_solutions:
-        print(f"  {solver_name}: No feasible solutions found!")
-        if min_infeasible_energy is not None:
-            print(f"    Lowest invalid energy: {min_infeasible_energy}")
+        print(f"    No feasible solutions found!")
+        print(f"    Ground-state energy: {ground_state_energy} (attained by an infeasible assignment)")
         return
 
     best_cost = min(s[1] for s in feasible_solutions)
-    best_feasible_energy = min(s[2] for s in feasible_solutions)
     optimal_solutions = [s[0] for s in feasible_solutions if s[1] == best_cost]
 
     gt_set = set(gt_solutions)
@@ -83,22 +111,16 @@ def report(solver_name, graph_name, graph, gt_obj, gt_solutions, feasible_soluti
 
     is_optimal = best_cost == gt_obj
     match = gt_set == found_set
+    approx_ratio = best_cost / gt_obj if gt_obj else None
 
-    print(f"  {solver_name} (penalty: {penalty_mode}):")
-    print(f"    Best obj: {best_cost} (optimal: {is_optimal})")
-    print(f"    Best feasible BQM energy: {best_feasible_energy}")
-    
-    # Check if an invalid state beats the valid state
-    if min_infeasible_energy is not None:
-        print(f"    Lowest invalid BQM energy: {min_infeasible_energy}")
-        if min_infeasible_energy < best_feasible_energy:
-            print(f"    🚨 WARNING: Invalid states exist with LOWER energy than the best valid state!")
-        elif min_infeasible_energy == best_feasible_energy:
-            print(f"    ⚠️ WARNING: Invalid states exist with EQUAL energy to the best valid state!")
-
+    print(f"    Total feasible assignments: {len(feasible_solutions)} "
+          f"(expected {n}! = {expected_feasible}, matches: {len(feasible_solutions) == expected_feasible})")
+    print(f"    Ground-state energy: {ground_state_energy} (# ground states: {ground_state_count})")
+    if infeasible_ground_state:
+        print(f"    🚨 WARNING: an infeasible assignment attains the ground-state energy!")
+    print(f"    Best feasible MinLA cost: {best_cost} (optimal: {is_optimal}, approx. ratio: {approx_ratio})")
     print(f"    #optimal solutions found: {len(found_set)} / {len(gt_set)}")
-    print(f"    Total feasible: {len(feasible_solutions)}")
-    print(f"    Exact match: {match}")
+    print(f"    Exact match with CpSolver ground truth: {match}")
     if not match:
         missing = gt_set - found_set
         extra = found_set - gt_set
@@ -131,29 +153,35 @@ def main():
         print(f"\n{'='*50}")
         print(f"Graph: {graph_name} (n={n}, m={graph.number_of_edges()}), ground truth obj: {gt_obj}")
 
-        for penalty_mode in ['lucas', 'exact']:
+        for penalty_mode in ['exact', 'lucas']:
+            bqm_name = BQM_DISPLAY_NAMES[penalty_mode]
             bqm = generate_bqm_instance(graph, penalty_mode)
 
-            # dimod ExactSolver
-            exact_results, min_infeasible_energy = solve_with_exact(graph, bqm, n)
-            report("dimod.ExactSolver", graph_name, graph, gt_obj, gt_solutions, exact_results, min_infeasible_energy, penalty_mode)
+            # dimod ExactSolver: exhaustive enumeration of every binary assignment
+            exact_results, gs_energy, gs_count, infeasible_gs = solve_with_exact(graph, bqm, n)
+            report("dimod.ExactSolver", graph_name, graph, gt_obj, gt_solutions, exact_results,
+                   gs_energy, gs_count, infeasible_gs, n, bqm_name)
 
             if exact_results:
                 exact_best = min(s[1] for s in exact_results)
                 exact_optimal = set(s[0] for s in exact_results if s[1] == exact_best)
                 exact_match = gt_set == exact_optimal
+                exact_ratio = exact_best / gt_obj if gt_obj else None
             else:
                 exact_best = None
                 exact_optimal = set()
                 exact_match = False
+                exact_ratio = None
 
-            # Path Integral Annealing
+            # Path Integral Annealing: heuristic sanity check
             pia_best, pia_feasible_count = solve_with_pia(graph, bqm, n)
+            pia_ratio = pia_best / gt_obj if (pia_best is not None and gt_obj) else None
             if pia_best is not None:
-                print(f"  PathIntegralAnnealing (penalty: {penalty_mode}): Best obj: {pia_best} (optimal: {pia_best == gt_obj})")
-                print(f"    Total feasible: {pia_feasible_count}")
+                print(f"  PathIntegralAnnealing ({bqm_name}): Best obj: {pia_best} "
+                      f"(optimal: {pia_best == gt_obj}, approx. ratio: {pia_ratio})")
+                print(f"    Feasible reads: {pia_feasible_count} / {PIA_NUM_READS}")
             else:
-                print(f"  PathIntegralAnnealing (penalty: {penalty_mode}): No feasible solutions found!")
+                print(f"  PathIntegralAnnealing ({bqm_name}): No feasible solutions found!")
 
             m = graph.number_of_edges()
             density = round(2 * m / (n * (n - 1)), 4) if n > 1 else 0
@@ -161,27 +189,35 @@ def main():
 
             rows.append({
                 "Graph": display_name,
-                "Penalty Mode": penalty_mode,
+                "BQM Type": bqm_name,
                 "|V|": n,
                 "|E|": m,
                 "Density": density,
                 "QUBO Variables": n * n,
-                "Optimal MinLA": gt_obj,
+                "Optimal MinLA (CpSolver)": gt_obj,
                 "# Optimal Permutations": len(gt_set),
-                "ExactSolver MinLA": exact_best,
+                "N!": math.factorial(n),
                 "ExactSolver # Feasible": len(exact_results),
+                "ExactSolver Feasible == N!": len(exact_results) == math.factorial(n),
+                "ExactSolver Ground-State Energy": gs_energy,
+                "ExactSolver # Ground States": gs_count,
+                "ExactSolver Infeasible Ground State": infeasible_gs,
+                "ExactSolver MinLA": exact_best,
+                "ExactSolver Approx Ratio": exact_ratio,
                 "ExactSolver # Optimal Found": len(exact_optimal),
-                "ExactSolver All Found": exact_match,
+                "ExactSolver Exact Match": exact_match,
                 "PIA MinLA": pia_best,
-                "PIA # Feasible": pia_feasible_count,
-                "PIA Optimal": pia_best == gt_obj if pia_best is not None else False,
+                "PIA # Feasible Reads": pia_feasible_count,
+                "PIA Approx Ratio": pia_ratio,
             })
 
     fieldnames = [
-        "Graph", "Penalty Mode", "|V|", "|E|", "Density", "QUBO Variables",
-        "Optimal MinLA", "# Optimal Permutations",
-        "ExactSolver MinLA", "ExactSolver # Feasible", "ExactSolver # Optimal Found", "ExactSolver All Found",
-        "PIA MinLA", "PIA # Feasible", "PIA Optimal",
+        "Graph", "BQM Type", "|V|", "|E|", "Density", "QUBO Variables",
+        "Optimal MinLA (CpSolver)", "# Optimal Permutations", "N!",
+        "ExactSolver # Feasible", "ExactSolver Feasible == N!",
+        "ExactSolver Ground-State Energy", "ExactSolver # Ground States", "ExactSolver Infeasible Ground State",
+        "ExactSolver MinLA", "ExactSolver Approx Ratio", "ExactSolver # Optimal Found", "ExactSolver Exact Match",
+        "PIA MinLA", "PIA # Feasible Reads", "PIA Approx Ratio",
     ]
     with open(CSV_PATH, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
