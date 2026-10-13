@@ -7,9 +7,9 @@ import seaborn as sns
 
 # Proactively added RandomSampler for when you run it
 RESULT_DIRS = {
-    "PIA": "Results/pia_experiment",
+    # "PIA": "Results/pia_experiment",
     "SA": "Results/sa_experiment",
-    "Random": "Results/random_experiment", 
+    # "Random": "Results/random_experiment", 
 }
 OUTPUT_PATH = "Results/sampler_experiment_summary.csv"
 BOXPLOT_PATH = "Results/plots/results_boxplot.png"

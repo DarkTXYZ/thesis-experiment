@@ -1,5 +1,6 @@
 import os
 import pickle
+import re
 import time
 import numpy as np
 import pandas as pd
@@ -10,23 +11,35 @@ import networkx as nx
 DATASET_PATH = "Dataset/quantum_dataset"
 RESULTS_PATH = "Results/sa_experiment"
 
-SEEDS = [42, 123, 456, 789, 999]
-NUM_READS = 10
+SEEDS = [42]
+NUM_READS = 50
 NUM_SWEEPS = 1000
 
 PENALTY_METHODS = ["lucas", "exact"]
 
-# Optimal hyperparameters derived from the tuning experiment
+# Optimal hyperparameters derived from the tuning experiment, keyed by graph
+# density (qubits_per_chain ignored - SA only ever runs with the default, 1).
 TUNED_CONFIGS = {
-    "lucas": {
-        "beta_schedule_type": "linear",
+    "0.2": {
+        "beta_schedule_type": "geometric",
+        "beta_range": (0.01, 1.0)
+    },
+    "0.5": {
+        "beta_schedule_type": "geometric",
         "beta_range": (0.1, 0.5)
     },
-    "exact": {
-        "beta_schedule_type": "geometric",
-        "beta_range": (0.01, 0.1)
+    "0.8": {
+        "beta_schedule_type": "linear",
+        "beta_range": (0.01, 0.5)
     }
 }
+
+
+def extract_density(filename):
+    match = re.search(r"_d([0-9.]+)\.pkl$", filename)
+    if not match:
+        raise ValueError(f"Could not determine density from filename: {filename}")
+    return match.group(1)
 
 def convert_graph_data_to_nx(graph_data):
     G = nx.Graph()
@@ -49,6 +62,8 @@ def run_experiment():
             data = pickle.load(f)
 
         total_graphs = len(data["graphs"])
+        density = extract_density(filename)
+        config = TUNED_CONFIGS[density]
         print(f"[{filename}] N={data['num_vertices']} | {total_graphs} graphs")
 
         for graph_id, graph in enumerate(data["graphs"]):
@@ -60,39 +75,33 @@ def run_experiment():
             # Evaluate both penalty methods for every graph
             for penalty in PENALTY_METHODS:
                 bqm = minla.generate_bqm_instance(G, penalty_mode=penalty)
-                config = TUNED_CONFIGS[penalty]
 
-                best_feasible_costs = []
-                feasible_seed_count = 0
+                feasible_costs = []
                 total_elapsed = 0
 
                 for seed in SEEDS:
                     t0 = time.time()
                     sampleset = solver.sample(
-                        bqm, 
-                        num_reads=NUM_READS, 
-                        num_sweeps=NUM_SWEEPS, 
-                        seed=seed, 
-                        beta_schedule_type=config["beta_schedule_type"], 
+                        bqm,
+                        num_reads=NUM_READS,
+                        num_sweeps=NUM_SWEEPS,
+                        seed=seed,
+                        beta_schedule_type=config["beta_schedule_type"],
                         beta_range=config["beta_range"]
                     )
                     elapsed = time.time() - t0
                     total_elapsed += elapsed
 
-                    best_cost = None
                     for sample in sampleset.samples():
                         ordering, is_feasible = minla.decode_solution(sample, n)
                         if is_feasible:
                             cost = minla.calculate_min_linear_arrangement(G, ordering)
-                            if best_cost is None or cost < best_cost:
-                                best_cost = cost
+                            feasible_costs.append(cost)
 
-                    if best_cost is not None:
-                        best_feasible_costs.append(best_cost)
-                        feasible_seed_count += 1
-
-                feasible = len(best_feasible_costs) > 0
-                avg_minla_cost = np.mean(best_feasible_costs) if feasible else None
+                feasible = len(feasible_costs) > 0
+                feasible_read_count = len(feasible_costs)
+                total_reads = len(SEEDS) * NUM_READS
+                avg_minla_cost = np.mean(feasible_costs) if feasible else None
                 approx_ratio = avg_minla_cost / lower_bound if feasible else None
 
                 all_rows.append({
@@ -102,7 +111,7 @@ def run_experiment():
                     "solver": "SimulatedAnnealingSampler",
                     "penalty": penalty,
                     "feasible": feasible,
-                    "feasible_seed_count": feasible_seed_count,
+                    "feasible_read_count": feasible_read_count,
                     "avg_minla_cost": avg_minla_cost,
                     "lower_bound": lower_bound,
                     "approx_ratio": approx_ratio,
@@ -117,7 +126,7 @@ def run_experiment():
 
                 print(
                     f"  [{filename}] graph {graph_id + 1}/{total_graphs} | penalty={penalty.upper():5} | "
-                    f"feasible={feasible!s:5} | seeds={feasible_seed_count}/{len(SEEDS)} | "
+                    f"feasible={feasible!s:5} | reads={feasible_read_count}/{total_reads} | "
                     f"time={total_elapsed:.2f}s"
                 )
 

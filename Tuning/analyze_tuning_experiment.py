@@ -1,4 +1,5 @@
 import os
+import re
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -6,15 +7,20 @@ import seaborn as sns
 
 PARENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS_DIR = os.path.join(PARENT_DIR, "Results/tuning_experiment")
-DETAILED_CSV = os.path.join(RESULTS_DIR, "tuning_experiment_detailed.csv")
+DETAILED_CSV = os.path.join(RESULTS_DIR, "tuning_experiment_detailed_latest.csv")
 
 ANALYSIS_DIR = os.path.join(RESULTS_DIR, "analysis")
 PLOTS_DIR = os.path.join(ANALYSIS_DIR, "plots")
 BEST_CONFIGS_CSV = os.path.join(ANALYSIS_DIR, "best_configs.csv")
 BEST_CONFIGS_OVERALL_CSV = os.path.join(ANALYSIS_DIR, "best_configs_overall.csv")
+BEST_CONFIGS_BY_P_CSV = os.path.join(ANALYSIS_DIR, "best_configs_by_p.csv")
 
 GROUP_COLS = ["solver", "n", "num_sweeps", "beta_min", "beta_max", "beta_schedule_type", "qubits_per_chain"]
 GROUP_COLS_OVERALL = ["solver", "num_sweeps", "beta_min", "beta_max", "beta_schedule_type", "qubits_per_chain"]
+# "p" encodes both n and density (e.g. "n10_d0.2"). Pool across n and group
+# purely by density ("d0.2", "d0.5", "d0.8") to compare configs by density
+# alone rather than by n.
+GROUP_COLS_BY_DENSITY = ["solver", "density", "num_sweeps", "beta_min", "beta_max", "beta_schedule_type", "qubits_per_chain"]
 TOP_N = 5
 
 
@@ -22,12 +28,16 @@ def load_detailed():
     if not os.path.exists(DETAILED_CSV):
         raise FileNotFoundError(f"No detailed results found at {DETAILED_CSV}")
     df = pd.read_csv(DETAILED_CSV)
+    df = df[df["p"] != "unknown"]
     # Rows written before qubits_per_chain was tracked ran with the sampler
     # default (1) - backfill so old and new rows group together correctly.
     if "qubits_per_chain" not in df.columns:
         df["qubits_per_chain"] = 1
     else:
         df["qubits_per_chain"] = df["qubits_per_chain"].fillna(1).astype(int)
+    # "p" is "n{n}_d{density}" (e.g. "n10_d0.2") or "unknown" for legacy rows.
+    # Pull out just the density part so it can be grouped on independently of n.
+    df["density"] = df["p"].str.extract(r"_d([0-9.]+)$")[0].fillna("unknown")
     return df
 
 
@@ -63,6 +73,73 @@ def aggregate_overall(df):
             "num_runs": len(group),
         })
     return pd.DataFrame(rows)
+
+
+def aggregate_by_density(df):
+    """Aggregate across graphs/seeds/n per (solver, density, config), pooling
+    all graph sizes that share a density together. Use this to pick one
+    config per (solver, density) regardless of n."""
+    rows = []
+    for keys, group in df.groupby(GROUP_COLS_BY_DENSITY):
+        feasible_runs = group[group["feasible"] == True]
+        rows.append({
+            **dict(zip(GROUP_COLS_BY_DENSITY, keys)),
+            "feasibility_rate": len(feasible_runs) / len(group),
+            "mean_approx_ratio": feasible_runs["approx_ratio"].mean() if len(feasible_runs) > 0 else None,
+            "mean_time_s": group["time_s"].mean(),
+            "num_runs": len(group),
+        })
+    return pd.DataFrame(rows)
+
+
+def print_best_config_per_density(agg_by_density):
+    print("=" * 78)
+    print("BEST CONFIG PER (solver, density)")
+    print("=" * 78)
+    for density in sorted(agg_by_density["density"].unique()):
+        print(f"\ndensity={density}")
+        print("-" * 78)
+        for solver in sorted(agg_by_density["solver"].unique()):
+            subset = agg_by_density[(agg_by_density["density"] == density) & (agg_by_density["solver"] == solver)].copy()
+            if subset.empty:
+                continue
+            subset["mean_approx_ratio"] = subset["mean_approx_ratio"].fillna(float("inf"))
+            best = subset.sort_values(
+                by=["feasibility_rate", "mean_approx_ratio", "mean_time_s"],
+                ascending=[False, True, True],
+            ).iloc[0]
+            ratio_str = "N/A" if best["mean_approx_ratio"] == float("inf") else f"{best['mean_approx_ratio']:.4f}"
+            print(
+                f"  {solver:<28} "
+                f"sweeps={int(best['num_sweeps']):<5} "
+                f"beta=({best['beta_min']:.2e},{best['beta_max']:.2e}) "
+                f"type={best['beta_schedule_type']:<9} "
+                f"qpc={int(best['qubits_per_chain']):<3} | "
+                f"feas_rate={best['feasibility_rate']:.0%}  "
+                f"approx_ratio={ratio_str:<8} "
+                f"time={best['mean_time_s']:.3f}s  "
+                f"n_runs={int(best['num_runs'])}"
+            )
+    print()
+
+
+def save_best_config_per_density_csv(agg_by_density):
+    os.makedirs(ANALYSIS_DIR, exist_ok=True)
+    rows = []
+    for density in sorted(agg_by_density["density"].unique()):
+        for solver in sorted(agg_by_density["solver"].unique()):
+            subset = agg_by_density[(agg_by_density["density"] == density) & (agg_by_density["solver"] == solver)].copy()
+            if subset.empty:
+                continue
+            subset["mean_approx_ratio"] = subset["mean_approx_ratio"].fillna(float("inf"))
+            best = subset.sort_values(
+                by=["feasibility_rate", "mean_approx_ratio", "mean_time_s"],
+                ascending=[False, True, True],
+            ).head(1)
+            rows.append(best)
+    out = pd.concat(rows, ignore_index=True)
+    out.to_csv(BEST_CONFIGS_BY_P_CSV, index=False)
+    print(f"Best config per (solver, density) saved to {BEST_CONFIGS_BY_P_CSV}")
 
 
 def print_overview(df):
@@ -329,16 +406,19 @@ def main():
     df = load_detailed()
     agg = aggregate(df)
     agg_overall = aggregate_overall(df)
+    agg_by_density = aggregate_by_density(df)
 
     print_overview(df)
     print_best_configs(agg)
     print_best_configs_overall(agg_overall)
+    print_best_config_per_density(agg_by_density)
     print_parameter_effects(agg)
     save_best_configs_csv(agg)
     save_best_configs_overall_csv(agg_overall)
-    plot_beta_heatmaps(agg)
-    plot_num_sweeps_trend(agg)
-    plot_qubits_per_chain_trend(agg)
+    save_best_config_per_density_csv(agg_by_density)
+    # plot_beta_heatmaps(agg)
+    # plot_num_sweeps_trend(agg)
+    # plot_qubits_per_chain_trend(agg)
 
 
 if __name__ == "__main__":

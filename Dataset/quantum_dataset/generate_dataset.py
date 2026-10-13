@@ -10,7 +10,6 @@ from pathlib import Path
 # Add parent directories to path for imports
 sys.path.append(str(Path(__file__).parent.parent.parent))
 from Baseline.lower_bound import MinLALowerBounds
-from Utils.MinLA import calculate_min_linear_arrangement, find_one_minimum_solution
 
 
 def generate_connected_random_graph(n: int, density: float, max_attempts: int = 10000) -> tuple[nx.Graph, int]:
