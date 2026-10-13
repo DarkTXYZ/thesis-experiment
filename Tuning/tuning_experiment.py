@@ -30,7 +30,7 @@ BETA_RANGE_GRID = [
     (beta_min, beta_max)
     for beta_min in BETA_MIN_GRID
     for beta_max in BETA_MAX_GRID
-    if beta_min <= beta_max
+    if beta_min < beta_max
 ]
 SCHEDULE_TYPES = ["linear", "geometric"]
 
@@ -150,12 +150,17 @@ def run_experiment():
                         if feasible:
                             best_cost = min(feasible_costs)
                             # Tune based on the expected (mean) cost of the sampler
-                            metric_cost = np.mean(feasible_costs) 
+                            metric_cost = np.mean(feasible_costs)
                             approx_ratio = metric_cost / lower_bound
+                            # Pooled over ALL feasible reads of this run (weighted by
+                            # occurrences), used to compute the read-level mean ratio
+                            # across the whole tuning dataset without re-touching the raw samples.
+                            sum_approx_ratio = sum(c / lower_bound for c in feasible_costs)
                         else:
                             best_cost = None
                             metric_cost = None
                             approx_ratio = None
+                            sum_approx_ratio = 0.0
 
                         all_results.append({
                             "solver": solver_name,
@@ -176,6 +181,9 @@ def run_experiment():
                             "lower_bound": lower_bound,
                             "approx_ratio": approx_ratio,
                             "time_s": round(elapsed, 3),
+                            "num_reads": NUM_READS,
+                            "total_feasible_reads": total_feasible_reads,
+                            "sum_approx_ratio": sum_approx_ratio,
                         })
 
                         print_result(solver_name, penalty, config_count, total_configs, n, p_val, graph_id, SEED,
@@ -194,18 +202,29 @@ def run_experiment():
     df.to_csv(detailed_snapshot, index=False)
     print(f"Detailed results snapshot saved to {detailed_snapshot}")
 
-    # Generate Summary Aggregation (Grouped by p)
+    # Summary Aggregation: pool across ALL 36 tuning graphs (all N and all
+    # densities together) per (solver, penalty, config). A single
+    # configuration is selected per (solver, penalty) using the whole
+    # dataset, rather than tuning separately per edge probability.
+    # Feasibility and mean ratio are computed at the READ level (pooled over
+    # every one of the group's 25-read runs), not at the per-graph
+    # instance level, so a graph with many feasible reads contributes
+    # proportionally more than one with only a few.
     agg_rows = []
-    group_cols = ["solver", "penalty", "p", "num_sweeps", "beta_min", "beta_max", "beta_schedule_type"]
-    
+    group_cols = ["solver", "penalty", "num_sweeps", "beta_min", "beta_max", "beta_schedule_type"]
+
     for keys, group in df.groupby(group_cols):
-        feasible_runs = group[group["feasible"] == True]
+        total_reads = group["num_reads"].sum()
+        total_feasible_reads = group["total_feasible_reads"].sum()
+        total_sum_ratio = group["sum_approx_ratio"].sum()
         agg_rows.append({
             **dict(zip(group_cols, keys)),
-            "feasibility_rate": len(feasible_runs) / len(group),
-            "mean_approx_ratio": feasible_runs["approx_ratio"].mean() if len(feasible_runs) > 0 else None,
+            "feasibility_rate": total_feasible_reads / total_reads,
+            "mean_approx_ratio": (total_sum_ratio / total_feasible_reads) if total_feasible_reads > 0 else None,
             "mean_time_s": group["time_s"].mean(),
-            "num_runs": len(group),
+            "num_graphs": len(group),
+            "total_reads": total_reads,
+            "total_feasible_reads": total_feasible_reads,
         })
 
     agg_df = pd.DataFrame(agg_rows)
@@ -216,40 +235,36 @@ def run_experiment():
     agg_df.to_csv(summary_snapshot, index=False)
     print(f"Summary results snapshot saved to {summary_snapshot}")
 
-    # Print the winning configurations per density
+    # Print the single winning configuration per (solver, penalty), pooled
+    # over all 36 tuning graphs and all three densities.
     print("\n" + "=" * 70)
-    print("BEST CONFIG PER SOLVER, PENALTY MODEL, AND GRAPH DENSITY (p)")
+    print("BEST CONFIG PER SOLVER AND PENALTY MODEL (pooled over all tuning graphs)")
     print("=" * 70)
-    
-    unique_ps = sorted([p for p in df["p"].unique() if pd.notna(p)])
-    
-    for p_val in unique_ps:
-        print(f"\n--- Best Configurations for p = {p_val} ---")
-        for solver_name in SOLVERS:
-            for penalty in PENALTY_METHODS:
-                solver_df = agg_df[
-                    (agg_df["solver"] == solver_name) & 
-                    (agg_df["penalty"] == penalty) & 
-                    (agg_df["p"] == p_val)
-                ].copy()
-                
-                if solver_df.empty:
-                    continue
-                
-                solver_df["mean_approx_ratio"] = solver_df["mean_approx_ratio"].fillna(float("inf"))
-                solver_df = solver_df.sort_values(
-                    by=["feasibility_rate", "mean_approx_ratio", "mean_time_s"],
-                    ascending=[False, True, True],
-                )
-                best = solver_df.iloc[0]
-                print(
-                    f"{solver_name} [{penalty.upper()}]: num_sweeps={best['num_sweeps']}, "
-                    f"beta=({best['beta_min']:.2e}, {best['beta_max']:.2e}), "
-                    f"type={best['beta_schedule_type']} | "
-                    f"feas={best['feasibility_rate']:.2%}, "
-                    f"gap={best['mean_approx_ratio']:.4f}, "
-                    f"time={best['mean_time_s']:.3f}s"
-                )
+
+    for solver_name in SOLVERS:
+        for penalty in PENALTY_METHODS:
+            solver_df = agg_df[
+                (agg_df["solver"] == solver_name) &
+                (agg_df["penalty"] == penalty)
+            ].copy()
+
+            if solver_df.empty:
+                continue
+
+            solver_df["mean_approx_ratio"] = solver_df["mean_approx_ratio"].fillna(float("inf"))
+            solver_df = solver_df.sort_values(
+                by=["feasibility_rate", "mean_approx_ratio", "mean_time_s"],
+                ascending=[False, True, True],
+            )
+            best = solver_df.iloc[0]
+            print(
+                f"{solver_name} [{penalty.upper()}]: num_sweeps={best['num_sweeps']}, "
+                f"beta=({best['beta_min']:.2e}, {best['beta_max']:.2e}), "
+                f"type={best['beta_schedule_type']} | "
+                f"read-level feas={best['feasibility_rate']:.2%}, "
+                f"mean ratio={best['mean_approx_ratio']:.4f}, "
+                f"time={best['mean_time_s']:.3f}s"
+            )
 
     return df, agg_df
 
