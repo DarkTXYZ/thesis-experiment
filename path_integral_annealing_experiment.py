@@ -12,34 +12,31 @@ DATASET_PATH = "Dataset/quantum_dataset"
 RESULTS_PATH = "Results/pia_experiment"
 
 SEEDS = [42]
-NUM_READS = 50
-NUM_SWEEPS = 1000
+NUM_READS = 25
+NUM_SWEEPS = 500
 
 PENALTY_METHODS = ["lucas", "exact"]
 
-# Optimal hyperparameters derived from the tuning experiment for PIASampler,
-# keyed by graph density (qubits_per_chain ignored - best was always 1).
+# Best-performing hyperparameters from the tuning experiment (Table
+# tab:tuning-results), one configuration per penalty method held fixed
+# across all graph densities.
 TUNED_CONFIGS = {
-    "0.2": {
+    "lucas": {
         "beta_schedule_type": "geometric",
-        "beta_range": (0.1, 10.0)
+        "beta_range": (0.5, 5.0)
     },
-    "0.5": {
+    "exact": {
         "beta_schedule_type": "geometric",
-        "beta_range": (0.01, 10.0)
-    },
-    "0.8": {
-        "beta_schedule_type": "geometric",
-        "beta_range": (0.01, 10.0)
+        "beta_range": (0.05, 10.0)
     }
 }
 
 
 def extract_density(filename):
+    """Target edge probability encoded in the filename, or None for an
+    exhaustively-enumerated file (e.g. quantum_n5.pkl) with no fixed density."""
     match = re.search(r"_d([0-9.]+)\.pkl$", filename)
-    if not match:
-        raise ValueError(f"Could not determine density from filename: {filename}")
-    return match.group(1)
+    return match.group(1) if match else None
 
 def convert_graph_data_to_nx(graph_data):
     G = nx.Graph()
@@ -48,22 +45,52 @@ def convert_graph_data_to_nx(graph_data):
     return G
 
 
+def format_duration(seconds):
+    seconds = int(seconds)
+    hours, remainder = divmod(seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    if hours:
+        return f"{hours}h{minutes:02d}m"
+    if minutes:
+        return f"{minutes}m{seconds:02d}s"
+    return f"{seconds}s"
+
+
+def print_result(run_idx, total_runs, cumulative_elapsed, filename, graph_id, total_graphs,
+                  penalty, feasible, feasible_read_count, elapsed):
+    status = "OK" if feasible else "--"
+    pct = 100 * run_idx / total_runs
+    avg_time = cumulative_elapsed / run_idx
+    eta = avg_time * (total_runs - run_idx)
+    print(
+        f"[{run_idx}/{total_runs} {pct:5.1f}% ETA {format_duration(eta):>6}] "
+        f"[{filename}] graph {graph_id + 1}/{total_graphs} | penalty={penalty.upper():5} | "
+        f"{status} reads={feasible_read_count} | time={elapsed:.3f}s"
+    )
+
+
 def run_experiment():
     os.makedirs(RESULTS_PATH, exist_ok=True)
     solver = PathIntegralAnnealingSampler()
 
     all_rows = []
 
-    for filename in os.listdir(DATASET_PATH):
+    dataset_files = []
+    for filename in sorted(os.listdir(DATASET_PATH)):
         if not filename.endswith(".pkl") or filename == "quantum_extra.pkl":
             continue
-
         with open(os.path.join(DATASET_PATH, filename), "rb") as f:
-            data = pickle.load(f)
+            dataset_files.append((filename, pickle.load(f)))
 
+    total_runs = sum(len(data["graphs"]) for _, data in dataset_files) * len(PENALTY_METHODS)
+    run_idx = 0
+    cumulative_elapsed = 0.0
+
+    print(f"seed={SEEDS[0]} num_sweeps={NUM_SWEEPS} num_reads={NUM_READS} | {total_runs} runs total\n")
+
+    for filename, data in dataset_files:
         total_graphs = len(data["graphs"])
         density = extract_density(filename)
-        config = TUNED_CONFIGS[density]
         print(f"[{filename}] N={data['num_vertices']} | {total_graphs} graphs")
 
         for graph_id, graph in enumerate(data["graphs"]):
@@ -73,6 +100,8 @@ def run_experiment():
             lower_bound = graph["lower_bound"]
 
             for penalty in PENALTY_METHODS:
+                run_idx += 1
+                config = TUNED_CONFIGS[penalty]
                 bqm = minla.generate_bqm_instance(G, penalty_mode=penalty)
 
                 feasible_costs = []
@@ -109,19 +138,22 @@ def run_experiment():
 
                 feasible = len(feasible_costs) > 0
                 feasible_read_count = len(feasible_costs)
-                total_reads = len(SEEDS) * NUM_READS
-                avg_minla_cost = np.mean(feasible_costs) if feasible else None
-                approx_ratio = avg_minla_cost / lower_bound if feasible else None
+                # Best feasible solution among the reads, not an average: the
+                # average is undefined when few reads are feasible and would
+                # unfairly penalize configurations with a lower feasibility rate.
+                best_minla_cost = min(feasible_costs) if feasible else None
+                approx_ratio = best_minla_cost / lower_bound if feasible else None
 
                 all_rows.append({
                     "n": n,
                     "m": m,
+                    "density": density,
                     "graph_id": graph_id,
                     "solver": "PathIntegralAnnealingSampler",
                     "penalty": penalty,
                     "feasible": feasible,
                     "feasible_read_count": feasible_read_count,
-                    "avg_minla_cost": avg_minla_cost,
+                    "best_minla_cost": best_minla_cost,
                     "lower_bound": lower_bound,
                     "approx_ratio": approx_ratio,
                     "time_s": round(total_elapsed, 3),
@@ -133,11 +165,9 @@ def run_experiment():
                     "beta_max": config["beta_range"][1]
                 })
 
-                print(
-                    f"  [{filename}] graph {graph_id + 1}/{total_graphs} | penalty={penalty.upper():5} | "
-                    f"feasible={feasible!s:5} | reads={feasible_read_count}/{total_reads} | "
-                    f"time={total_elapsed:.2f}s"
-                )
+                cumulative_elapsed += total_elapsed
+                print_result(run_idx, total_runs, cumulative_elapsed, filename, graph_id, total_graphs,
+                             penalty, feasible, feasible_read_count, total_elapsed)
 
     df = pd.DataFrame(all_rows)
     timestamp = time.strftime("%Y%m%d_%H%M%S")
